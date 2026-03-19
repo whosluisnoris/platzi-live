@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchPlatziLiveStreams } from "@/lib/invidious";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabase, getSupabaseAdmin } from "@/lib/supabase";
 import type { LiveStream } from "@/lib/invidious";
 
 export const dynamic = "force-dynamic";
@@ -55,9 +55,25 @@ export async function GET(request: NextRequest) {
   const auto = autoStreams.status === "fulfilled" ? autoStreams.value : [];
   const stored = storedStreams.status === "fulfilled" ? storedStreams.value : [];
 
-  // Merge: stored streams first, then auto-detected, deduplicated
-  const seen = new Set(stored.map((s) => s.videoId));
-  const merged = [...stored, ...auto.filter((s) => !seen.has(s.videoId))];
+  // Auto-save any newly detected live streams to Supabase so they persist
+  // after the live ends (visitors can still find and watch the recording)
+  const storedIds = new Set(stored.map((s) => s.videoId));
+  const newStreams = auto.filter((s) => !storedIds.has(s.videoId));
+  if (newStreams.length > 0) {
+    await getSupabaseAdmin()
+      .from("streams")
+      .upsert(
+        newStreams.map((s) => ({
+          video_id: s.videoId,
+          title: s.title,
+          channel_title: s.channelTitle,
+        })),
+        { onConflict: "video_id" }
+      );
+  }
+
+  // Merge: stored first, then any auto-detected not yet in Supabase
+  const merged = [...stored, ...newStreams];
 
   return NextResponse.json({ streams: merged });
 }
