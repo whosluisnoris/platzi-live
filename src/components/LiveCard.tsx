@@ -8,9 +8,10 @@ import { EmbedModal } from "./EmbedModal";
 
 interface LiveCardProps {
   stream: LiveStream;
+  onRemove?: () => void;
 }
 
-export function LiveCard({ stream }: LiveCardProps) {
+export function LiveCard({ stream, onRemove }: LiveCardProps) {
   const [showEmbed, setShowEmbed] = useState(false);
   const [imgError, setImgError] = useState(false);
 
@@ -60,6 +61,15 @@ export function LiveCard({ stream }: LiveCardProps) {
           >
             Open on YouTube
           </a>
+          {onRemove && (
+            <button
+              onClick={onRemove}
+              title="Remove"
+              className="rounded-lg bg-gray-800 px-3 py-2 text-sm text-gray-400 transition hover:bg-gray-700 hover:text-white"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
 
