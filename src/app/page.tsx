@@ -12,7 +12,9 @@ export default function Home() {
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Platzi Live</h1>
+          <h1 className="text-3xl font-bold text-white">
+            Platzi <span className="text-[#98ca3f]">Live</span>
+          </h1>
           <p className="mt-1 text-sm text-gray-400">
             Live streams from the Platzi YouTube channel
           </p>
@@ -20,7 +22,7 @@ export default function Home() {
         <button
           onClick={refresh}
           disabled={loading}
-          className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-700 disabled:opacity-50"
+          className="rounded-lg border border-[#98ca3f]/30 bg-[#1a1a1a] px-4 py-2 text-sm font-medium text-[#98ca3f] transition hover:bg-[#98ca3f]/10 disabled:opacity-50"
         >
           {loading ? "Checking…" : "Refresh"}
         </button>
@@ -28,7 +30,7 @@ export default function Home() {
 
       {/* Error */}
       {error && (
-        <div className="mb-6 rounded-lg bg-red-900/40 px-4 py-3 text-sm text-red-300 ring-1 ring-red-700">
+        <div className="mb-6 rounded-lg bg-red-900/30 px-4 py-3 text-sm text-red-300 ring-1 ring-red-700/50">
           Error: {error}
         </div>
       )}
@@ -37,7 +39,7 @@ export default function Home() {
       {loading && streams.length === 0 && (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2].map((i) => (
-            <div key={i} className="h-72 animate-pulse rounded-2xl bg-gray-800" />
+            <div key={i} className="h-72 animate-pulse rounded-2xl bg-[#1a1a1a]" />
           ))}
         </div>
       )}

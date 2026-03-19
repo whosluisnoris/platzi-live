@@ -20,7 +20,7 @@ export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [streams, setStreams] = useState<LiveStream[]>([]);
   const [input, setInput] = useState("");
-  const [status, setStatus] = useState<string | null>(null);
+  const [status, setStatus] = useState<{ text: string; ok: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
 
   const headers = { "Content-Type": "application/json", Authorization: `Bearer ${secret}` };
@@ -37,14 +37,13 @@ export default function AdminPage() {
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    // Verify the secret works by attempting a no-op request
     const res = await fetch("/api/admin/streams", {
       method: "DELETE",
       headers,
       body: JSON.stringify({ videoId: "________no-op" }),
     });
     if (res.status === 401) {
-      setStatus("Wrong password");
+      setStatus({ text: "Wrong password", ok: false });
     } else {
       setAuthed(true);
       setStatus(null);
@@ -54,12 +53,11 @@ export default function AdminPage() {
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     const videoId = extractVideoId(input.trim());
-    if (!videoId) { setStatus("Invalid YouTube URL or video ID"); return; }
+    if (!videoId) { setStatus({ text: "Invalid YouTube URL or video ID", ok: false }); return; }
 
     setLoading(true);
     setStatus(null);
 
-    // Resolve title via oEmbed
     const oEmbed = await fetch(`/api/oembed?videoId=${videoId}`).then((r) => r.json()).catch(() => ({}));
 
     const res = await fetch("/api/admin/streams", {
@@ -74,11 +72,11 @@ export default function AdminPage() {
 
     if (res.ok) {
       setInput("");
-      setStatus("Stream added ✓");
+      setStatus({ text: "Stream added ✓", ok: true });
       await loadStreams();
     } else {
       const data = await res.json();
-      setStatus(data.error ?? "Failed to add stream");
+      setStatus({ text: data.error ?? "Failed to add stream", ok: false });
     }
     setLoading(false);
   }
@@ -90,25 +88,30 @@ export default function AdminPage() {
       body: JSON.stringify({ videoId }),
     });
     await loadStreams();
-    setStatus("Stream removed");
+    setStatus({ text: "Stream removed", ok: true });
   }
 
   if (!authed) {
     return (
-      <main className="flex min-h-screen items-center justify-center px-4">
+      <main className="flex min-h-screen items-center justify-center bg-[#0d0d0d] px-4">
         <form onSubmit={handleLogin} className="flex w-full max-w-sm flex-col gap-4">
-          <h1 className="text-xl font-bold text-white">Admin</h1>
+          <div className="mb-2">
+            <h1 className="text-2xl font-bold text-white">
+              Platzi <span className="text-[#98ca3f]">Admin</span>
+            </h1>
+            <p className="mt-1 text-sm text-gray-400">Manage live stream links</p>
+          </div>
           <input
             type="password"
             value={secret}
             onChange={(e) => setSecret(e.target.value)}
             placeholder="Admin password"
-            className="rounded-lg bg-gray-800 px-4 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-white/30"
+            className="rounded-lg bg-[#1a1a1a] px-4 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#98ca3f]/50"
           />
-          {status && <p className="text-sm text-red-400">{status}</p>}
+          {status && <p className="text-sm text-red-400">{status.text}</p>}
           <button
             type="submit"
-            className="rounded-lg bg-red-600 py-2 text-sm font-semibold text-white hover:bg-red-500"
+            className="rounded-lg bg-[#98ca3f] py-2 text-sm font-semibold text-[#0d0d0d] hover:bg-[#aad44f] transition"
           >
             Login
           </button>
@@ -119,27 +122,36 @@ export default function AdminPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-10">
-      <h1 className="mb-6 text-2xl font-bold text-white">Admin — Manage Streams</h1>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-white">
+          Platzi <span className="text-[#98ca3f]">Admin</span>
+        </h1>
+        <p className="mt-1 text-sm text-gray-400">Add or remove live stream links</p>
+      </div>
 
       {/* Add form */}
-      <form onSubmit={handleAdd} className="mb-8 flex gap-2">
+      <form onSubmit={handleAdd} className="mb-6 flex gap-2">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Paste YouTube URL or video ID…"
-          className="flex-1 rounded-lg bg-gray-800 px-4 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-white/30"
+          className="flex-1 rounded-lg bg-[#1a1a1a] px-4 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#98ca3f]/50"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="rounded-lg bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+          className="rounded-lg bg-[#98ca3f] px-5 py-2 text-sm font-semibold text-[#0d0d0d] hover:bg-[#aad44f] disabled:opacity-50 transition"
         >
           {loading ? "Adding…" : "Add"}
         </button>
       </form>
 
-      {status && <p className="mb-4 text-sm text-green-400">{status}</p>}
+      {status && (
+        <p className={`mb-4 text-sm ${status.ok ? "text-[#98ca3f]" : "text-red-400"}`}>
+          {status.text}
+        </p>
+      )}
 
       {/* Stream list */}
       {streams.length === 0 ? (
@@ -149,7 +161,7 @@ export default function AdminPage() {
           {streams.map((s) => (
             <li
               key={s.videoId}
-              className="flex items-center justify-between rounded-lg bg-gray-900 px-4 py-3 ring-1 ring-white/10"
+              className="flex items-center justify-between rounded-lg bg-[#1a1a1a] px-4 py-3 ring-1 ring-[#98ca3f]/20"
             >
               <div>
                 <p className="text-sm font-medium text-white">{s.title}</p>
@@ -157,7 +169,7 @@ export default function AdminPage() {
               </div>
               <button
                 onClick={() => handleRemove(s.videoId)}
-                className="ml-4 rounded-lg bg-gray-800 px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-700 hover:text-white"
+                className="ml-4 rounded-lg border border-red-800/50 px-3 py-1.5 text-xs text-red-400 hover:bg-red-900/30 transition"
               >
                 Remove
               </button>

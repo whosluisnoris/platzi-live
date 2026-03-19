@@ -19,7 +19,7 @@ export function EmbedModal({ embedUrl, title, onClose }: EmbedModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
       onClick={onClose}
     >
       <div
@@ -28,12 +28,12 @@ export function EmbedModal({ embedUrl, title, onClose }: EmbedModalProps) {
       >
         <button
           onClick={onClose}
-          className="absolute -top-10 right-0 text-white hover:text-gray-300 text-sm font-medium"
+          className="absolute -top-10 right-0 text-sm font-medium text-[#98ca3f] hover:text-white transition"
           aria-label="Close"
         >
           ✕ Close
         </button>
-        <div className="aspect-video w-full overflow-hidden rounded-xl shadow-2xl">
+        <div className="aspect-video w-full overflow-hidden rounded-xl shadow-2xl ring-1 ring-[#98ca3f]/30">
           <iframe
             src={embedUrl}
             title={title}
