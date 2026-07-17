@@ -38,6 +38,31 @@ anterior funciona sin cambios en la DB.
 - [ ] `/api/admin/stats` responde con los agregados
 - [ ] `/api/live` guarda/refresca sin errores en los runtime logs de Vercel
 
+## Resultados de la verificación del rediseño (2026-07-16)
+
+Todo lo ejecutable sin sesión de Vercel quedó verificado:
+
+| Prueba | Resultado |
+|---|---|
+| `npm run build` + `npm run lint` + `tsc --noEmit` | ✅ sin errores |
+| Migración aditiva aplicada → producción (código viejo) siguió sirviendo `/api/live` | ✅ 200 OK |
+| Backfill: 23/23 filas con fechas, títulos intactos, 0 filas dañadas | ✅ |
+| Home local: lofi por defecto, 23 lives con fechas en español, orden asc/desc | ✅ |
+| `?test=` (live simulado): prioridad en reproductor + "En vivo ahora" + badge en header | ✅ |
+| Clic en tarjeta: cambia video (autoplay), resalta, actualiza `?v=` | ✅ |
+| Deep-link `?v=` directo | ✅ |
+| Móvil 375px: apilado, sin scroll horizontal | ✅ |
+| `/api/live` sin service key: lectura sigue viva (escrituras se omiten) | ✅ |
+| Analítica end-to-end en DB (INSERT de los 3 tipos + agregados en `watch_stats`) | ✅ probado en transacción con ROLLBACK — cero datos residuales |
+| RLS: anon no lee `watch_events`/`watch_stats` (`[]`), INSERT anon → 401, `streams` legible | ✅ |
+| Build del preview en Vercel | ✅ "Deployment has completed" |
+
+Pendiente de verificación humana (el preview está protegido por SSO de Vercel y el
+conector MCP no tiene acceso al proyecto): abrir la URL del preview con sesión de
+Vercel y probar que los eventos aparezcan en `watch_events`. Alternativa: verificarlo
+en producción justo después del merge (la clave service role ya funciona en prod — el
+auto-guardado de streams la usa hoy mismo).
+
 ## Variables de entorno (Vercel → Settings → Environment Variables)
 
 | Variable | Uso |
