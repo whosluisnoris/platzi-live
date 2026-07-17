@@ -26,11 +26,11 @@ export function VideoListItem({ stream, active, onSelect, badge }: VideoListItem
       aria-current={active ? "true" : undefined}
       className={`group flex w-full gap-3 rounded-xl p-2 text-left transition ${
         active
-          ? "bg-[#98ca3f]/10 ring-1 ring-[#98ca3f]/40"
+          ? "bg-[#0aeb8b]/10 ring-1 ring-[#0aeb8b]/40"
           : "hover:bg-white/5"
       }`}
     >
-      <div className="relative aspect-video w-40 shrink-0 overflow-hidden rounded-lg bg-[#1a1a1a]">
+      <div className="relative aspect-video w-40 shrink-0 overflow-hidden rounded-lg bg-[#1c212a]">
         <Image
           src={thumbnailUrl}
           alt=""
@@ -45,7 +45,7 @@ export function VideoListItem({ stream, active, onSelect, badge }: VideoListItem
             className={`absolute bottom-1 right-1 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
               badge === "EN VIVO"
                 ? "bg-red-600 text-white"
-                : "bg-black/80 text-[#98ca3f]"
+                : "bg-black/80 text-[#0aeb8b]"
             }`}
           >
             {badge}
@@ -56,7 +56,7 @@ export function VideoListItem({ stream, active, onSelect, badge }: VideoListItem
       <div className="flex min-w-0 flex-col gap-1 py-0.5">
         <h3
           className={`line-clamp-2 text-sm font-semibold leading-snug ${
-            active ? "text-[#98ca3f]" : "text-white"
+            active ? "text-[#0aeb8b]" : "text-white"
           }`}
         >
           {stream.title}

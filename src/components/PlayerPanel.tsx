@@ -53,7 +53,7 @@ export function PlayerPanel({ stream, autoplay }: PlayerPanelProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackEvent(stream.videoId, "open_youtube")}
-            className="rounded-lg border border-[#98ca3f]/30 px-4 py-2 text-sm font-semibold text-[#98ca3f] transition hover:bg-[#98ca3f]/10 active:scale-95"
+            className="rounded-lg border border-[#0aeb8b]/30 px-4 py-2 text-sm font-semibold text-[#0aeb8b] transition hover:bg-[#0aeb8b]/10 active:scale-95"
           >
             Ver en YouTube ↗
           </a>

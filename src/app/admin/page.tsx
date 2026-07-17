@@ -112,11 +112,11 @@ export default function AdminPage() {
 
   if (!authed) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#0d0d0d] px-4">
+      <main className="flex min-h-screen items-center justify-center bg-[#13161c] px-4">
         <form onSubmit={handleLogin} className="flex w-full max-w-sm flex-col gap-4">
           <div className="mb-2">
             <h1 className="text-2xl font-bold text-white">
-              Platzi <span className="text-[#98ca3f]">Admin</span>
+              Platzi <span className="text-[#0aeb8b]">Admin</span>
             </h1>
             <p className="mt-1 text-sm text-gray-400">Gestiona los lives guardados</p>
           </div>
@@ -125,12 +125,12 @@ export default function AdminPage() {
             value={secret}
             onChange={(e) => setSecret(e.target.value)}
             placeholder="Contraseña de administrador"
-            className="rounded-lg bg-[#1a1a1a] px-4 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#98ca3f]/50"
+            className="rounded-lg bg-[#1c212a] px-4 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
           />
           {status && <p className="text-sm text-red-400">{status.text}</p>}
           <button
             type="submit"
-            className="rounded-lg bg-[#98ca3f] py-2 text-sm font-semibold text-[#0d0d0d] hover:bg-[#aad44f] transition"
+            className="rounded-lg bg-[#0aeb8b] py-2 text-sm font-semibold text-[#13161c] hover:bg-[#08c975] transition"
           >
             Entrar
           </button>
@@ -143,7 +143,7 @@ export default function AdminPage() {
     <main className="mx-auto w-full max-w-4xl px-4 py-10">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">
-          Platzi <span className="text-[#98ca3f]">Admin</span>
+          Platzi <span className="text-[#0aeb8b]">Admin</span>
         </h1>
         <p className="mt-1 text-sm text-gray-400">Agrega o quita lives y revisa las estadísticas</p>
       </div>
@@ -155,19 +155,19 @@ export default function AdminPage() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Pega una URL de YouTube o un ID de video…"
-          className="flex-1 rounded-lg bg-[#1a1a1a] px-4 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#98ca3f]/50"
+          className="flex-1 rounded-lg bg-[#1c212a] px-4 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="rounded-lg bg-[#98ca3f] px-5 py-2 text-sm font-semibold text-[#0d0d0d] hover:bg-[#aad44f] disabled:opacity-50 transition"
+          className="rounded-lg bg-[#0aeb8b] px-5 py-2 text-sm font-semibold text-[#13161c] hover:bg-[#08c975] disabled:opacity-50 transition"
         >
           {loading ? "Agregando…" : "Agregar"}
         </button>
       </form>
 
       {status && (
-        <p className={`mb-4 text-sm ${status.ok ? "text-[#98ca3f]" : "text-red-400"}`}>
+        <p className={`mb-4 text-sm ${status.ok ? "text-[#0aeb8b]" : "text-red-400"}`}>
           {status.text}
         </p>
       )}
@@ -180,7 +180,7 @@ export default function AdminPage() {
           {streams.map((s) => (
             <li
               key={s.videoId}
-              className="flex items-center justify-between rounded-lg bg-[#1a1a1a] px-4 py-3 ring-1 ring-[#98ca3f]/20"
+              className="flex items-center justify-between rounded-lg bg-[#1c212a] px-4 py-3 ring-1 ring-[#0aeb8b]/20"
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-white">{s.title}</p>
@@ -207,11 +207,11 @@ export default function AdminPage() {
       {/* Estadísticas */}
       <div className="mb-4 mt-12 flex items-center justify-between">
         <h2 className="text-lg font-bold text-white">
-          Estadísticas <span className="text-[#98ca3f]">de reproducción</span>
+          Estadísticas <span className="text-[#0aeb8b]">de reproducción</span>
         </h2>
         <button
           onClick={loadStats}
-          className="rounded-lg border border-[#98ca3f]/30 px-3 py-1.5 text-xs font-medium text-[#98ca3f] hover:bg-[#98ca3f]/10 transition"
+          className="rounded-lg border border-[#0aeb8b]/30 px-3 py-1.5 text-xs font-medium text-[#0aeb8b] hover:bg-[#0aeb8b]/10 transition"
         >
           Actualizar
         </button>
@@ -225,7 +225,7 @@ export default function AdminPage() {
       ) : (
         <div className="overflow-x-auto rounded-lg ring-1 ring-white/10">
           <table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="bg-[#1a1a1a] text-xs uppercase tracking-wide text-gray-400">
+            <thead className="bg-[#1c212a] text-xs uppercase tracking-wide text-gray-400">
               <tr>
                 <th className="px-4 py-3">Video</th>
                 <th className="px-3 py-3 text-right" title="Clics para reproducir aquí">Reproducciones</th>
@@ -241,7 +241,7 @@ export default function AdminPage() {
                   <td className="max-w-[280px] truncate px-4 py-3 text-white" title={r.title}>
                     {r.title}
                   </td>
-                  <td className="px-3 py-3 text-right font-semibold text-[#98ca3f]">{r.plays}</td>
+                  <td className="px-3 py-3 text-right font-semibold text-[#0aeb8b]">{r.plays}</td>
                   <td className="px-3 py-3 text-right text-gray-300">{r.autoplays}</td>
                   <td className="px-3 py-3 text-right text-gray-300">{r.youtubeOpens}</td>
                   <td className="px-3 py-3 text-right text-gray-300">{r.uniqueSessions}</td>

@@ -76,11 +76,11 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Barra superior */}
-      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#0d0d0d]/95 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#13161c]/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold text-white">
-              Platzi <span className="text-[#98ca3f]">Live</span>
+              Platzi <span className="text-[#0aeb8b]">Live</span>
             </h1>
             {liveNow.length > 0 && (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600/15 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-red-400 ring-1 ring-red-600/40">
@@ -92,7 +92,7 @@ export default function Home() {
           <button
             onClick={refresh}
             disabled={loading}
-            className="rounded-lg border border-[#98ca3f]/30 bg-transparent px-4 py-2 text-sm font-medium text-[#98ca3f] transition hover:bg-[#98ca3f]/10 disabled:opacity-50"
+            className="rounded-lg border border-[#0aeb8b]/30 bg-transparent px-4 py-2 text-sm font-medium text-[#0aeb8b] transition hover:bg-[#0aeb8b]/10 disabled:opacity-50"
           >
             {loading ? "Buscando…" : "Actualizar"}
           </button>
@@ -113,7 +113,7 @@ export default function Home() {
             {displayed ? (
               <PlayerPanel stream={displayed} autoplay={chosen !== null} />
             ) : (
-              <div className="aspect-video w-full animate-pulse rounded-xl bg-[#1a1a1a]" />
+              <div className="aspect-video w-full animate-pulse rounded-xl bg-[#1c212a]" />
             )}
           </div>
 
@@ -152,7 +152,7 @@ export default function Home() {
                   value={order}
                   onChange={(e) => setOrder(e.target.value as SortOrder)}
                   aria-label="Ordenar lives"
-                  className="rounded-lg bg-[#1a1a1a] px-3 py-1.5 text-xs text-gray-300 ring-1 ring-white/10 focus:outline-none focus:ring-[#98ca3f]/50"
+                  className="rounded-lg bg-[#1c212a] px-3 py-1.5 text-xs text-gray-300 ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
                 >
                   <option value="desc">Más recientes primero</option>
                   <option value="asc">Más antiguos primero</option>
@@ -164,7 +164,7 @@ export default function Home() {
                   {[1, 2, 3, 4, 5].map((i) => (
                     <div
                       key={i}
-                      className="h-24 animate-pulse rounded-xl bg-[#1a1a1a]"
+                      className="h-24 animate-pulse rounded-xl bg-[#1c212a]"
                     />
                   ))}
                 </div>
