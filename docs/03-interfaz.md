@@ -27,7 +27,21 @@ En móvil las columnas se apilan (reproductor arriba). Rejilla:
 | `PlayerPanel` | Iframe del video + título, canal, insignia EN VIVO o fecha ("Transmitido hace 3 semanas · 11 de junio de 2026") y botón "Ver en YouTube" |
 | `VideoListItem` | Tarjeta horizontal de la lista (miniatura 160px con fallback a `hqdefault`, título 2 líneas, canal, fecha relativa); resalta el video activo; insignias "EN VIVO" (rojo) y "24/7" (verde) |
 | `StatusBadge` | Insignia "EN VIVO" (roja, convención universal; el verde Platzi queda para acciones) |
-| `FeedbackPoll` | Encuesta bajo el reproductor (ver [04-analitica.md](04-analitica.md)) |
+| `FeedbackPoll` | Encuesta flotante en la esquina inferior derecha, con cierre y pastilla "📊 Encuesta" para reabrir (ver [04-analitica.md](04-analitica.md)) |
+| `DailyChart` | Gráfica SVG de barras apiladas por día, usada en `/admin` |
+
+Las tarjetas muestran "hace 3 semanas · 3 h 58 min" (fecha relativa + duración del
+video); el reproductor añade además la fecha absoluta.
+
+## Estilo glass y barra de scroll
+
+- Tonos base más cercanos al negro y unificados: fondo `#0e1013`, superficie `#14171c`
+  (variables en [`globals.css`](../src/app/globals.css)).
+- Clase `.glass`: degradado sutil de gris claro + `backdrop-blur` + borde luminoso.
+  Se usa en el header, el panel de la lista, la encuesta flotante y las tarjetas del
+  admin.
+- Clase `.custom-scroll`: barra de 10px con degradado claro y carril tenue, uniforme
+  en las dos zonas con scroll propio (más visible que la nativa).
 
 ## Zonas de scroll (escritorio, ≥1024px)
 

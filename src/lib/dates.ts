@@ -27,6 +27,16 @@ export function timeAgo(iso: string | null): string | null {
   return null;
 }
 
+// Duración legible en español: "2 h 15 min", "45 min", "58 s"
+export function formatDuration(seconds: number | null): string | null {
+  if (seconds == null || seconds <= 0) return null;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return m > 0 ? `${h} h ${m} min` : `${h} h`;
+  if (m > 0) return `${m} min`;
+  return `${seconds} s`;
+}
+
 export function formatDate(iso: string | null): string | null {
   if (!iso) return null;
   const date = new Date(iso);

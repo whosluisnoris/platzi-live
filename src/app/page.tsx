@@ -78,9 +78,9 @@ export default function Home() {
     // En lg+ la página ocupa exactamente el viewport: el reproductor queda fijo
     // y cada columna hace scroll por su cuenta solo si su contenido no cabe.
     <div className="flex min-h-screen flex-col lg:h-dvh">
-      {/* Barra superior */}
-      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#13161c]/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between gap-4 px-4 py-3 sm:px-6">
+      {/* Barra superior (glass) */}
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0e1013]/80 bg-gradient-to-b from-white/[0.06] to-transparent backdrop-blur-xl">
+        <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between gap-4 px-4 py-4 sm:px-8">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold text-white">
               Platzi <span className="text-[#0aeb8b]">Live</span>
@@ -102,35 +102,32 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-6 sm:px-6 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden">
+      <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-8 sm:px-8 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden">
         {error && (
-          <div className="mb-4 rounded-lg bg-red-900/30 px-4 py-3 text-sm text-red-300 ring-1 ring-red-700/50">
+          <div className="mb-5 rounded-lg bg-red-900/30 px-4 py-3 text-sm text-red-300 ring-1 ring-red-700/50">
             No se pudo comprobar el canal ahora mismo: {error}. Mostrando el
             histórico guardado.
           </div>
         )}
 
-        <div className="grid gap-8 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_430px]">
+        <div className="grid gap-10 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_430px]">
           {/* Reproductor principal: fijo; solo scrollea si su contenido no cabe */}
-          <div className="lg:min-h-0 lg:overflow-y-auto lg:pr-1 lg:[scrollbar-color:#2a303b_transparent] lg:[scrollbar-width:thin]">
+          <div className="custom-scroll lg:min-h-0 lg:overflow-y-auto lg:pr-2">
             {displayed ? (
               <PlayerPanel stream={displayed} autoplay={chosen !== null} />
             ) : (
-              <div className="aspect-video w-full animate-pulse rounded-xl bg-[#1c212a]" />
+              <div className="aspect-video w-full animate-pulse rounded-xl bg-[#14171c]" />
             )}
-            <div className="mt-6">
-              <FeedbackPoll />
-            </div>
           </div>
 
-          {/* Lista lateral: panel con tono propio que marca la zona con scroll */}
-          <aside className="flex flex-col gap-8 rounded-2xl bg-white/[0.03] p-3 ring-1 ring-white/5 sm:p-4 lg:min-h-0 lg:overflow-y-auto lg:[scrollbar-color:#2a303b_transparent] lg:[scrollbar-width:thin]">
+          {/* Lista lateral: panel glass que marca la zona con scroll */}
+          <aside className="glass backdrop-blur-md custom-scroll flex flex-col gap-10 rounded-2xl p-4 sm:p-5 lg:min-h-0 lg:overflow-y-auto">
             <section aria-label="En vivo ahora">
-              <h2 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-gray-300">
+              <h2 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-gray-300">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
                 En vivo ahora
               </h2>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 {liveNow.map((s) => (
                   <VideoListItem
                     key={s.videoId}
@@ -150,7 +147,7 @@ export default function Home() {
             </section>
 
             <section aria-label="Lives anteriores">
-              <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="mb-4 flex items-center justify-between gap-3">
                 <h2 className="text-sm font-bold uppercase tracking-wide text-gray-300">
                   Lives anteriores
                 </h2>
@@ -158,7 +155,7 @@ export default function Home() {
                   value={order}
                   onChange={(e) => setOrder(e.target.value as SortOrder)}
                   aria-label="Ordenar lives"
-                  className="rounded-lg bg-[#1c212a] px-3 py-1.5 text-xs text-gray-300 ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
+                  className="rounded-lg bg-[#14171c] px-3 py-1.5 text-xs text-gray-300 ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
                 >
                   <option value="desc">Más recientes primero</option>
                   <option value="asc">Más antiguos primero</option>
@@ -166,11 +163,11 @@ export default function Home() {
               </div>
 
               {loading && streams.length === 0 ? (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-3">
                   {[1, 2, 3, 4, 5].map((i) => (
                     <div
                       key={i}
-                      className="h-24 animate-pulse rounded-xl bg-[#1c212a]"
+                      className="h-24 animate-pulse rounded-xl bg-[#14171c]"
                     />
                   ))}
                 </div>
@@ -180,7 +177,7 @@ export default function Home() {
                   aquí automáticamente.
                 </p>
               ) : (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-3">
                   {past.map((s) => (
                     <VideoListItem
                       key={s.videoId}
@@ -196,10 +193,13 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="mx-auto w-full max-w-[1500px] px-4 pb-8 pt-4 text-center text-xs text-gray-600 sm:px-6">
+      <footer className="mx-auto w-full max-w-[1500px] px-4 pb-8 pt-4 text-center text-xs text-gray-600 sm:px-8">
         Los videos se reproducen directamente desde YouTube. Este sitio solo
         organiza los enlaces públicos del canal de Platzi.
       </footer>
+
+      {/* Encuesta flotante (esquina inferior derecha) */}
+      <FeedbackPoll />
     </div>
   );
 }

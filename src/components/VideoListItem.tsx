@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import type { LiveStream } from "@/lib/invidious";
-import { timeAgo } from "@/lib/dates";
+import { formatDuration, timeAgo } from "@/lib/dates";
 
 interface VideoListItemProps {
   stream: LiveStream;
@@ -19,18 +19,19 @@ export function VideoListItem({ stream, active, onSelect, badge }: VideoListItem
     ? `https://i.ytimg.com/vi/${stream.videoId}/hqdefault.jpg`
     : stream.thumbnailUrl;
   const relative = timeAgo(stream.liveStartedAt ?? stream.publishedAt);
+  const duration = formatDuration(stream.durationSeconds);
 
   return (
     <button
       onClick={() => onSelect(stream)}
       aria-current={active ? "true" : undefined}
-      className={`group flex w-full gap-3 rounded-xl p-2 text-left transition ${
+      className={`group flex w-full gap-3.5 rounded-xl p-2.5 text-left transition ${
         active
           ? "bg-[#0aeb8b]/10 ring-1 ring-[#0aeb8b]/40"
           : "hover:bg-white/5"
       }`}
     >
-      <div className="relative aspect-video w-40 shrink-0 overflow-hidden rounded-lg bg-[#1c212a]">
+      <div className="relative aspect-video w-40 shrink-0 overflow-hidden rounded-lg bg-[#14171c]">
         <Image
           src={thumbnailUrl}
           alt=""
@@ -62,7 +63,13 @@ export function VideoListItem({ stream, active, onSelect, badge }: VideoListItem
           {stream.title}
         </h3>
         <p className="text-xs text-gray-400">{stream.channelTitle}</p>
-        {relative && <p className="text-xs text-gray-500">{relative}</p>}
+        {(relative || duration) && (
+          <p className="text-xs text-gray-500">
+            {relative}
+            {relative && duration && " · "}
+            {duration}
+          </p>
+        )}
       </div>
     </button>
   );

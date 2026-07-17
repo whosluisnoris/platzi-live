@@ -3,6 +3,15 @@
 import { useState, useCallback } from "react";
 import type { LiveStream } from "@/lib/invidious";
 import { formatDate, timeAgo } from "@/lib/dates";
+import { DailyChart } from "@/components/DailyChart";
+
+// Paleta categórica validada (validate_palette.js, superficie #0e1013)
+const EVENT_SERIES = [
+  { key: "plays", label: "Reproducciones", color: "#09b06a" },
+  { key: "autoplays", label: "Automáticas", color: "#4a90e0" },
+  { key: "youtubeOpens", label: "YouTube", color: "#b87a16" },
+];
+const VISIT_SERIES = [{ key: "pageviews", label: "Vistas de página", color: "#09b06a" }];
 
 const VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
 
@@ -19,6 +28,21 @@ interface VideoStats {
 interface PollResults {
   total: number;
   counts: { si: number; puede_mejorar: number; no: number };
+}
+
+interface DailyRow {
+  date: string;
+  plays: number;
+  autoplays: number;
+  youtubeOpens: number;
+  sessions: number;
+  [key: string]: string | number;
+}
+
+interface VisitsState {
+  configured: boolean;
+  daily?: { date: string; pageviews: number; visitors: number }[];
+  error?: string;
 }
 
 const POLL_LABELS: { key: keyof PollResults["counts"]; label: string }[] = [
@@ -42,6 +66,8 @@ export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [streams, setStreams] = useState<LiveStream[]>([]);
   const [stats, setStats] = useState<VideoStats[]>([]);
+  const [daily, setDaily] = useState<DailyRow[]>([]);
+  const [visits, setVisits] = useState<VisitsState | null>(null);
   const [poll, setPoll] = useState<PollResults | null>(null);
   const [input, setInput] = useState("");
   const [status, setStatus] = useState<{ text: string; ok: boolean } | null>(null);
@@ -60,11 +86,16 @@ export default function AdminPage() {
     if (!res.ok) return false;
     const data = await res.json();
     setStats(data.stats ?? []);
-    // resultados de la encuesta (agregados públicos; si falla no bloquea nada)
+    setDaily(data.daily ?? []);
+    // encuesta y visitas de Vercel en paralelo (si fallan no bloquean nada)
     fetch("/api/feedback?question=live_platform_v1")
       .then((r) => (r.ok ? r.json() : null))
       .then((p) => setPoll(p))
       .catch(() => {});
+    fetch("/api/admin/visits", { headers })
+      .then((r) => r.json())
+      .then((v) => setVisits(v))
+      .catch(() => setVisits(null));
     return true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [secret]);
@@ -129,7 +160,7 @@ export default function AdminPage() {
 
   if (!authed) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#13161c] px-4">
+      <main className="flex min-h-screen items-center justify-center bg-[#0e1013] px-4">
         <form onSubmit={handleLogin} className="flex w-full max-w-sm flex-col gap-4">
           <div className="mb-2">
             <h1 className="text-2xl font-bold text-white">
@@ -142,12 +173,12 @@ export default function AdminPage() {
             value={secret}
             onChange={(e) => setSecret(e.target.value)}
             placeholder="Contraseña de administrador"
-            className="rounded-lg bg-[#1c212a] px-4 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
+            className="rounded-lg bg-[#14171c] px-4 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
           />
           {status && <p className="text-sm text-red-400">{status.text}</p>}
           <button
             type="submit"
-            className="rounded-lg bg-[#0aeb8b] py-2 text-sm font-semibold text-[#13161c] hover:bg-[#08c975] transition"
+            className="rounded-lg bg-[#0aeb8b] py-2 text-sm font-semibold text-[#0e1013] hover:bg-[#08c975] transition"
           >
             Entrar
           </button>
@@ -172,12 +203,12 @@ export default function AdminPage() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Pega una URL de YouTube o un ID de video…"
-          className="flex-1 rounded-lg bg-[#1c212a] px-4 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
+          className="flex-1 rounded-lg bg-[#14171c] px-4 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="rounded-lg bg-[#0aeb8b] px-5 py-2 text-sm font-semibold text-[#13161c] hover:bg-[#08c975] disabled:opacity-50 transition"
+          className="rounded-lg bg-[#0aeb8b] px-5 py-2 text-sm font-semibold text-[#0e1013] hover:bg-[#08c975] disabled:opacity-50 transition"
         >
           {loading ? "Agregando…" : "Agregar"}
         </button>
@@ -197,7 +228,7 @@ export default function AdminPage() {
           {streams.map((s) => (
             <li
               key={s.videoId}
-              className="flex items-center justify-between rounded-lg bg-[#1c212a] px-4 py-3 ring-1 ring-[#0aeb8b]/20"
+              className="flex items-center justify-between rounded-lg bg-[#14171c] px-4 py-3 ring-1 ring-[#0aeb8b]/20"
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-white">{s.title}</p>
@@ -222,7 +253,7 @@ export default function AdminPage() {
       )}
 
       {/* Estadísticas */}
-      <div className="mb-4 mt-12 flex items-center justify-between">
+      <div className="mb-4 mt-14 flex items-center justify-between">
         <h2 className="text-lg font-bold text-white">
           Estadísticas <span className="text-[#0aeb8b]">de reproducción</span>
         </h2>
@@ -234,6 +265,18 @@ export default function AdminPage() {
         </button>
       </div>
 
+      {/* Gráfica de actividad diaria */}
+      <div className="glass backdrop-blur-md mb-8 rounded-2xl p-5">
+        <h3 className="mb-4 text-sm font-semibold text-gray-200">
+          Actividad de los últimos 14 días
+        </h3>
+        <DailyChart
+          data={daily}
+          series={EVENT_SERIES}
+          tooltipExtra={(row) => `Sesiones únicas: ${Number(row.sessions ?? 0)}`}
+        />
+      </div>
+
       {stats.length === 0 ? (
         <p className="text-sm text-gray-400">
           Todavía no hay eventos registrados. Cuando alguien reproduzca un video,
@@ -242,7 +285,7 @@ export default function AdminPage() {
       ) : (
         <div className="overflow-x-auto rounded-lg ring-1 ring-white/10">
           <table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="bg-[#1c212a] text-xs uppercase tracking-wide text-gray-400">
+            <thead className="bg-[#14171c] text-xs uppercase tracking-wide text-gray-400">
               <tr>
                 <th className="px-4 py-3">Video</th>
                 <th className="px-3 py-3 text-right" title="Clics para reproducir aquí">Reproducciones</th>
@@ -272,8 +315,56 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* Visitas (Vercel Web Analytics) */}
+      <h2 className="mb-4 mt-14 text-lg font-bold text-white">
+        Visitas <span className="text-[#0aeb8b]">(Vercel Web Analytics)</span>
+      </h2>
+      {!visits || !visits.configured ? (
+        <div className="glass backdrop-blur-md max-w-2xl rounded-2xl p-5 text-sm text-gray-300">
+          <p className="mb-3">
+            Vercel sí permite consultar las visitas por API, pero requiere una
+            configuración única desde tu cuenta:
+          </p>
+          <ol className="list-decimal space-y-2 pl-5 text-gray-400">
+            <li>
+              En el dashboard de Vercel: proyecto <b>platzi-live</b> → pestaña{" "}
+              <b>Analytics</b> → <b>Enable Web Analytics</b> (gratis en Hobby).
+            </li>
+            <li>
+              Crea un <b>Access Token</b> en Account Settings → Tokens.
+            </li>
+            <li>
+              Agrega en Settings → Environment Variables del proyecto:{" "}
+              <code className="rounded bg-white/10 px-1">ANALYTICS_API_TOKEN</code>,{" "}
+              <code className="rounded bg-white/10 px-1">ANALYTICS_PROJECT_ID</code> (prj_…) y{" "}
+              <code className="rounded bg-white/10 px-1">ANALYTICS_TEAM_ID</code> (team_…).
+            </li>
+          </ol>
+          <p className="mt-3 text-gray-500">
+            Al redesplegar, esta sección mostrará la gráfica de visitas
+            automáticamente. Mientras tanto, la actividad de arriba (medida por
+            la propia plataforma) ya refleja las visitas con reproductor.
+          </p>
+        </div>
+      ) : visits.error ? (
+        <p className="text-sm text-red-400">
+          Configurado, pero Vercel respondió con error: {visits.error}
+        </p>
+      ) : (
+        <div className="glass backdrop-blur-md mb-8 rounded-2xl p-5">
+          <h3 className="mb-4 text-sm font-semibold text-gray-200">
+            Vistas de página de los últimos 14 días
+          </h3>
+          <DailyChart
+            data={(visits.daily ?? []) as unknown as Record<string, string | number>[]}
+            series={VISIT_SERIES}
+            tooltipExtra={(row) => `Visitantes únicos: ${Number(row.visitors ?? 0)}`}
+          />
+        </div>
+      )}
+
       {/* Encuesta */}
-      <h2 className="mb-4 mt-12 text-lg font-bold text-white">
+      <h2 className="mb-4 mt-14 text-lg font-bold text-white">
         Encuesta <span className="text-[#0aeb8b]">de la plataforma</span>
       </h2>
       <p className="mb-3 text-sm text-gray-400">
@@ -282,7 +373,7 @@ export default function AdminPage() {
       {!poll || poll.total === 0 ? (
         <p className="text-sm text-gray-400">Todavía no hay votos.</p>
       ) : (
-        <div className="flex max-w-md flex-col gap-2 rounded-lg bg-[#1c212a] p-4 ring-1 ring-white/10">
+        <div className="flex max-w-md flex-col gap-2 rounded-lg bg-[#14171c] p-4 ring-1 ring-white/10">
           {POLL_LABELS.map(({ key, label }) => {
             const count = poll.counts[key] ?? 0;
             const pct = poll.total > 0 ? Math.round((count / poll.total) * 100) : 0;
