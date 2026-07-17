@@ -80,7 +80,7 @@ export default function Home() {
     <div className="flex min-h-screen flex-col lg:h-dvh">
       {/* Barra superior (glass) */}
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0e1013]/80 bg-gradient-to-b from-white/[0.06] to-transparent backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between gap-4 px-4 py-4 sm:px-8">
+        <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between gap-4 px-3 py-3 sm:px-8">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold text-white">
               Platzi <span className="text-[#0aeb8b]">Live</span>
