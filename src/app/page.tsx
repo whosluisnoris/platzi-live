@@ -194,8 +194,7 @@ export default function Home() {
       </main>
 
       <footer className="mx-auto w-full max-w-[1500px] px-4 pb-8 pt-4 text-center text-xs text-gray-600 sm:px-8">
-        Los videos se reproducen directamente desde YouTube. Este sitio solo
-        organiza los enlaces públicos del canal de Platzi.
+Hecho con cariño para la comunidad de Platzi. Por <a href="https://www.linkedin.com/in/luisnorisgarcia/">Luis Noris</a>.
       </footer>
 
       {/* Encuesta flotante (esquina inferior derecha) */}
