@@ -53,10 +53,37 @@ GROUP BY 1 ORDER BY 1 DESC;
 SELECT event_type, count(*) FROM watch_events GROUP BY 1;
 ```
 
+## Gráfica del panel de admin
+
+En `/admin` hay una gráfica de barras apiladas con la actividad de los últimos 14 días
+(reproducciones, cargas automáticas y aperturas en YouTube; sesiones únicas en el
+tooltip). Es SVG puro sin dependencias ([`src/components/DailyChart.tsx`](../src/components/DailyChart.tsx));
+la paleta categórica (verde `#09b06a`, azul `#4a90e0`, ámbar `#b87a16`) fue validada con
+el validador del sistema de diseño para la superficie oscura (banda de luminosidad,
+croma, separación para daltonismo y contraste). Incluye vista de tabla accesible.
+
+## Visitas desde Vercel Web Analytics
+
+Vercel **sí** expone las visitas por API (`/v1/query/web-analytics/visits/aggregate`),
+y el panel ya está preparado para mostrarlas. Requiere configuración única:
+
+1. Dashboard de Vercel → proyecto → **Analytics** → *Enable Web Analytics* (gratis en
+   Hobby). El paquete `@vercel/analytics` ya está integrado en el layout, así que la
+   recolección empieza en cuanto se habilita.
+2. Crear un **Access Token** (Account Settings → Tokens).
+3. Variables de entorno del proyecto: `ANALYTICS_API_TOKEN`, `ANALYTICS_PROJECT_ID`
+   (prj_…) y `ANALYTICS_TEAM_ID` (team_…).
+
+`GET /api/admin/visits` (protegido con la contraseña de admin) consulta la API de
+Vercel y la sección "Visitas" del panel muestra la gráfica; sin configurar, muestra
+esta misma guía.
+
 ## Encuesta de la plataforma
 
-Bajo el reproductor vive una encuesta ("¿Te gustaría que los lives de Platzi se vieran
-así?") con tres opciones: *Sí, me encanta* / *Puede mejorar* / *No me convence*.
+Encuesta flotante (esquina inferior derecha, se puede cerrar y reabrir con la pastilla
+"📊 Encuesta"): "¿Te gustaría que los lives de Platzi se vieran así?" con tres
+opciones: *Sí, me encanta* / *Puede mejorar* / *No me convence*. Se abre sola tras
+1.5 s solo si la persona no ha votado ni la ha cerrado antes.
 
 - Un voto por sesión anónima (la misma de la analítica); volver a votar lo **actualiza**
   vía `UNIQUE (question_id, session_id)` + upsert.

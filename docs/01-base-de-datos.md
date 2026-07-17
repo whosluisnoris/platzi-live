@@ -17,6 +17,7 @@ Proyecto Supabase: `platzi-live` (`ozkmxovmdognljtsvhrl`).
 | `is_live` | boolean | `true` mientras el live está activo |
 | `thumbnail_url` | text | Miniatura (`i.ytimg.com/vi/<id>/maxresdefault.jpg`) |
 | `enriched_at` | timestamptz | Cuándo se scrapearon los metadatos (`null` = pendiente de auto-reparación) |
+| `duration_seconds` | integer | Duración del video (`null` mientras el live sigue activo; se captura al terminar) |
 
 > ¿Por qué `live_started_at` y no `published_at`? Los lives se programan con antelación:
 > hay casos reales donde `published_at` es semanas anterior (o incluso posterior) al live.
@@ -76,3 +77,5 @@ Las escrituras siempre pasan por rutas API del servidor con `SUPABASE_SERVICE_RO
    cada video (solo `UPDATE` de columnas nuevas; título y demás campos intactos).
 3. **`add_feedback_votes`** (2026-07-17): tabla de la encuesta (aditiva), con RLS sin
    políticas públicas e índice por pregunta.
+4. **`add_duration_seconds`** (2026-07-17): columna de duración en `streams` (aditiva)
+   + backfill de las 23 filas scrapeando `lengthSeconds` de cada página watch.

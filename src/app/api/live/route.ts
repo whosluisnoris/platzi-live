@@ -22,6 +22,7 @@ interface StreamRow {
   is_live: boolean;
   thumbnail_url: string | null;
   enriched_at: string | null;
+  duration_seconds: number | null;
 }
 
 function rowToStream(row: StreamRow): LiveStream & { enrichedAt: string | null } {
@@ -37,6 +38,7 @@ function rowToStream(row: StreamRow): LiveStream & { enrichedAt: string | null }
     liveStartedAt: row.live_started_at,
     liveEndedAt: row.live_ended_at,
     isLive: row.is_live,
+    durationSeconds: row.duration_seconds,
     enrichedAt: row.enriched_at,
   };
 }
@@ -45,7 +47,7 @@ async function fetchStoredStreams() {
   const { data, error } = await getSupabase()
     .from("streams")
     .select(
-      "video_id, title, channel_title, published_at, live_started_at, live_ended_at, is_live, thumbnail_url, enriched_at"
+      "video_id, title, channel_title, published_at, live_started_at, live_ended_at, is_live, thumbnail_url, enriched_at, duration_seconds"
     )
     .order("live_started_at", { ascending: false, nullsFirst: false });
 
@@ -70,6 +72,7 @@ async function buildEnrichedRow(stream: LiveStream) {
       live_started_at: d.liveStartedAt ?? new Date().toISOString(),
       live_ended_at: d.isLiveNow ? null : d.liveEndedAt,
       is_live: d.isLiveNow,
+      duration_seconds: d.durationSeconds,
       enriched_at: new Date().toISOString(),
     };
   } catch {
@@ -102,6 +105,7 @@ export async function GET(request: NextRequest) {
         liveStartedAt: new Date().toISOString(),
         liveEndedAt: null,
         isLive: true,
+        durationSeconds: null,
       };
       const stored = await fetchStoredStreams();
       return NextResponse.json({ streams: [mock, ...stored] });
@@ -152,6 +156,23 @@ export async function GET(request: NextRequest) {
         .from("streams")
         .update({ is_live: false, live_ended_at: nowIso })
         .in("video_id", endedIds);
+      // Al terminar un live, la página watch ya publica su duración final
+      // y el fin exacto: se capturan de una vez (best-effort).
+      for (const id of endedIds.slice(0, MAX_ENRICH_PER_REQUEST)) {
+        try {
+          const d = await fetchVideoDetails(id);
+          await admin
+            .from("streams")
+            .update({
+              duration_seconds: d.durationSeconds,
+              live_ended_at: d.liveEndedAt ?? nowIso,
+              enriched_at: new Date().toISOString(),
+            })
+            .eq("video_id", id);
+        } catch {
+          // la auto-reparación lo completará después
+        }
+      }
     }
 
     const reliveIds = stored
@@ -165,9 +186,11 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // 3. Auto-reparación: filas cuyo enriquecimiento falló en su momento
+  // 3. Auto-reparación: filas sin enriquecer o grabaciones sin duración
   if (admin) {
-    const pending = stored.filter((s) => !s.enrichedAt).slice(0, 2);
+    const pending = stored
+      .filter((s) => !s.enrichedAt || (s.durationSeconds == null && !s.isLive))
+      .slice(0, 2);
     for (const s of pending) {
       try {
         const d = await fetchVideoDetails(s.videoId);
@@ -177,6 +200,7 @@ export async function GET(request: NextRequest) {
             published_at: d.publishedAt,
             live_started_at: d.liveStartedAt,
             live_ended_at: d.liveEndedAt,
+            duration_seconds: d.durationSeconds,
             enriched_at: new Date().toISOString(),
           })
           .eq("video_id", s.videoId);

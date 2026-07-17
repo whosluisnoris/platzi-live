@@ -13,4 +13,5 @@ export const LOFI_STREAM: LiveStream = {
   liveStartedAt: null,
   liveEndedAt: null,
   isLive: true,
+  durationSeconds: null,
 };

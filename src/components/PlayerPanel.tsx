@@ -2,7 +2,7 @@
 
 import type { LiveStream } from "@/lib/invidious";
 import { StatusBadge } from "./StatusBadge";
-import { formatDate, timeAgo } from "@/lib/dates";
+import { formatDate, formatDuration, timeAgo } from "@/lib/dates";
 import { trackEvent } from "@/lib/analytics";
 
 interface PlayerPanelProps {
@@ -16,6 +16,7 @@ export function PlayerPanel({ stream, autoplay }: PlayerPanelProps) {
   const dateIso = stream.liveStartedAt ?? stream.publishedAt;
   const relative = timeAgo(dateIso);
   const absolute = formatDate(dateIso);
+  const duration = formatDuration(stream.durationSeconds);
 
   return (
     <section aria-label="Reproductor">
@@ -30,7 +31,7 @@ export function PlayerPanel({ stream, autoplay }: PlayerPanelProps) {
         />
       </div>
 
-      <div className="mt-4 flex flex-col gap-2">
+      <div className="mt-5 flex flex-col gap-3">
         <h1 className="text-lg font-bold leading-snug text-white sm:text-xl">
           {stream.title}
         </h1>
@@ -44,6 +45,7 @@ export function PlayerPanel({ stream, autoplay }: PlayerPanelProps) {
                 <span>
                   Transmitido {relative}
                   {absolute && <span className="text-gray-500"> · {absolute}</span>}
+                  {duration && <span className="text-gray-500"> · {duration}</span>}
                 </span>
               )
             )}

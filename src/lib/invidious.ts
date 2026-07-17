@@ -9,6 +9,7 @@ export interface LiveStream {
   liveStartedAt: string | null;
   liveEndedAt: string | null;
   isLive: boolean;
+  durationSeconds: number | null;
 }
 
 // Metadatos de un video individual, extraídos de su página watch
@@ -17,6 +18,7 @@ export interface VideoDetails {
   liveStartedAt: string | null;
   liveEndedAt: string | null;
   isLiveNow: boolean;
+  durationSeconds: number | null;
 }
 
 const PLATZI_CHANNEL_ID = "UC55-mxUj5Nj3niXFReG44OQ";
@@ -76,6 +78,7 @@ function rendererToStream(v: VideoRenderer): LiveStream | null {
     liveStartedAt: null,
     liveEndedAt: null,
     isLive: true, // proviene del listado de lives activos del canal
+    durationSeconds: null,
   };
 }
 
@@ -145,6 +148,7 @@ async function fetchViaInvidious(): Promise<LiveStream[]> {
           liveStartedAt: null,
           liveEndedAt: null,
           isLive: true,
+          durationSeconds: null,
         }));
     } catch (err) {
       lastError = err;
@@ -182,10 +186,16 @@ export async function fetchVideoDetails(videoId: string): Promise<VideoDetails> 
   if (!res.ok) throw new Error(`YouTube watch page returned ${res.status}`);
   const html = await res.text();
 
+  const isLiveNow = firstMatch(html, /"isLiveNow":(true|false)/) === "true";
+  const lengthRaw = firstMatch(html, /"lengthSeconds":"(\d+)"/);
+  const length = lengthRaw ? parseInt(lengthRaw, 10) : null;
+
   return {
     publishedAt: firstMatch(html, /"publishDate":"([^"]+)"/),
     liveStartedAt: firstMatch(html, /"startTimestamp":"([^"]+)"/),
     liveEndedAt: firstMatch(html, /"endTimestamp":"([^"]+)"/),
-    isLiveNow: firstMatch(html, /"isLiveNow":(true|false)/) === "true",
+    isLiveNow,
+    // en un live activo lengthSeconds es 0: la duración real llega al terminar
+    durationSeconds: length && length > 0 && !isLiveNow ? length : null,
   };
 }

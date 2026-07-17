@@ -12,6 +12,7 @@ export interface StoredStream {
   is_live: boolean;
   thumbnail_url: string | null;
   enriched_at: string | null;
+  duration_seconds: number | null;
 }
 
 let _public: SupabaseClient | null = null;
