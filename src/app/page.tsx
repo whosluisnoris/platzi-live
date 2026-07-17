@@ -193,7 +193,7 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="mx-auto w-full max-w-[1500px] px-4 pb-8 pt-4 text-center text-xs text-gray-600 sm:px-8">
+      <footer className="mx-auto w-full max-w-[1500px] px-4 pb-8 pt-4 text-center text-xs text-gray-600 sm:px-4">
         Los videos se reproducen directamente desde YouTube. Este sitio solo
         organiza los enlaces públicos del canal de Platzi.
       </footer>
