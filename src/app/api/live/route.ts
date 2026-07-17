@@ -1,33 +1,90 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchPlatziLiveStreams } from "@/lib/invidious";
+import { fetchPlatziLiveStreams, fetchVideoDetails } from "@/lib/invidious";
 import { getSupabase, getSupabaseAdmin } from "@/lib/supabase";
 import type { LiveStream } from "@/lib/invidious";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 const VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
 const IS_DEV = process.env.NODE_ENV !== "production";
+// Máximo de páginas watch consultadas por request (detección + auto-reparación)
+const MAX_ENRICH_PER_REQUEST = 3;
 
-async function fetchStoredStreams(): Promise<LiveStream[]> {
-  const { data, error } = await getSupabase()
-    .from("streams")
-    .select("video_id, title, channel_title")
-    .order("added_at", { ascending: false });
+interface StreamRow {
+  video_id: string;
+  title: string;
+  channel_title: string;
+  published_at: string | null;
+  live_started_at: string | null;
+  live_ended_at: string | null;
+  is_live: boolean;
+  thumbnail_url: string | null;
+  enriched_at: string | null;
+}
 
-  if (error || !data) return [];
-
-  return data.map((row) => ({
+function rowToStream(row: StreamRow): LiveStream & { enrichedAt: string | null } {
+  return {
     videoId: row.video_id,
     title: row.title,
-    thumbnailUrl: `https://i.ytimg.com/vi/${row.video_id}/maxresdefault.jpg`,
+    thumbnailUrl:
+      row.thumbnail_url ?? `https://i.ytimg.com/vi/${row.video_id}/maxresdefault.jpg`,
     channelTitle: row.channel_title,
     watchUrl: `https://www.youtube.com/watch?v=${row.video_id}`,
     embedUrl: `https://www.youtube.com/embed/${row.video_id}?autoplay=1&rel=0`,
-  }));
+    publishedAt: row.published_at,
+    liveStartedAt: row.live_started_at,
+    liveEndedAt: row.live_ended_at,
+    isLive: row.is_live,
+    enrichedAt: row.enriched_at,
+  };
+}
+
+async function fetchStoredStreams() {
+  const { data, error } = await getSupabase()
+    .from("streams")
+    .select(
+      "video_id, title, channel_title, published_at, live_started_at, live_ended_at, is_live, thumbnail_url, enriched_at"
+    )
+    .order("live_started_at", { ascending: false, nullsFirst: false });
+
+  if (error || !data) return [];
+  return (data as StreamRow[]).map(rowToStream);
+}
+
+// Fila lista para upsert con los metadatos scrapeados del video
+async function buildEnrichedRow(stream: LiveStream) {
+  const base = {
+    video_id: stream.videoId,
+    title: stream.title,
+    channel_title: stream.channelTitle,
+    is_live: true,
+    thumbnail_url: `https://i.ytimg.com/vi/${stream.videoId}/maxresdefault.jpg`,
+  };
+  try {
+    const d = await fetchVideoDetails(stream.videoId);
+    return {
+      ...base,
+      published_at: d.publishedAt,
+      live_started_at: d.liveStartedAt ?? new Date().toISOString(),
+      live_ended_at: d.isLiveNow ? null : d.liveEndedAt,
+      is_live: d.isLiveNow,
+      enriched_at: new Date().toISOString(),
+    };
+  } catch {
+    // Sin metadatos por ahora: enriched_at queda null y la auto-reparación
+    // lo completará en un request posterior.
+    return {
+      ...base,
+      live_started_at: new Date().toISOString(),
+      enriched_at: null,
+    };
+  }
 }
 
 export async function GET(request: NextRequest) {
-  // ?test=VIDEO_ID — dev-only shortcut to preview the UI with a known video
+  // ?test=VIDEO_ID — atajo solo-dev para previsualizar la UI como si hubiera un live
   if (IS_DEV) {
     const testId = request.nextUrl.searchParams.get("test");
     if (testId) {
@@ -41,39 +98,104 @@ export async function GET(request: NextRequest) {
         channelTitle: "Platzi",
         watchUrl: `https://www.youtube.com/watch?v=${testId}`,
         embedUrl: `https://www.youtube.com/embed/${testId}?autoplay=1&rel=0`,
+        publishedAt: new Date().toISOString(),
+        liveStartedAt: new Date().toISOString(),
+        liveEndedAt: null,
+        isLive: true,
       };
-      return NextResponse.json({ streams: [mock] });
+      const stored = await fetchStoredStreams();
+      return NextResponse.json({ streams: [mock, ...stored] });
     }
   }
 
-  // Fetch both sources in parallel
-  const [autoStreams, storedStreams] = await Promise.allSettled([
+  // Ambas fuentes en paralelo: lives activos del canal + histórico en Supabase
+  const [autoRes, storedRes] = await Promise.allSettled([
     fetchPlatziLiveStreams(),
     fetchStoredStreams(),
   ]);
 
-  const auto = autoStreams.status === "fulfilled" ? autoStreams.value : [];
-  const stored = storedStreams.status === "fulfilled" ? storedStreams.value : [];
+  const scrapeOk = autoRes.status === "fulfilled";
+  const auto = scrapeOk ? autoRes.value : [];
+  const stored = storedRes.status === "fulfilled" ? storedRes.value : [];
 
-  // Auto-save any newly detected live streams to Supabase so they persist
-  // after the live ends (visitors can still find and watch the recording)
+  const liveIds = new Set(auto.map((s) => s.videoId));
   const storedIds = new Set(stored.map((s) => s.videoId));
-  const newStreams = auto.filter((s) => !storedIds.has(s.videoId));
-  if (newStreams.length > 0) {
-    await getSupabaseAdmin()
-      .from("streams")
-      .upsert(
-        newStreams.map((s) => ({
-          video_id: s.videoId,
-          title: s.title,
-          channel_title: s.channelTitle,
-        })),
-        { onConflict: "video_id" }
-      );
+
+  // Las escrituras son best-effort: sin service key (p. ej. en local) la
+  // lectura sigue funcionando y solo se omite el guardado.
+  let admin: SupabaseClient | null = null;
+  try {
+    admin = getSupabaseAdmin();
+  } catch {
+    admin = null;
   }
 
-  // Merge: stored first, then any auto-detected not yet in Supabase
-  const merged = [...stored, ...newStreams];
+  // 1. Lives recién detectados → guardar con fechas (el live sigue visible
+  //    después de terminar; los visitantes pueden ver la grabación)
+  const newLive = auto.filter((s) => !storedIds.has(s.videoId));
+  if (admin && newLive.length > 0) {
+    const rows = await Promise.all(
+      newLive.slice(0, MAX_ENRICH_PER_REQUEST).map(buildEnrichedRow)
+    );
+    await admin.from("streams").upsert(rows, { onConflict: "video_id" });
+  }
 
-  return NextResponse.json({ streams: merged });
+  // 2. Transiciones de estado — solo si el scrape del canal funcionó, para no
+  //    marcar lives como terminados por un fallo transitorio de red.
+  if (admin && scrapeOk) {
+    const nowIso = new Date().toISOString();
+    const endedIds = stored
+      .filter((s) => s.isLive && !liveIds.has(s.videoId))
+      .map((s) => s.videoId);
+    if (endedIds.length > 0) {
+      await admin
+        .from("streams")
+        .update({ is_live: false, live_ended_at: nowIso })
+        .in("video_id", endedIds);
+    }
+
+    const reliveIds = stored
+      .filter((s) => !s.isLive && liveIds.has(s.videoId))
+      .map((s) => s.videoId);
+    if (reliveIds.length > 0) {
+      await admin
+        .from("streams")
+        .update({ is_live: true, live_ended_at: null })
+        .in("video_id", reliveIds);
+    }
+  }
+
+  // 3. Auto-reparación: filas cuyo enriquecimiento falló en su momento
+  if (admin) {
+    const pending = stored.filter((s) => !s.enrichedAt).slice(0, 2);
+    for (const s of pending) {
+      try {
+        const d = await fetchVideoDetails(s.videoId);
+        await admin
+          .from("streams")
+          .update({
+            published_at: d.publishedAt,
+            live_started_at: d.liveStartedAt,
+            live_ended_at: d.liveEndedAt,
+            enriched_at: new Date().toISOString(),
+          })
+          .eq("video_id", s.videoId);
+      } catch {
+        // Se reintentará en otro request
+      }
+    }
+  }
+
+  // Respuesta: histórico con is_live refrescado + lives nuevos.
+  // enrichedAt es interno: undefined hace que JSON lo omita.
+  const streams = [
+    ...newLive,
+    ...stored.map((s) => ({
+      ...s,
+      enrichedAt: undefined,
+      isLive: scrapeOk ? liveIds.has(s.videoId) : s.isLive,
+    })),
+  ];
+
+  return NextResponse.json({ streams });
 }

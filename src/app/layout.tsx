@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Platzi Live",
-  description: "Watch Platzi live streams on YouTube",
+  title: "Platzi Live — todos los lives en un solo lugar",
+  description:
+    "Mira los Platzi Lives en vivo, explora el histórico de transmisiones y concéntrate con la radio lofi 24/7.",
 };
 
 export default function RootLayout({
@@ -24,10 +25,10 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#0d0d0d] text-white">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#13161c] text-white">{children}</body>
     </html>
   );
 }

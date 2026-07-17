@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  --platzi-green: #98ca3f;
-  --platzi-green-dark: #7aaa28;
-  --platzi-bg: #0d0d0d;
-  --platzi-surface: #1a1a1a;
+  --platzi-green: #0aeb8b;
+  --platzi-green-dark: #08c975;
+  --platzi-bg: #13161c;
+  --platzi-surface: #1c212a;
   --platzi-border: rgba(152, 202, 63, 0.15);
 }
 

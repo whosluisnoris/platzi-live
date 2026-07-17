@@ -6,6 +6,12 @@ export interface StoredStream {
   title: string;
   channel_title: string;
   added_at: string;
+  published_at: string | null;
+  live_started_at: string | null;
+  live_ended_at: string | null;
+  is_live: boolean;
+  thumbnail_url: string | null;
+  enriched_at: string | null;
 }
 
 let _public: SupabaseClient | null = null;

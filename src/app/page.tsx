@@ -1,62 +1,205 @@
 "use client";
 
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveStreams } from "@/hooks/useLiveStreams";
-import { LiveCard } from "@/components/LiveCard";
-import { EmptyState } from "@/components/EmptyState";
+import { PlayerPanel } from "@/components/PlayerPanel";
+import { VideoListItem } from "@/components/VideoListItem";
+import { FeedbackPoll } from "@/components/FeedbackPoll";
+import { LOFI_STREAM } from "@/lib/constants";
+import { trackEvent } from "@/lib/analytics";
+import type { LiveStream } from "@/lib/invidious";
+
+type SortOrder = "desc" | "asc";
+
+// Fecha efectiva para ordenar: inicio del live, o publicación como respaldo
+const sortKey = (s: LiveStream) => s.liveStartedAt ?? s.publishedAt ?? "";
 
 export default function Home() {
-  const { streams, loading, error, lastChecked, refresh } = useLiveStreams();
+  const { streams, loading, error, refresh } = useLiveStreams();
+  // Video elegido explícitamente por el usuario (con clic); null = automático
+  const [chosen, setChosen] = useState<LiveStream | null>(null);
+  const [order, setOrder] = useState<SortOrder>("desc");
+  // ?v= leído una sola vez; en el servidor no existe window y queda null
+  const [requestedId] = useState(() =>
+    typeof window === "undefined"
+      ? null
+      : new URLSearchParams(window.location.search).get("v")
+  );
+
+  const liveNow = useMemo(() => streams.filter((s) => s.isLive), [streams]);
+
+  const past = useMemo(() => {
+    const rest = streams.filter((s) => !s.isLive);
+    return [...rest].sort((a, b) =>
+      order === "desc"
+        ? sortKey(b).localeCompare(sortKey(a))
+        : sortKey(a).localeCompare(sortKey(b))
+    );
+  }, [streams, order]);
+
+  // Selección derivada (sin estado extra): clic del usuario → deep-link ?v= →
+  // Platzi live activo → radio lofi. Mientras no haya clic, un live que
+  // empiece toma el reproductor automáticamente.
+  const displayed = useMemo(() => {
+    if (chosen) return chosen;
+    if (loading && streams.length === 0) return null; // primera carga
+    if (requestedId) {
+      if (requestedId === LOFI_STREAM.videoId) return LOFI_STREAM;
+      const match = streams.find((s) => s.videoId === requestedId);
+      if (match) return match;
+    }
+    return liveNow[0] ?? LOFI_STREAM;
+  }, [chosen, loading, streams, liveNow, requestedId]);
+
+  // Registra el video servido automáticamente (los clics se registran aparte)
+  const lastTracked = useRef<string | null>(null);
+  useEffect(() => {
+    if (!displayed || lastTracked.current === displayed.videoId) return;
+    const isFirst = lastTracked.current === null;
+    lastTracked.current = displayed.videoId;
+    if (chosen) return;
+    trackEvent(
+      displayed.videoId,
+      isFirst && requestedId === displayed.videoId ? "play" : "autoplay_default"
+    );
+  }, [displayed, chosen, requestedId]);
+
+  function handleSelect(stream: LiveStream) {
+    setChosen(stream);
+    trackEvent(stream.videoId, "play");
+    // deep-link compartible sin recargar
+    const url = new URL(window.location.href);
+    url.searchParams.set("v", stream.videoId);
+    window.history.replaceState(null, "", url);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
-      {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white">
-            Platzi <span className="text-[#98ca3f]">Live</span>
-          </h1>
-          <p className="mt-1 text-sm text-gray-400">
-            Live streams from the Platzi YouTube channel
-          </p>
+    // En lg+ la página ocupa exactamente el viewport: el reproductor queda fijo
+    // y cada columna hace scroll por su cuenta solo si su contenido no cabe.
+    <div className="flex min-h-screen flex-col lg:h-dvh">
+      {/* Barra superior */}
+      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#13161c]/95 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between gap-4 px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold text-white">
+              Platzi <span className="text-[#0aeb8b]">Live</span>
+            </h1>
+            {liveNow.length > 0 && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600/15 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-red-400 ring-1 ring-red-600/40">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
+                En vivo
+              </span>
+            )}
+          </div>
+          <button
+            onClick={refresh}
+            disabled={loading}
+            className="rounded-lg border border-[#0aeb8b]/30 bg-transparent px-4 py-2 text-sm font-medium text-[#0aeb8b] transition hover:bg-[#0aeb8b]/10 disabled:opacity-50"
+          >
+            {loading ? "Buscando…" : "Actualizar"}
+          </button>
         </div>
-        <button
-          onClick={refresh}
-          disabled={loading}
-          className="rounded-lg border border-[#98ca3f]/30 bg-[#1a1a1a] px-4 py-2 text-sm font-medium text-[#98ca3f] transition hover:bg-[#98ca3f]/10 disabled:opacity-50"
-        >
-          {loading ? "Checking…" : "Refresh"}
-        </button>
-      </div>
+      </header>
 
-      {/* Error */}
-      {error && (
-        <div className="mb-6 rounded-lg bg-red-900/30 px-4 py-3 text-sm text-red-300 ring-1 ring-red-700/50">
-          Error: {error}
+      <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-6 sm:px-6 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden">
+        {error && (
+          <div className="mb-4 rounded-lg bg-red-900/30 px-4 py-3 text-sm text-red-300 ring-1 ring-red-700/50">
+            No se pudo comprobar el canal ahora mismo: {error}. Mostrando el
+            histórico guardado.
+          </div>
+        )}
+
+        <div className="grid gap-8 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_430px]">
+          {/* Reproductor principal: fijo; solo scrollea si su contenido no cabe */}
+          <div className="lg:min-h-0 lg:overflow-y-auto lg:pr-1 lg:[scrollbar-color:#2a303b_transparent] lg:[scrollbar-width:thin]">
+            {displayed ? (
+              <PlayerPanel stream={displayed} autoplay={chosen !== null} />
+            ) : (
+              <div className="aspect-video w-full animate-pulse rounded-xl bg-[#1c212a]" />
+            )}
+            <div className="mt-6">
+              <FeedbackPoll />
+            </div>
+          </div>
+
+          {/* Lista lateral: panel con tono propio que marca la zona con scroll */}
+          <aside className="flex flex-col gap-8 rounded-2xl bg-white/[0.03] p-3 ring-1 ring-white/5 sm:p-4 lg:min-h-0 lg:overflow-y-auto lg:[scrollbar-color:#2a303b_transparent] lg:[scrollbar-width:thin]">
+            <section aria-label="En vivo ahora">
+              <h2 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-gray-300">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+                En vivo ahora
+              </h2>
+              <div className="flex flex-col gap-2">
+                {liveNow.map((s) => (
+                  <VideoListItem
+                    key={s.videoId}
+                    stream={s}
+                    active={displayed?.videoId === s.videoId}
+                    onSelect={handleSelect}
+                    badge="EN VIVO"
+                  />
+                ))}
+                <VideoListItem
+                  stream={LOFI_STREAM}
+                  active={displayed?.videoId === LOFI_STREAM.videoId}
+                  onSelect={handleSelect}
+                  badge="24/7"
+                />
+              </div>
+            </section>
+
+            <section aria-label="Lives anteriores">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h2 className="text-sm font-bold uppercase tracking-wide text-gray-300">
+                  Lives anteriores
+                </h2>
+                <select
+                  value={order}
+                  onChange={(e) => setOrder(e.target.value as SortOrder)}
+                  aria-label="Ordenar lives"
+                  className="rounded-lg bg-[#1c212a] px-3 py-1.5 text-xs text-gray-300 ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
+                >
+                  <option value="desc">Más recientes primero</option>
+                  <option value="asc">Más antiguos primero</option>
+                </select>
+              </div>
+
+              {loading && streams.length === 0 ? (
+                <div className="flex flex-col gap-2">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div
+                      key={i}
+                      className="h-24 animate-pulse rounded-xl bg-[#1c212a]"
+                    />
+                  ))}
+                </div>
+              ) : past.length === 0 ? (
+                <p className="text-sm text-gray-500">
+                  Aún no hay lives guardados. Cuando Platzi transmita, aparecerá
+                  aquí automáticamente.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {past.map((s) => (
+                    <VideoListItem
+                      key={s.videoId}
+                      stream={s}
+                      active={displayed?.videoId === s.videoId}
+                      onSelect={handleSelect}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          </aside>
         </div>
-      )}
+      </main>
 
-      {/* Loading skeleton */}
-      {loading && streams.length === 0 && (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2].map((i) => (
-            <div key={i} className="h-72 animate-pulse rounded-2xl bg-[#1a1a1a]" />
-          ))}
-        </div>
-      )}
-
-      {/* Stream cards */}
-      {!loading && streams.length > 0 && (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {streams.map((stream) => (
-            <LiveCard key={stream.videoId} stream={stream} />
-          ))}
-        </div>
-      )}
-
-      {/* Empty state */}
-      {!loading && streams.length === 0 && !error && (
-        <EmptyState lastChecked={lastChecked} onRefresh={refresh} />
-      )}
-    </main>
+      <footer className="mx-auto w-full max-w-[1500px] px-4 pb-8 pt-4 text-center text-xs text-gray-600 sm:px-6">
+        Los videos se reproducen directamente desde YouTube. Este sitio solo
+        organiza los enlaces públicos del canal de Platzi.
+      </footer>
+    </div>
   );
 }
