@@ -74,7 +74,9 @@ export default function Home() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    // En lg+ la página ocupa exactamente el viewport: el reproductor queda fijo
+    // y cada columna hace scroll por su cuenta solo si su contenido no cabe.
+    <div className="flex min-h-screen flex-col lg:h-dvh">
       {/* Barra superior */}
       <header className="sticky top-0 z-40 border-b border-white/5 bg-[#13161c]/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between gap-4 px-4 py-3 sm:px-6">
@@ -99,7 +101,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-6 sm:px-6">
+      <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-6 sm:px-6 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden">
         {error && (
           <div className="mb-4 rounded-lg bg-red-900/30 px-4 py-3 text-sm text-red-300 ring-1 ring-red-700/50">
             No se pudo comprobar el canal ahora mismo: {error}. Mostrando el
@@ -107,9 +109,9 @@ export default function Home() {
           </div>
         )}
 
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[minmax(0,1fr)_430px]">
-          {/* Reproductor principal */}
-          <div>
+        <div className="grid gap-8 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_430px]">
+          {/* Reproductor principal: fijo; solo scrollea si su contenido no cabe */}
+          <div className="lg:min-h-0 lg:overflow-y-auto lg:pr-1 lg:[scrollbar-color:#2a303b_transparent] lg:[scrollbar-width:thin]">
             {displayed ? (
               <PlayerPanel stream={displayed} autoplay={chosen !== null} />
             ) : (
@@ -117,8 +119,8 @@ export default function Home() {
             )}
           </div>
 
-          {/* Lista lateral */}
-          <aside className="flex flex-col gap-8">
+          {/* Lista lateral: con scroll propio */}
+          <aside className="flex flex-col gap-8 lg:min-h-0 lg:overflow-y-auto lg:pr-1 lg:[scrollbar-color:#2a303b_transparent] lg:[scrollbar-width:thin]">
             <section aria-label="En vivo ahora">
               <h2 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-gray-300">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
