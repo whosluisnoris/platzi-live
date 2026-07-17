@@ -80,7 +80,7 @@ export default function Home() {
     <div className="flex min-h-screen flex-col lg:h-dvh">
       {/* Barra superior (glass) */}
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0e1013]/80 bg-gradient-to-b from-white/[0.06] to-transparent backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between gap-4 px-4 py-4 sm:px-8">
+        <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between gap-4 px-3 py-3 sm:px-8">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold text-white">
               Platzi <span className="text-[#0aeb8b]">Live</span>
@@ -193,8 +193,8 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="mx-auto w-full max-w-[1500px] px-4 pb-8 pt-4 text-center text-xs text-gray-600 sm:px-4">
-Hecho con cariño para la comunidad de Platzi 💚. Por <a href="https://www.linkedin.com/in/luisnorisgarcia/">Luis Noris</a>.
+      <footer className="mx-auto w-full max-w-[1500px] mb-2 pb-4 px-4 text-center text-xs text-gray-600 sm:px-4">
+      Hecho con cariño para la comunidad de Platzi 💚. Por <a href="https://www.linkedin.com/in/luisnorisgarcia/">Luis Noris</a>
       </footer>
 
       {/* Encuesta flotante (esquina inferior derecha) */}
