@@ -1,9 +1,20 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import type { LiveStream } from "@/lib/invidious";
+import { formatDate, timeAgo } from "@/lib/dates";
 
 const VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
+
+interface VideoStats {
+  videoId: string;
+  title: string;
+  plays: number;
+  autoplays: number;
+  youtubeOpens: number;
+  uniqueSessions: number;
+  lastActivity: string | null;
+}
 
 function extractVideoId(input: string): string | null {
   try {
@@ -19,6 +30,7 @@ export default function AdminPage() {
   const [secret, setSecret] = useState("");
   const [authed, setAuthed] = useState(false);
   const [streams, setStreams] = useState<LiveStream[]>([]);
+  const [stats, setStats] = useState<VideoStats[]>([]);
   const [input, setInput] = useState("");
   const [status, setStatus] = useState<{ text: string; ok: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -31,29 +43,32 @@ export default function AdminPage() {
     setStreams(data.streams ?? []);
   }, []);
 
-  useEffect(() => {
-    if (authed) loadStreams();
-  }, [authed, loadStreams]);
+  const loadStats = useCallback(async () => {
+    const res = await fetch("/api/admin/stats", { headers });
+    if (!res.ok) return false;
+    const data = await res.json();
+    setStats(data.stats ?? []);
+    return true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secret]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    const res = await fetch("/api/admin/streams", {
-      method: "DELETE",
-      headers,
-      body: JSON.stringify({ videoId: "________no-op" }),
-    });
-    if (res.status === 401) {
-      setStatus({ text: "Wrong password", ok: false });
-    } else {
-      setAuthed(true);
-      setStatus(null);
+    // La ruta de estadísticas sirve como verificación de contraseña (solo lectura)
+    const ok = await loadStats();
+    if (!ok) {
+      setStatus({ text: "Contraseña incorrecta", ok: false });
+      return;
     }
+    setAuthed(true);
+    setStatus(null);
+    await loadStreams();
   }
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     const videoId = extractVideoId(input.trim());
-    if (!videoId) { setStatus({ text: "Invalid YouTube URL or video ID", ok: false }); return; }
+    if (!videoId) { setStatus({ text: "URL de YouTube o ID de video no válido", ok: false }); return; }
 
     setLoading(true);
     setStatus(null);
@@ -72,23 +87,27 @@ export default function AdminPage() {
 
     if (res.ok) {
       setInput("");
-      setStatus({ text: "Stream added ✓", ok: true });
+      setStatus({ text: "Video agregado ✓", ok: true });
       await loadStreams();
     } else {
       const data = await res.json();
-      setStatus({ text: data.error ?? "Failed to add stream", ok: false });
+      setStatus({ text: data.error ?? "No se pudo agregar el video", ok: false });
     }
     setLoading(false);
   }
 
   async function handleRemove(videoId: string) {
+    const confirmed = window.confirm(
+      "¿Seguro que quieres quitar este video de la plataforma? Esta acción no se puede deshacer."
+    );
+    if (!confirmed) return;
     await fetch("/api/admin/streams", {
       method: "DELETE",
       headers,
       body: JSON.stringify({ videoId }),
     });
     await loadStreams();
-    setStatus({ text: "Stream removed", ok: true });
+    setStatus({ text: "Video eliminado", ok: true });
   }
 
   if (!authed) {
@@ -99,13 +118,13 @@ export default function AdminPage() {
             <h1 className="text-2xl font-bold text-white">
               Platzi <span className="text-[#98ca3f]">Admin</span>
             </h1>
-            <p className="mt-1 text-sm text-gray-400">Manage live stream links</p>
+            <p className="mt-1 text-sm text-gray-400">Gestiona los lives guardados</p>
           </div>
           <input
             type="password"
             value={secret}
             onChange={(e) => setSecret(e.target.value)}
-            placeholder="Admin password"
+            placeholder="Contraseña de administrador"
             className="rounded-lg bg-[#1a1a1a] px-4 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#98ca3f]/50"
           />
           {status && <p className="text-sm text-red-400">{status.text}</p>}
@@ -113,7 +132,7 @@ export default function AdminPage() {
             type="submit"
             className="rounded-lg bg-[#98ca3f] py-2 text-sm font-semibold text-[#0d0d0d] hover:bg-[#aad44f] transition"
           >
-            Login
+            Entrar
           </button>
         </form>
       </main>
@@ -121,21 +140,21 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-10">
+    <main className="mx-auto w-full max-w-4xl px-4 py-10">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">
           Platzi <span className="text-[#98ca3f]">Admin</span>
         </h1>
-        <p className="mt-1 text-sm text-gray-400">Add or remove live stream links</p>
+        <p className="mt-1 text-sm text-gray-400">Agrega o quita lives y revisa las estadísticas</p>
       </div>
 
-      {/* Add form */}
+      {/* Formulario para agregar */}
       <form onSubmit={handleAdd} className="mb-6 flex gap-2">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Paste YouTube URL or video ID…"
+          placeholder="Pega una URL de YouTube o un ID de video…"
           className="flex-1 rounded-lg bg-[#1a1a1a] px-4 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#98ca3f]/50"
         />
         <button
@@ -143,7 +162,7 @@ export default function AdminPage() {
           disabled={loading || !input.trim()}
           className="rounded-lg bg-[#98ca3f] px-5 py-2 text-sm font-semibold text-[#0d0d0d] hover:bg-[#aad44f] disabled:opacity-50 transition"
         >
-          {loading ? "Adding…" : "Add"}
+          {loading ? "Agregando…" : "Agregar"}
         </button>
       </form>
 
@@ -153,9 +172,9 @@ export default function AdminPage() {
         </p>
       )}
 
-      {/* Stream list */}
+      {/* Lista de videos guardados */}
       {streams.length === 0 ? (
-        <p className="text-sm text-gray-400">No streams saved.</p>
+        <p className="text-sm text-gray-400">No hay videos guardados.</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {streams.map((s) => (
@@ -163,19 +182,77 @@ export default function AdminPage() {
               key={s.videoId}
               className="flex items-center justify-between rounded-lg bg-[#1a1a1a] px-4 py-3 ring-1 ring-[#98ca3f]/20"
             >
-              <div>
-                <p className="text-sm font-medium text-white">{s.title}</p>
-                <p className="text-xs text-gray-400">{s.videoId}</p>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-white">{s.title}</p>
+                <p className="text-xs text-gray-400">
+                  {s.videoId}
+                  {(s.liveStartedAt ?? s.publishedAt) && (
+                    <span className="text-gray-500">
+                      {" · "}{formatDate(s.liveStartedAt ?? s.publishedAt)}
+                    </span>
+                  )}
+                </p>
               </div>
               <button
                 onClick={() => handleRemove(s.videoId)}
-                className="ml-4 rounded-lg border border-red-800/50 px-3 py-1.5 text-xs text-red-400 hover:bg-red-900/30 transition"
+                className="ml-4 shrink-0 rounded-lg border border-red-800/50 px-3 py-1.5 text-xs text-red-400 hover:bg-red-900/30 transition"
               >
-                Remove
+                Quitar
               </button>
             </li>
           ))}
         </ul>
+      )}
+
+      {/* Estadísticas */}
+      <div className="mb-4 mt-12 flex items-center justify-between">
+        <h2 className="text-lg font-bold text-white">
+          Estadísticas <span className="text-[#98ca3f]">de reproducción</span>
+        </h2>
+        <button
+          onClick={loadStats}
+          className="rounded-lg border border-[#98ca3f]/30 px-3 py-1.5 text-xs font-medium text-[#98ca3f] hover:bg-[#98ca3f]/10 transition"
+        >
+          Actualizar
+        </button>
+      </div>
+
+      {stats.length === 0 ? (
+        <p className="text-sm text-gray-400">
+          Todavía no hay eventos registrados. Cuando alguien reproduzca un video,
+          aparecerá aquí.
+        </p>
+      ) : (
+        <div className="overflow-x-auto rounded-lg ring-1 ring-white/10">
+          <table className="w-full min-w-[640px] text-left text-sm">
+            <thead className="bg-[#1a1a1a] text-xs uppercase tracking-wide text-gray-400">
+              <tr>
+                <th className="px-4 py-3">Video</th>
+                <th className="px-3 py-3 text-right" title="Clics para reproducir aquí">Reproducciones</th>
+                <th className="px-3 py-3 text-right" title="Cargado automáticamente al entrar">Autom.</th>
+                <th className="px-3 py-3 text-right" title="Aperturas en YouTube">YouTube</th>
+                <th className="px-3 py-3 text-right" title="Personas únicas aproximadas">Sesiones</th>
+                <th className="px-4 py-3 text-right">Última actividad</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {stats.map((r) => (
+                <tr key={r.videoId} className="hover:bg-white/5">
+                  <td className="max-w-[280px] truncate px-4 py-3 text-white" title={r.title}>
+                    {r.title}
+                  </td>
+                  <td className="px-3 py-3 text-right font-semibold text-[#98ca3f]">{r.plays}</td>
+                  <td className="px-3 py-3 text-right text-gray-300">{r.autoplays}</td>
+                  <td className="px-3 py-3 text-right text-gray-300">{r.youtubeOpens}</td>
+                  <td className="px-3 py-3 text-right text-gray-300">{r.uniqueSessions}</td>
+                  <td className="px-4 py-3 text-right text-xs text-gray-400">
+                    {r.lastActivity ? timeAgo(r.lastActivity) : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </main>
   );

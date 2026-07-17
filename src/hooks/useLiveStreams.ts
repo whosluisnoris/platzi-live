@@ -28,7 +28,7 @@ export function useLiveStreams() {
       const url = testId ? `/api/live?test=${encodeURIComponent(testId)}` : "/api/live";
       const res = await fetch(url);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed to fetch");
+      if (!res.ok) throw new Error(data.error ?? "No se pudo consultar el servidor");
       setState({
         streams: data.streams,
         loading: false,
@@ -39,7 +39,7 @@ export function useLiveStreams() {
       setState((prev) => ({
         ...prev,
         loading: false,
-        error: err instanceof Error ? err.message : "Unknown error",
+        error: err instanceof Error ? err.message : "Error desconocido",
         lastChecked: new Date(),
       }));
     }

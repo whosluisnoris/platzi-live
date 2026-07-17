@@ -5,6 +5,18 @@ export interface LiveStream {
   channelTitle: string;
   watchUrl: string;
   embedUrl: string;
+  publishedAt: string | null;
+  liveStartedAt: string | null;
+  liveEndedAt: string | null;
+  isLive: boolean;
+}
+
+// Metadatos de un video individual, extraídos de su página watch
+export interface VideoDetails {
+  publishedAt: string | null;
+  liveStartedAt: string | null;
+  liveEndedAt: string | null;
+  isLiveNow: boolean;
 }
 
 const PLATZI_CHANNEL_ID = "UC55-mxUj5Nj3niXFReG44OQ";
@@ -60,6 +72,10 @@ function rendererToStream(v: VideoRenderer): LiveStream | null {
     channelTitle,
     watchUrl: `https://www.youtube.com/watch?v=${videoId}`,
     embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`,
+    publishedAt: null,
+    liveStartedAt: null,
+    liveEndedAt: null,
+    isLive: true, // proviene del listado de lives activos del canal
   };
 }
 
@@ -125,6 +141,10 @@ async function fetchViaInvidious(): Promise<LiveStream[]> {
           channelTitle: v.author ?? "Platzi",
           watchUrl: `https://www.youtube.com/watch?v=${v.videoId}`,
           embedUrl: `https://www.youtube.com/embed/${v.videoId}?autoplay=1&rel=0`,
+          publishedAt: null,
+          liveStartedAt: null,
+          liveEndedAt: null,
+          isLive: true,
         }));
     } catch (err) {
       lastError = err;
@@ -143,4 +163,29 @@ export async function fetchPlatziLiveStreams(): Promise<LiveStream[]> {
     // Fallback: Invidious API instances
     return fetchViaInvidious();
   }
+}
+
+// ── Metadatos por video (fechas exactas, sin API de Google) ──────────────────
+// La página watch incrusta ytInitialPlayerResponse con publishDate y
+// liveBroadcastDetails{startTimestamp,endTimestamp}; con eso basta un regex.
+
+function firstMatch(html: string, re: RegExp): string | null {
+  const m = html.match(re);
+  return m ? m[1] : null;
+}
+
+export async function fetchVideoDetails(videoId: string): Promise<VideoDetails> {
+  const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+    headers: { "User-Agent": BROWSER_UA, "Accept-Language": "en-US,en;q=0.9" },
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!res.ok) throw new Error(`YouTube watch page returned ${res.status}`);
+  const html = await res.text();
+
+  return {
+    publishedAt: firstMatch(html, /"publishDate":"([^"]+)"/),
+    liveStartedAt: firstMatch(html, /"startTimestamp":"([^"]+)"/),
+    liveEndedAt: firstMatch(html, /"endTimestamp":"([^"]+)"/),
+    isLiveNow: firstMatch(html, /"isLiveNow":(true|false)/) === "true",
+  };
 }
