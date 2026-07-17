@@ -145,7 +145,7 @@ export function FeedbackPoll() {
       >
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-sm font-bold text-white">
-            📊 ¿Te gustaría que los lives de Platzi se vieran así?
+            📊 ¿Te gustaría tener una funcionalidad así en Platzi?
           </h2>
           <button
             onClick={close}
