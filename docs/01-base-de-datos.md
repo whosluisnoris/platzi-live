@@ -34,6 +34,21 @@ Proyecto Supabase: `platzi-live` (`ozkmxovmdognljtsvhrl`).
 
 Índice: `(video_id, created_at)`.
 
+## Tabla `feedback_votes` — encuesta de la plataforma
+
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `id` | uuid (PK) | Autogenerado |
+| `question_id` | text | Pregunta (hoy: `live_platform_v1`) |
+| `answer` | text | `si` \| `puede_mejorar` \| `no` (CHECK en DB) |
+| `session_id` | text | Misma sesión anónima de la analítica |
+| `created_at` | timestamptz | Momento del voto |
+
+`UNIQUE (question_id, session_id)`: un voto por sesión; volver a votar **actualiza** la
+respuesta (upsert). Si el navegador bloquea localStorage, el voto entra sin sesión (los
+`NULL` no chocan con la restricción). RLS activo sin políticas públicas, igual que
+`watch_events`.
+
 ## Vista `watch_stats`
 
 Agregados por video: `plays`, `autoplays`, `youtube_opens`, `unique_sessions`,
@@ -59,3 +74,5 @@ Las escrituras siempre pasan por rutas API del servidor con `SUPABASE_SERVICE_RO
 2. **Backfill** (2026-07-16): las 23 filas existentes recibieron `published_at`,
    `live_started_at`, `live_ended_at` y `thumbnail_url` scrapeando la página watch de
    cada video (solo `UPDATE` de columnas nuevas; título y demás campos intactos).
+3. **`add_feedback_votes`** (2026-07-17): tabla de la encuesta (aditiva), con RLS sin
+   políticas públicas e índice por pregunta.

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveStreams } from "@/hooks/useLiveStreams";
 import { PlayerPanel } from "@/components/PlayerPanel";
 import { VideoListItem } from "@/components/VideoListItem";
+import { FeedbackPoll } from "@/components/FeedbackPoll";
 import { LOFI_STREAM } from "@/lib/constants";
 import { trackEvent } from "@/lib/analytics";
 import type { LiveStream } from "@/lib/invidious";
@@ -117,10 +118,13 @@ export default function Home() {
             ) : (
               <div className="aspect-video w-full animate-pulse rounded-xl bg-[#1c212a]" />
             )}
+            <div className="mt-6">
+              <FeedbackPoll />
+            </div>
           </div>
 
-          {/* Lista lateral: con scroll propio */}
-          <aside className="flex flex-col gap-8 lg:min-h-0 lg:overflow-y-auto lg:pr-1 lg:[scrollbar-color:#2a303b_transparent] lg:[scrollbar-width:thin]">
+          {/* Lista lateral: panel con tono propio que marca la zona con scroll */}
+          <aside className="flex flex-col gap-8 rounded-2xl bg-white/[0.03] p-3 ring-1 ring-white/5 sm:p-4 lg:min-h-0 lg:overflow-y-auto lg:[scrollbar-color:#2a303b_transparent] lg:[scrollbar-width:thin]">
             <section aria-label="En vivo ahora">
               <h2 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-gray-300">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />

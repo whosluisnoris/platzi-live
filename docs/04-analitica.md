@@ -53,6 +53,21 @@ GROUP BY 1 ORDER BY 1 DESC;
 SELECT event_type, count(*) FROM watch_events GROUP BY 1;
 ```
 
+## Encuesta de la plataforma
+
+Bajo el reproductor vive una encuesta ("¿Te gustaría que los lives de Platzi se vieran
+así?") con tres opciones: *Sí, me encanta* / *Puede mejorar* / *No me convence*.
+
+- Un voto por sesión anónima (la misma de la analítica); volver a votar lo **actualiza**
+  vía `UNIQUE (question_id, session_id)` + upsert.
+- `POST /api/feedback` registra el voto; `GET /api/feedback?question=...` devuelve solo
+  agregados (conteos y total — nunca sesiones).
+- Tras votar, el usuario ve los porcentajes (estilo encuesta de redes) y puede cambiar
+  su respuesta; el estado se recuerda en `localStorage` (`pl_poll_live_platform_v1`).
+- Los resultados también aparecen en `/admin` → "Encuesta de la plataforma".
+
+Sirve como evidencia de interés real para la propuesta a Platzi.
+
 ## Posibles extensiones futuras
 
 - **Duración de visualización**: eventos periódicos `heartbeat` mientras el iframe está

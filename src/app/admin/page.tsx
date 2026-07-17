@@ -16,6 +16,17 @@ interface VideoStats {
   lastActivity: string | null;
 }
 
+interface PollResults {
+  total: number;
+  counts: { si: number; puede_mejorar: number; no: number };
+}
+
+const POLL_LABELS: { key: keyof PollResults["counts"]; label: string }[] = [
+  { key: "si", label: "😍 Sí, me encanta" },
+  { key: "puede_mejorar", label: "🤔 Puede mejorar" },
+  { key: "no", label: "😕 No me convence" },
+];
+
 function extractVideoId(input: string): string | null {
   try {
     const url = new URL(input);
@@ -31,6 +42,7 @@ export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [streams, setStreams] = useState<LiveStream[]>([]);
   const [stats, setStats] = useState<VideoStats[]>([]);
+  const [poll, setPoll] = useState<PollResults | null>(null);
   const [input, setInput] = useState("");
   const [status, setStatus] = useState<{ text: string; ok: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,6 +60,11 @@ export default function AdminPage() {
     if (!res.ok) return false;
     const data = await res.json();
     setStats(data.stats ?? []);
+    // resultados de la encuesta (agregados públicos; si falla no bloquea nada)
+    fetch("/api/feedback?question=live_platform_v1")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((p) => setPoll(p))
+      .catch(() => {});
     return true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [secret]);
@@ -252,6 +269,38 @@ export default function AdminPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Encuesta */}
+      <h2 className="mb-4 mt-12 text-lg font-bold text-white">
+        Encuesta <span className="text-[#0aeb8b]">de la plataforma</span>
+      </h2>
+      <p className="mb-3 text-sm text-gray-400">
+        &ldquo;¿Te gustaría que los lives de Platzi se vieran así?&rdquo;
+      </p>
+      {!poll || poll.total === 0 ? (
+        <p className="text-sm text-gray-400">Todavía no hay votos.</p>
+      ) : (
+        <div className="flex max-w-md flex-col gap-2 rounded-lg bg-[#1c212a] p-4 ring-1 ring-white/10">
+          {POLL_LABELS.map(({ key, label }) => {
+            const count = poll.counts[key] ?? 0;
+            const pct = poll.total > 0 ? Math.round((count / poll.total) * 100) : 0;
+            return (
+              <div key={key} className="flex items-center gap-2 text-sm">
+                <span className="w-40 shrink-0 text-gray-300">{label}</span>
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/5">
+                  <div className="h-full rounded-full bg-[#0aeb8b]" style={{ width: `${pct}%` }} />
+                </div>
+                <span className="w-16 shrink-0 text-right text-gray-400">
+                  {count} · {pct}%
+                </span>
+              </div>
+            );
+          })}
+          <p className="mt-1 text-xs text-gray-500">
+            {poll.total} {poll.total === 1 ? "voto" : "votos"} en total
+          </p>
         </div>
       )}
     </main>

@@ -27,6 +27,15 @@ En móvil las columnas se apilan (reproductor arriba). Rejilla:
 | `PlayerPanel` | Iframe del video + título, canal, insignia EN VIVO o fecha ("Transmitido hace 3 semanas · 11 de junio de 2026") y botón "Ver en YouTube" |
 | `VideoListItem` | Tarjeta horizontal de la lista (miniatura 160px con fallback a `hqdefault`, título 2 líneas, canal, fecha relativa); resalta el video activo; insignias "EN VIVO" (rojo) y "24/7" (verde) |
 | `StatusBadge` | Insignia "EN VIVO" (roja, convención universal; el verde Platzi queda para acciones) |
+| `FeedbackPoll` | Encuesta bajo el reproductor (ver [04-analitica.md](04-analitica.md)) |
+
+## Zonas de scroll (escritorio, ≥1024px)
+
+La página ocupa exactamente el viewport: **el reproductor queda fijo** y no hay scroll
+de página. La lista lateral es un **panel con tono propio** (`bg-white/[0.03]` + borde
+sutil) que scrollea por dentro — el cambio de tono marca visualmente qué zona se mueve.
+La columna del reproductor solo scrollea si su contenido no cabe (ventanas bajitas).
+En móvil todo se apila y la página scrollea normal.
 
 ## Selección del video en el reproductor
 
