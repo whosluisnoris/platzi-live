@@ -81,7 +81,7 @@ esta misma guía.
 ## Encuesta de la plataforma
 
 Encuesta flotante (esquina inferior derecha, se puede cerrar y reabrir con la pastilla
-"📊 Encuesta"): "¿Te gustaría que los lives de Platzi se vieran así?" con tres
+"📊 Encuesta"): "¿Te gustaría tener una funcionalidad así en Platzi?" con tres
 opciones: *Sí, me encanta* / *Puede mejorar* / *No me convence*. Se abre sola tras
 1.5 s solo si la persona no ha votado ni la ha cerrado antes.
 
