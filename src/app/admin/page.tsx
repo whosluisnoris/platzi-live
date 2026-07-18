@@ -368,7 +368,7 @@ export default function AdminPage() {
         Encuesta <span className="text-[#0aeb8b]">de la plataforma</span>
       </h2>
       <p className="mb-3 text-sm text-gray-400">
-        &ldquo;¿Te gustaría que los lives de Platzi se vieran así?&rdquo;
+        &ldquo;¿Te gustaría tener una funcionalidad así en Platzi?&rdquo;
       </p>
       {!poll || poll.total === 0 ? (
         <p className="text-sm text-gray-400">Todavía no hay votos.</p>
