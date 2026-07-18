@@ -85,6 +85,12 @@ Encuesta flotante (esquina inferior derecha, se puede cerrar y reabrir con la pa
 opciones: *Sí, me encanta* / *Puede mejorar* / *No me convence*. Se abre sola tras
 1.5 s solo si la persona no ha votado ni la ha cerrado antes.
 
+Tras votar aparece un campo opcional "¿Quieres contarnos por qué?" (máx. 500
+caracteres). El comentario viaja adjunto al voto de la sesión (columna `comment`;
+volver a comentar lo actualiza) y **solo se lee desde /admin** — el GET público sigue
+devolviendo únicamente conteos. Los comentarios aparecen en /admin bajo los resultados
+de la encuesta, con la respuesta votada y la fecha.
+
 - Un voto por sesión anónima (la misma de la analítica); volver a votar lo **actualiza**
   vía `UNIQUE (question_id, session_id)` + upsert.
 - `POST /api/feedback` registra el voto; `GET /api/feedback?question=...` devuelve solo

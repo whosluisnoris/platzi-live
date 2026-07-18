@@ -6,6 +6,7 @@ import { getSessionId } from "@/lib/analytics";
 const QUESTION_ID = "live_platform_v1";
 const STORAGE_KEY = `pl_poll_${QUESTION_ID}`;
 const DISMISS_KEY = `pl_poll_${QUESTION_ID}_cerrada`;
+const COMMENT_KEY = `pl_poll_${QUESTION_ID}_comentario`;
 
 type Answer = "si" | "puede_mejorar" | "no";
 
@@ -48,6 +49,18 @@ export function FeedbackPoll() {
   const [changing, setChanging] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [sendingComment, setSendingComment] = useState(false);
+  // Solo se usa en la vista de resultados (que aparece tras hidratar): sin
+  // riesgo de divergencia con el SSR aunque lea localStorage al inicio.
+  const [commentSent, setCommentSent] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return localStorage.getItem(COMMENT_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
 
   // Estado inicial (async para no divergir del SSR): recupera el voto y
   // auto-abre tras un momento solo si nunca votó ni la cerró antes.
@@ -115,6 +128,38 @@ export function FeedbackPoll() {
       setError(true);
     } finally {
       setSending(false);
+    }
+  }
+
+  async function sendComment(e: React.FormEvent) {
+    e.preventDefault();
+    const text = commentText.trim();
+    if (!text || !voted) return;
+    setSendingComment(true);
+    setError(false);
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          questionId: QUESTION_ID,
+          answer: voted,
+          sessionId: getSessionId(),
+          comment: text.slice(0, 500),
+        }),
+      });
+      if (!res.ok) throw new Error();
+      try {
+        localStorage.setItem(COMMENT_KEY, "1");
+      } catch {
+        /* sin persistencia igual cuenta */
+      }
+      setCommentSent(true);
+      setCommentText("");
+    } catch {
+      setError(true);
+    } finally {
+      setSendingComment(false);
     }
   }
 
@@ -209,6 +254,33 @@ export function FeedbackPoll() {
                 </div>
               );
             })}
+            {/* Comentario opcional */}
+            {commentSent ? (
+              <p className="mt-1 text-xs text-gray-400">
+                💬 ¡Gracias por tu comentario!
+              </p>
+            ) : (
+              <form onSubmit={sendComment} className="mt-1 flex flex-col gap-2">
+                <textarea
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  maxLength={500}
+                  rows={2}
+                  placeholder="¿Quieres contarnos por qué? (opcional)"
+                  className="w-full resize-none rounded-lg bg-white/5 px-3 py-2 text-xs text-white placeholder-gray-500 ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
+                />
+                {commentText.trim().length > 0 && (
+                  <button
+                    type="submit"
+                    disabled={sendingComment}
+                    className="self-end rounded-lg bg-[#0aeb8b] px-3.5 py-1.5 text-xs font-semibold text-[#0e1013] transition hover:bg-[#08c975] active:scale-95 disabled:opacity-50"
+                  >
+                    {sendingComment ? "Enviando…" : "Enviar comentario"}
+                  </button>
+                )}
+              </form>
+            )}
+
             <div className="mt-1.5 flex items-center justify-between text-xs text-gray-400">
               <span>
                 Gracias por tu opinión 💚

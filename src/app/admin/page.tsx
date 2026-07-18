@@ -45,6 +45,18 @@ interface VisitsState {
   error?: string;
 }
 
+interface PollComment {
+  answer: string;
+  comment: string;
+  createdAt: string;
+}
+
+const ANSWER_EMOJI: Record<string, string> = {
+  si: "😍",
+  puede_mejorar: "🤔",
+  no: "😕",
+};
+
 const POLL_LABELS: { key: keyof PollResults["counts"]; label: string }[] = [
   { key: "si", label: "😍 Sí, me encanta" },
   { key: "puede_mejorar", label: "🤔 Puede mejorar" },
@@ -69,6 +81,7 @@ export default function AdminPage() {
   const [daily, setDaily] = useState<DailyRow[]>([]);
   const [visits, setVisits] = useState<VisitsState | null>(null);
   const [poll, setPoll] = useState<PollResults | null>(null);
+  const [comments, setComments] = useState<PollComment[]>([]);
   const [input, setInput] = useState("");
   const [status, setStatus] = useState<{ text: string; ok: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -87,6 +100,7 @@ export default function AdminPage() {
     const data = await res.json();
     setStats(data.stats ?? []);
     setDaily(data.daily ?? []);
+    setComments(data.comments ?? []);
     // encuesta y visitas de Vercel en paralelo (si fallan no bloquean nada)
     fetch("/api/feedback?question=live_platform_v1")
       .then((r) => (r.ok ? r.json() : null))
@@ -393,6 +407,32 @@ export default function AdminPage() {
             {poll.total} {poll.total === 1 ? "voto" : "votos"} en total
           </p>
         </div>
+      )}
+
+      {/* Comentarios de la encuesta */}
+      <h3 className="mb-3 mt-8 text-sm font-semibold text-gray-200">
+        Comentarios <span className="text-gray-500">({comments.length})</span>
+      </h3>
+      {comments.length === 0 ? (
+        <p className="mb-8 text-sm text-gray-400">Todavía no hay comentarios.</p>
+      ) : (
+        <ul className="mb-8 flex max-w-2xl flex-col gap-3">
+          {comments.map((c, i) => (
+            <li
+              key={`${c.createdAt}-${i}`}
+              className="glass backdrop-blur-md rounded-xl p-4"
+            >
+              <p className="whitespace-pre-wrap break-words text-sm text-gray-200">
+                {c.comment}
+              </p>
+              <p className="mt-2 text-xs text-gray-500">
+                {ANSWER_EMOJI[c.answer] ?? ""} Votó &ldquo;
+                {POLL_LABELS.find((l) => l.key === c.answer)?.label.replace(/^\S+ /, "") ?? c.answer}
+                &rdquo; · {timeAgo(c.createdAt) ?? formatDate(c.createdAt)}
+              </p>
+            </li>
+          ))}
+        </ul>
       )}
     </main>
   );
