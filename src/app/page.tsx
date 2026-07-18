@@ -194,7 +194,15 @@ export default function Home() {
       </main>
 
       <footer className="mx-auto w-full max-w-[1500px] mb-2 pb-4 px-4 text-center text-xs text-gray-600 sm:px-4">
-      Hecho con cariño para la comunidad de Platzi 💚. Por <a href="https://www.linkedin.com/in/luisnorisgarcia/">Luis Noris</a>
+      Hecho con cariño para la comunidad de Platzi 💚. Por{" "}
+      <a
+        href="https://www.linkedin.com/in/luisnorisgarcia/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline underline-offset-2 transition-colors hover:text-[#0aeb8b]"
+      >
+        Luis Noris
+      </a>
       </footer>
 
       {/* Encuesta flotante (esquina inferior derecha) */}
