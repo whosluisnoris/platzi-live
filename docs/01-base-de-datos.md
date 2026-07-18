@@ -43,6 +43,7 @@ Proyecto Supabase: `platzi-live` (`ozkmxovmdognljtsvhrl`).
 | `question_id` | text | Pregunta (hoy: `live_platform_v1`) |
 | `answer` | text | `si` \| `puede_mejorar` \| `no` (CHECK en DB) |
 | `session_id` | text | Misma sesión anónima de la analítica |
+| `comment` | text | Comentario opcional (máx. 500 caracteres, solo visible en /admin) |
 | `created_at` | timestamptz | Momento del voto |
 
 `UNIQUE (question_id, session_id)`: un voto por sesión; volver a votar **actualiza** la

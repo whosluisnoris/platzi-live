@@ -26,7 +26,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { questionId, answer, sessionId } = (body ?? {}) as Record<string, unknown>;
+  const { questionId, answer, sessionId, comment } = (body ?? {}) as Record<
+    string,
+    unknown
+  >;
 
   if (typeof questionId !== "string" || !QUESTIONS.has(questionId)) {
     return NextResponse.json({ error: "Invalid question" }, { status: 400 });
@@ -37,6 +40,13 @@ export async function POST(request: NextRequest) {
   const session =
     typeof sessionId === "string" && SESSION_RE.test(sessionId) ? sessionId : null;
 
+  // Comentario opcional: solo texto plano, recortado a 500 caracteres.
+  // Si la clave no viene, el upsert NO toca el comentario ya guardado.
+  const cleanComment =
+    typeof comment === "string" && comment.trim().length > 0
+      ? comment.trim().slice(0, 500)
+      : undefined;
+
   const admin = tryGetAdmin();
   if (!admin) {
     return NextResponse.json({ error: "Feedback disabled" }, { status: 503 });
@@ -45,7 +55,12 @@ export async function POST(request: NextRequest) {
   // Con sesión: un voto por sesión (upsert). Sin sesión (localStorage
   // bloqueado): insert simple — los NULL no chocan con la restricción UNIQUE.
   const { error } = await admin.from("feedback_votes").upsert(
-    { question_id: questionId, answer, session_id: session },
+    {
+      question_id: questionId,
+      answer,
+      session_id: session,
+      ...(cleanComment !== undefined && { comment: cleanComment }),
+    },
     { onConflict: "question_id,session_id" }
   );
 

@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
   const sinceIso = new Date(
     Date.now() - DAYS_WINDOW * 86_400_000
   ).toISOString();
-  const [statsRes, titlesRes, eventsRes] = await Promise.all([
+  const [statsRes, titlesRes, eventsRes, commentsRes] = await Promise.all([
     admin
       .from("watch_stats")
       .select("*")
@@ -87,6 +87,12 @@ export async function GET(request: NextRequest) {
       .select("event_type, session_id, created_at")
       .gte("created_at", sinceIso)
       .limit(20_000),
+    admin
+      .from("feedback_votes")
+      .select("answer, comment, created_at")
+      .not("comment", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(50),
   ]);
 
   if (statsRes.error) {
@@ -113,5 +119,17 @@ export async function GET(request: NextRequest) {
 
   const daily = buildDaily((eventsRes.data ?? []) as EventRow[]);
 
-  return NextResponse.json({ stats, daily });
+  const comments = (
+    (commentsRes.data ?? []) as {
+      answer: string;
+      comment: string;
+      created_at: string;
+    }[]
+  ).map((c) => ({
+    answer: c.answer,
+    comment: c.comment,
+    createdAt: c.created_at,
+  }));
+
+  return NextResponse.json({ stats, daily, comments });
 }
