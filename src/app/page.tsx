@@ -39,16 +39,21 @@ export default function Home() {
 
   // Selección derivada (sin estado extra): clic del usuario → deep-link ?v= →
   // Platzi live activo → radio lofi. Mientras no haya clic, un live que
-  // empiece toma el reproductor automáticamente.
+  // empiece toma el reproductor automáticamente. La radio lofi es solo
+  // relleno: un live activo la desplaza aunque haya sido clic o deep-link.
   const displayed = useMemo(() => {
-    if (chosen) return chosen;
+    const live = liveNow[0] ?? null;
+    if (chosen) {
+      if (live && chosen.videoId === LOFI_STREAM.videoId) return live;
+      return chosen;
+    }
     if (loading && streams.length === 0) return null; // primera carga
     if (requestedId) {
-      if (requestedId === LOFI_STREAM.videoId) return LOFI_STREAM;
+      if (requestedId === LOFI_STREAM.videoId) return live ?? LOFI_STREAM;
       const match = streams.find((s) => s.videoId === requestedId);
       if (match) return match;
     }
-    return liveNow[0] ?? LOFI_STREAM;
+    return live ?? LOFI_STREAM;
   }, [chosen, loading, streams, liveNow, requestedId]);
 
   // Registra el video servido automáticamente (los clics se registran aparte)

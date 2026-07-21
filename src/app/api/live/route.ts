@@ -144,35 +144,51 @@ export async function GET(request: NextRequest) {
     await admin.from("streams").upsert(rows, { onConflict: "video_id" });
   }
 
+  // Lives confirmados por su página watch aunque el scrape del canal no los
+  // haya listado (el listado a veces omite lives activos): mandan sobre liveIds.
+  const confirmedLive = new Set<string>();
+
   // 2. Transiciones de estado — solo si el scrape del canal funcionó, para no
   //    marcar lives como terminados por un fallo transitorio de red.
   if (admin && scrapeOk) {
     const nowIso = new Date().toISOString();
-    const endedIds = stored
+    const endCandidates = stored
       .filter((s) => s.isLive && !liveIds.has(s.videoId))
       .map((s) => s.videoId);
-    if (endedIds.length > 0) {
+    for (const id of endCandidates.slice(0, MAX_ENRICH_PER_REQUEST)) {
+      // Antes de dar el live por terminado se verifica su página watch: si
+      // sigue en vivo es que el listado del canal lo omitió, y se conserva.
+      // Al terminar de verdad, la página ya publica duración y fin exactos.
+      try {
+        const d = await fetchVideoDetails(id);
+        if (d.isLiveNow) {
+          confirmedLive.add(id);
+          continue;
+        }
+        await admin
+          .from("streams")
+          .update({
+            is_live: false,
+            duration_seconds: d.durationSeconds,
+            live_ended_at: d.liveEndedAt ?? nowIso,
+            enriched_at: new Date().toISOString(),
+          })
+          .eq("video_id", id);
+      } catch {
+        // Sin página watch no se puede verificar: se marca terminado y la
+        // auto-reparación completará los metadatos después.
+        await admin
+          .from("streams")
+          .update({ is_live: false, live_ended_at: nowIso })
+          .eq("video_id", id);
+      }
+    }
+    const endRest = endCandidates.slice(MAX_ENRICH_PER_REQUEST);
+    if (endRest.length > 0) {
       await admin
         .from("streams")
         .update({ is_live: false, live_ended_at: nowIso })
-        .in("video_id", endedIds);
-      // Al terminar un live, la página watch ya publica su duración final
-      // y el fin exacto: se capturan de una vez (best-effort).
-      for (const id of endedIds.slice(0, MAX_ENRICH_PER_REQUEST)) {
-        try {
-          const d = await fetchVideoDetails(id);
-          await admin
-            .from("streams")
-            .update({
-              duration_seconds: d.durationSeconds,
-              live_ended_at: d.liveEndedAt ?? nowIso,
-              enriched_at: new Date().toISOString(),
-            })
-            .eq("video_id", id);
-        } catch {
-          // la auto-reparación lo completará después
-        }
-      }
+        .in("video_id", endRest);
     }
 
     const reliveIds = stored
@@ -194,12 +210,14 @@ export async function GET(request: NextRequest) {
     for (const s of pending) {
       try {
         const d = await fetchVideoDetails(s.videoId);
+        if (d.isLiveNow) confirmedLive.add(s.videoId);
         await admin
           .from("streams")
           .update({
             published_at: d.publishedAt,
             live_started_at: d.liveStartedAt,
             live_ended_at: d.liveEndedAt,
+            is_live: d.isLiveNow,
             duration_seconds: d.durationSeconds,
             enriched_at: new Date().toISOString(),
           })
@@ -217,7 +235,9 @@ export async function GET(request: NextRequest) {
     ...stored.map((s) => ({
       ...s,
       enrichedAt: undefined,
-      isLive: scrapeOk ? liveIds.has(s.videoId) : s.isLive,
+      isLive:
+        confirmedLive.has(s.videoId) ||
+        (scrapeOk ? liveIds.has(s.videoId) : s.isLive),
     })),
   ];
 

@@ -29,11 +29,12 @@ const BROWSER_UA =
 
 interface VideoRenderer {
   videoId?: string;
-  title?: { runs?: Array<{ text?: string }> };
+  title?: { runs?: Array<{ text?: string }>; simpleText?: string };
   ownerText?: { runs?: Array<{ text?: string }> };
   thumbnailOverlays?: Array<{
     thumbnailOverlayTimeStatusRenderer?: { style?: string };
   }>;
+  badges?: Array<{ metadataBadgeRenderer?: { style?: string } }>;
 }
 
 interface RawData {
@@ -43,20 +44,32 @@ interface RawData {
 }
 
 function extractVideoRenderers(obj: unknown, depth = 0): VideoRenderer[] {
-  if (depth > 30 || !obj || typeof obj !== "object") return [];
+  if (depth > 40 || !obj || typeof obj !== "object") return [];
   if (Array.isArray(obj)) {
     return obj.flatMap((item) => extractVideoRenderers(item, depth + 1));
   }
   const record = obj as Record<string, unknown>;
+  // La pestaña /streams usa videoRenderer, pero algunos layouts de canal
+  // sirven gridVideoRenderer con la misma forma interna.
   if ("videoRenderer" in record) {
     return [record.videoRenderer as VideoRenderer];
+  }
+  if ("gridVideoRenderer" in record) {
+    return [record.gridVideoRenderer as VideoRenderer];
   }
   return Object.values(record).flatMap((v) => extractVideoRenderers(v, depth + 1));
 }
 
 function isLiveRenderer(v: VideoRenderer): boolean {
-  return (v.thumbnailOverlays ?? []).some(
-    (o) => o.thumbnailOverlayTimeStatusRenderer?.style === "LIVE"
+  // YouTube marca un live activo con el overlay LIVE en la miniatura o con un
+  // badge BADGE_STYLE_TYPE_LIVE_NOW junto al título, según el layout servido.
+  return (
+    (v.thumbnailOverlays ?? []).some(
+      (o) => o.thumbnailOverlayTimeStatusRenderer?.style === "LIVE"
+    ) ||
+    (v.badges ?? []).some(
+      (b) => b.metadataBadgeRenderer?.style === "BADGE_STYLE_TYPE_LIVE_NOW"
+    )
   );
 }
 
@@ -64,7 +77,9 @@ function rendererToStream(v: VideoRenderer): LiveStream | null {
   const videoId = v.videoId;
   if (!videoId) return null;
   const title =
-    v.title?.runs?.map((r) => r.text ?? "").join("") ?? "Platzi Live";
+    v.title?.runs?.map((r) => r.text ?? "").join("") ??
+    v.title?.simpleText ??
+    "Platzi Live";
   const channelTitle =
     v.ownerText?.runs?.map((r) => r.text ?? "").join("") ?? "Platzi";
   return {
