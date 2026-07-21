@@ -201,6 +201,13 @@ export async function fetchVideoDetails(videoId: string): Promise<VideoDetails> 
   if (!res.ok) throw new Error(`YouTube watch page returned ${res.status}`);
   const html = await res.text();
 
+  // YouTube a veces responde 200 con una página sin ytInitialPlayerResponse
+  // (muro anti-bot / consentimiento). Eso no son metadatos "en null": es un
+  // fallo, y tratarlo como éxito borraría fechas ya guardadas.
+  if (!/"(publishDate|startTimestamp|lengthSeconds|isLiveNow)"/.test(html)) {
+    throw new Error("YouTube watch page returned no player metadata");
+  }
+
   const isLiveNow = firstMatch(html, /"isLiveNow":(true|false)/) === "true";
   const lengthRaw = firstMatch(html, /"lengthSeconds":"(\d+)"/);
   const length = lengthRaw ? parseInt(lengthRaw, 10) : null;

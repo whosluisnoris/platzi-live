@@ -152,35 +152,44 @@ export async function GET(request: NextRequest) {
   //    marcar lives como terminados por un fallo transitorio de red.
   if (admin && scrapeOk) {
     const nowIso = new Date().toISOString();
-    const endCandidates = stored
-      .filter((s) => s.isLive && !liveIds.has(s.videoId))
-      .map((s) => s.videoId);
-    for (const id of endCandidates.slice(0, MAX_ENRICH_PER_REQUEST)) {
+    const endCandidates = stored.filter(
+      (s) => s.isLive && !liveIds.has(s.videoId)
+    );
+    for (const s of endCandidates.slice(0, MAX_ENRICH_PER_REQUEST)) {
       // Antes de dar el live por terminado se verifica su página watch: si
       // sigue en vivo es que el listado del canal lo omitió, y se conserva.
       // Al terminar de verdad, la página ya publica duración y fin exactos.
       try {
-        const d = await fetchVideoDetails(id);
+        const d = await fetchVideoDetails(s.videoId);
         if (d.isLiveNow) {
-          confirmedLive.add(id);
+          confirmedLive.add(s.videoId);
           continue;
         }
         await admin
           .from("streams")
           .update({
             is_live: false,
-            duration_seconds: d.durationSeconds,
+            duration_seconds: d.durationSeconds ?? s.durationSeconds,
             live_ended_at: d.liveEndedAt ?? nowIso,
             enriched_at: new Date().toISOString(),
           })
-          .eq("video_id", id);
+          .eq("video_id", s.videoId);
       } catch {
-        // Sin página watch no se puede verificar: se marca terminado y la
-        // auto-reparación completará los metadatos después.
-        await admin
-          .from("streams")
-          .update({ is_live: false, live_ended_at: nowIso })
-          .eq("video_id", id);
+        // Página watch no disponible (p. ej. YouTube bloqueó al servidor):
+        // no se puede afirmar que terminó, así que se conserva el estado.
+        // Tope de 12 h para que un live no quede "en vivo" para siempre.
+        const startedMs = s.liveStartedAt ? Date.parse(s.liveStartedAt) : NaN;
+        const stale =
+          !Number.isFinite(startedMs) ||
+          Date.now() - startedMs > 12 * 3600_000;
+        if (stale) {
+          await admin
+            .from("streams")
+            .update({ is_live: false, live_ended_at: nowIso })
+            .eq("video_id", s.videoId);
+        } else {
+          confirmedLive.add(s.videoId);
+        }
       }
     }
     const endRest = endCandidates.slice(MAX_ENRICH_PER_REQUEST);
@@ -188,7 +197,7 @@ export async function GET(request: NextRequest) {
       await admin
         .from("streams")
         .update({ is_live: false, live_ended_at: nowIso })
-        .in("video_id", endRest);
+        .in("video_id", endRest.map((s) => s.videoId));
     }
 
     const reliveIds = stored
@@ -211,14 +220,16 @@ export async function GET(request: NextRequest) {
       try {
         const d = await fetchVideoDetails(s.videoId);
         if (d.isLiveNow) confirmedLive.add(s.videoId);
+        // Los valores nuevos solo reemplazan, nunca borran: si YouTube no
+        // publicó algún campo se conserva el que ya estaba guardado.
         await admin
           .from("streams")
           .update({
-            published_at: d.publishedAt,
-            live_started_at: d.liveStartedAt,
-            live_ended_at: d.liveEndedAt,
+            published_at: d.publishedAt ?? s.publishedAt,
+            live_started_at: d.liveStartedAt ?? s.liveStartedAt,
+            live_ended_at: d.isLiveNow ? null : d.liveEndedAt ?? s.liveEndedAt,
             is_live: d.isLiveNow,
-            duration_seconds: d.durationSeconds,
+            duration_seconds: d.durationSeconds ?? s.durationSeconds,
             enriched_at: new Date().toISOString(),
           })
           .eq("video_id", s.videoId);
