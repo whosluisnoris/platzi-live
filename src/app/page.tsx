@@ -11,8 +11,8 @@ import type { LiveStream } from "@/lib/invidious";
 
 type SortOrder = "desc" | "asc";
 
-// Fecha efectiva para ordenar: inicio del live, o publicación como respaldo
-const sortKey = (s: LiveStream) => s.liveStartedAt ?? s.publishedAt ?? "";
+// Fecha para ordenar: el inicio real de la transmisión
+const sortKey = (s: LiveStream) => s.liveStartedAt ?? "";
 
 export default function Home() {
   const { streams, loading, error, refresh } = useLiveStreams();
