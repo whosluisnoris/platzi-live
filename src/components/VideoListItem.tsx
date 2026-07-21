@@ -18,7 +18,7 @@ export function VideoListItem({ stream, active, onSelect, badge }: VideoListItem
   const thumbnailUrl = imgError
     ? `https://i.ytimg.com/vi/${stream.videoId}/hqdefault.jpg`
     : stream.thumbnailUrl;
-  const relative = timeAgo(stream.liveStartedAt ?? stream.publishedAt);
+  const relative = timeAgo(stream.liveStartedAt);
   const duration = formatDuration(stream.durationSeconds);
 
   return (

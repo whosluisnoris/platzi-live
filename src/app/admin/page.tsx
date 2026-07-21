@@ -248,9 +248,9 @@ export default function AdminPage() {
                 <p className="truncate text-sm font-medium text-white">{s.title}</p>
                 <p className="text-xs text-gray-400">
                   {s.videoId}
-                  {(s.liveStartedAt ?? s.publishedAt) && (
+                  {s.liveStartedAt && (
                     <span className="text-gray-500">
-                      {" · "}{formatDate(s.liveStartedAt ?? s.publishedAt)}
+                      {" · "}{formatDate(s.liveStartedAt)}
                     </span>
                   )}
                 </p>

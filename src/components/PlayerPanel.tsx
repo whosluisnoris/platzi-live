@@ -13,7 +13,7 @@ interface PlayerPanelProps {
 
 export function PlayerPanel({ stream, autoplay }: PlayerPanelProps) {
   const embedSrc = `https://www.youtube.com/embed/${stream.videoId}?rel=0&autoplay=${autoplay ? 1 : 0}`;
-  const dateIso = stream.liveStartedAt ?? stream.publishedAt;
+  const dateIso = stream.liveStartedAt;
   const relative = timeAgo(dateIso);
   const absolute = formatDate(dateIso);
   const duration = formatDuration(stream.durationSeconds);
