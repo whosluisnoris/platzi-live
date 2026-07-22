@@ -123,6 +123,56 @@ async function fetchViaYouTubeScrape(): Promise<LiveStream[]> {
     .filter((s): s is LiveStream => s !== null);
 }
 
+// ── Detección directa vía /live ──────────────────────────────────────────────
+// youtube.com/channel/<id>/live sirve la página watch del live activo (si lo
+// hay), con <link rel="canonical"> apuntando a watch?v=<id>. No depende del
+// formato del listado /streams, que a veces omite lives recién iniciados.
+
+function decodeEntities(text: string): string {
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+}
+
+async function fetchViaLivePage(): Promise<LiveStream[]> {
+  const url = `https://www.youtube.com/channel/${PLATZI_CHANNEL_ID}/live`;
+  const res = await fetch(url, {
+    headers: { "User-Agent": BROWSER_UA, "Accept-Language": "en-US,en;q=0.9" },
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!res.ok) throw new Error(`YouTube live page returned ${res.status}`);
+  const html = await res.text();
+
+  // Sin transmisión activa la página no incrusta un reproductor en vivo
+  if (!html.includes('"isLiveNow":true')) return [];
+
+  const videoId = firstMatch(
+    html,
+    /<link rel="canonical" href="https:\/\/www\.youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})"/
+  );
+  if (!videoId) return [];
+
+  const rawTitle = firstMatch(html, /<meta name="title" content="([^"]*)"/);
+  return [
+    {
+      videoId,
+      title: rawTitle ? decodeEntities(rawTitle) : "Platzi Live",
+      thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
+      channelTitle: "Platzi",
+      watchUrl: `https://www.youtube.com/watch?v=${videoId}`,
+      embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`,
+      publishedAt: null,
+      liveStartedAt: firstMatch(html, /"startTimestamp":"([^"]+)"/),
+      liveEndedAt: null,
+      isLive: true,
+      durationSeconds: null,
+    },
+  ];
+}
+
 // ── Invidious fallback (best-effort) ─────────────────────────────────────────
 
 const INVIDIOUS_INSTANCES = [
@@ -175,13 +225,29 @@ async function fetchViaInvidious(): Promise<LiveStream[]> {
 // ── Public API ────────────────────────────────────────────────────────────────
 
 export async function fetchPlatziLiveStreams(): Promise<LiveStream[]> {
-  // Primary: scrape YouTube channel page (no API key, works reliably)
-  try {
-    return await fetchViaYouTubeScrape();
-  } catch {
+  // Dos vías en paralelo: /live (directa, un solo live) y el listado /streams
+  // (cubre lives simultáneos). Cualquiera de las dos basta para detectar.
+  const [livePage, streamsTab] = await Promise.allSettled([
+    fetchViaLivePage(),
+    fetchViaYouTubeScrape(),
+  ]);
+
+  if (livePage.status === "rejected" && streamsTab.status === "rejected") {
     // Fallback: Invidious API instances
     return fetchViaInvidious();
   }
+
+  const merged: LiveStream[] = [];
+  const seen = new Set<string>();
+  for (const result of [livePage, streamsTab]) {
+    if (result.status !== "fulfilled") continue;
+    for (const s of result.value) {
+      if (seen.has(s.videoId)) continue;
+      seen.add(s.videoId);
+      merged.push(s);
+    }
+  }
+  return merged;
 }
 
 // ── Metadatos por video (fechas exactas, sin API de Google) ──────────────────
