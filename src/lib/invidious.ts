@@ -43,26 +43,26 @@ interface RawData {
   [key: string]: unknown;
 }
 
-function extractVideoRenderers(obj: unknown, depth = 0): VideoRenderer[] {
-  if (depth > 40 || !obj || typeof obj !== "object") return [];
-  if (Array.isArray(obj)) {
-    return obj.flatMap((item) => extractVideoRenderers(item, depth + 1));
-  }
-  const record = obj as Record<string, unknown>;
-  // La pestaña /streams usa videoRenderer, pero algunos layouts de canal
-  // sirven gridVideoRenderer con la misma forma interna.
-  if ("videoRenderer" in record) {
-    return [record.videoRenderer as VideoRenderer];
-  }
-  if ("gridVideoRenderer" in record) {
-    return [record.gridVideoRenderer as VideoRenderer];
-  }
-  return Object.values(record).flatMap((v) => extractVideoRenderers(v, depth + 1));
+// Formato nuevo (comprobado en producción): YouTube migró los listados de
+// canal a "view models" — cada video llega como lockupViewModel con contentId,
+// y ya no hay ningún videoRenderer en ytInitialData.
+interface LockupViewModel {
+  contentId?: string;
+  contentType?: string;
+  metadata?: { lockupMetadataViewModel?: { title?: { content?: string } } };
+}
+
+const YT_VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
+
+// Video normalizado desde cualquiera de las dos representaciones
+interface ExtractedVideo {
+  videoId: string;
+  title: string | null;
+  channelTitle: string | null;
+  isLive: boolean;
 }
 
 function isLiveRenderer(v: VideoRenderer): boolean {
-  // YouTube marca un live activo con el overlay LIVE en la miniatura o con un
-  // badge BADGE_STYLE_TYPE_LIVE_NOW junto al título, según el layout servido.
   return (
     (v.thumbnailOverlays ?? []).some(
       (o) => o.thumbnailOverlayTimeStatusRenderer?.style === "LIVE"
@@ -73,26 +73,106 @@ function isLiveRenderer(v: VideoRenderer): boolean {
   );
 }
 
-function rendererToStream(v: VideoRenderer): LiveStream | null {
-  const videoId = v.videoId;
-  if (!videoId) return null;
-  const title =
-    v.title?.runs?.map((r) => r.text ?? "").join("") ??
-    v.title?.simpleText ??
-    "Platzi Live";
-  const channelTitle =
-    v.ownerText?.runs?.map((r) => r.text ?? "").join("") ?? "Platzi";
+function isLiveLockup(l: LockupViewModel): boolean {
+  // El estado en vivo va en badges anidados cuya ruta exacta varía; se busca
+  // el estilo *_LIVE o el texto del badge sobre el JSON del lockup completo.
+  const s = JSON.stringify(l);
+  return (
+    /BADGE_STYLE[A-Z_]*LIVE/.test(s) ||
+    /"text":"(LIVE|EN VIVO|EN DIRECTO)"/.test(s)
+  );
+}
+
+function extractVideos(
+  obj: unknown,
+  depth = 0,
+  out: ExtractedVideo[] = []
+): ExtractedVideo[] {
+  if (depth > 40 || !obj || typeof obj !== "object") return out;
+  if (Array.isArray(obj)) {
+    for (const item of obj) extractVideos(item, depth + 1, out);
+    return out;
+  }
+  const record = obj as Record<string, unknown>;
+  if ("videoRenderer" in record || "gridVideoRenderer" in record) {
+    const v = (record.videoRenderer ?? record.gridVideoRenderer) as VideoRenderer;
+    if (v?.videoId) {
+      out.push({
+        videoId: v.videoId,
+        title:
+          v.title?.runs?.map((r) => r.text ?? "").join("") ??
+          v.title?.simpleText ??
+          null,
+        channelTitle: v.ownerText?.runs?.map((r) => r.text ?? "").join("") ?? null,
+        isLive: isLiveRenderer(v),
+      });
+    }
+  }
+  if ("lockupViewModel" in record) {
+    const l = record.lockupViewModel as LockupViewModel;
+    const id = l?.contentId;
+    if (
+      id &&
+      YT_VIDEO_ID_RE.test(id) &&
+      (l.contentType == null || l.contentType === "LOCKUP_CONTENT_TYPE_VIDEO")
+    ) {
+      out.push({
+        videoId: id,
+        title: l.metadata?.lockupMetadataViewModel?.title?.content ?? null,
+        channelTitle: null,
+        isLive: isLiveLockup(l),
+      });
+    }
+  }
+  for (const v of Object.values(record)) extractVideos(v, depth + 1, out);
+  return out;
+}
+
+// Un video puede aparecer repetido (shelf + grid): es live si alguna copia lo marca
+function dedupeVideos(videos: ExtractedVideo[]): ExtractedVideo[] {
+  const byId = new Map<string, ExtractedVideo>();
+  for (const v of videos) {
+    const prev = byId.get(v.videoId);
+    byId.set(
+      v.videoId,
+      prev
+        ? {
+            ...prev,
+            title: prev.title ?? v.title,
+            channelTitle: prev.channelTitle ?? v.channelTitle,
+            isLive: prev.isLive || v.isLive,
+          }
+        : v
+    );
+  }
+  return [...byId.values()];
+}
+
+function parseYtInitialData(html: string): RawData | null {
+  const marker = "var ytInitialData = ";
+  const start = html.indexOf(marker);
+  if (start === -1) return null;
+  const scriptEnd = html.indexOf(";</script>", start + marker.length);
+  if (scriptEnd === -1) return null;
+  try {
+    return JSON.parse(html.slice(start + marker.length, scriptEnd));
+  } catch {
+    return null;
+  }
+}
+
+function extractedToStream(v: ExtractedVideo): LiveStream {
   return {
-    videoId,
-    title,
-    thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
-    channelTitle,
-    watchUrl: `https://www.youtube.com/watch?v=${videoId}`,
-    embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`,
+    videoId: v.videoId,
+    title: v.title ?? "Platzi Live",
+    thumbnailUrl: `https://i.ytimg.com/vi/${v.videoId}/maxresdefault.jpg`,
+    channelTitle: v.channelTitle ?? "Platzi",
+    watchUrl: `https://www.youtube.com/watch?v=${v.videoId}`,
+    embedUrl: `https://www.youtube.com/embed/${v.videoId}?autoplay=1&rel=0`,
     publishedAt: null,
     liveStartedAt: null,
     liveEndedAt: null,
-    isLive: true, // proviene del listado de lives activos del canal
+    isLive: true, // proviene de un listado de lives activos
     durationSeconds: null,
   };
 }
@@ -106,21 +186,12 @@ async function fetchViaYouTubeScrape(): Promise<LiveStream[]> {
   if (!res.ok) throw new Error(`YouTube page returned ${res.status}`);
 
   const html = await res.text();
+  const data = parseYtInitialData(html);
+  if (!data) throw new Error("ytInitialData not found in page");
 
-  // Extract ytInitialData JSON embedded in the page
-  const marker = "var ytInitialData = ";
-  const start = html.indexOf(marker);
-  if (start === -1) throw new Error("ytInitialData not found in page");
-  const jsonStart = start + marker.length;
-  const scriptEnd = html.indexOf(";</script>", jsonStart);
-  if (scriptEnd === -1) throw new Error("ytInitialData end not found");
-
-  const data: RawData = JSON.parse(html.slice(jsonStart, scriptEnd));
-  const renderers = extractVideoRenderers(data);
-  return renderers
-    .filter(isLiveRenderer)
-    .map(rendererToStream)
-    .filter((s): s is LiveStream => s !== null);
+  return dedupeVideos(extractVideos(data))
+    .filter((v) => v.isLive)
+    .map(extractedToStream);
 }
 
 // ── Detección directa vía /live ──────────────────────────────────────────────
@@ -146,8 +217,16 @@ async function fetchViaLivePage(): Promise<LiveStream[]> {
   if (!res.ok) throw new Error(`YouTube live page returned ${res.status}`);
   const html = await res.text();
 
-  // Sin transmisión activa la página no incrusta un reproductor en vivo
-  if (!html.includes('"isLiveNow":true')) return [];
+  // Sin reproductor incrustado (comprobado en producción: YouTube sirve un
+  // shell sin ytInitialPlayerResponse), el live puede venir igualmente en el
+  // ytInitialData de la página como lockup marcado LIVE.
+  if (!html.includes('"isLiveNow":true')) {
+    const data = parseYtInitialData(html);
+    if (!data) return [];
+    return dedupeVideos(extractVideos(data))
+      .filter((v) => v.isLive)
+      .map(extractedToStream);
+  }
 
   const videoId = firstMatch(
     html,
@@ -262,18 +341,21 @@ export async function diagnoseLiveDetection(): Promise<Record<string, unknown>> 
       signal: AbortSignal.timeout(10_000),
     });
     const html = await res.text();
+    const data = parseYtInitialData(html);
+    const videos = data ? dedupeVideos(extractVideos(data)) : [];
     out.livePage = {
       status: res.status,
       finalUrl: res.url,
       htmlLength: html.length,
       hasIsLiveNowTrue: html.includes('"isLiveNow":true'),
-      hasIsLiveNowFalse: html.includes('"isLiveNow":false'),
+      hasYtInitialData: data !== null,
+      lockupCountRaw: (html.match(/"lockupViewModel"/g) ?? []).length,
+      videoCount: videos.length,
+      liveVideoIds: videos.filter((v) => v.isLive).map((v) => v.videoId),
       canonicalVideoId: firstMatch(
         html,
         /<link rel="canonical" href="https:\/\/www\.youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})"/
       ),
-      canonicalHref: firstMatch(html, /<link rel="canonical" href="([^"]+)"/),
-      metaTitle: firstMatch(html, /<meta name="title" content="([^"]*)"/),
     };
   } catch (err) {
     out.livePage = { error: String(err) };
@@ -285,28 +367,25 @@ export async function diagnoseLiveDetection(): Promise<Record<string, unknown>> 
       signal: AbortSignal.timeout(10_000),
     });
     const html = await res.text();
-    const marker = "var ytInitialData = ";
-    const start = html.indexOf(marker);
+    const data = parseYtInitialData(html);
     const info: Record<string, unknown> = {
       status: res.status,
       htmlLength: html.length,
-      hasYtInitialData: start !== -1,
+      hasYtInitialData: data !== null,
+      lockupCountRaw: (html.match(/"lockupViewModel"/g) ?? []).length,
+      videoRendererCountRaw: (html.match(/"videoRenderer"/g) ?? []).length,
+      badgeStylesRaw: [
+        ...new Set(html.match(/"badgeStyle":"[A-Z_]+"/g) ?? []),
+      ].slice(0, 10),
     };
-    if (start !== -1) {
-      const scriptEnd = html.indexOf(";</script>", start + marker.length);
-      const data: RawData = JSON.parse(html.slice(start + marker.length, scriptEnd));
-      const renderers = extractVideoRenderers(data);
-      info.rendererCount = renderers.length;
-      info.liveVideoIds = renderers.filter(isLiveRenderer).map((v) => v.videoId);
-      // Muestra de los estilos que YouTube está usando, por si cambiaron
-      info.sample = renderers.slice(0, 3).map((v) => ({
+    if (data) {
+      const videos = dedupeVideos(extractVideos(data));
+      info.videoCount = videos.length;
+      info.liveVideoIds = videos.filter((v) => v.isLive).map((v) => v.videoId);
+      info.sample = videos.slice(0, 3).map((v) => ({
         videoId: v.videoId,
-        overlayStyles: (v.thumbnailOverlays ?? [])
-          .map((o) => o.thumbnailOverlayTimeStatusRenderer?.style)
-          .filter(Boolean),
-        badgeStyles: (v.badges ?? [])
-          .map((b) => b.metadataBadgeRenderer?.style)
-          .filter(Boolean),
+        title: v.title?.slice(0, 60) ?? null,
+        isLive: v.isLive,
       }));
     }
     out.streamsTab = info;
