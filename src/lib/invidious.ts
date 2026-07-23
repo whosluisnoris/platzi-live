@@ -250,6 +250,73 @@ export async function fetchPlatziLiveStreams(): Promise<LiveStream[]> {
   return merged;
 }
 
+// ── Diagnóstico de detección (para /api/live?debug=SECRET) ───────────────────
+// Reporta qué ve cada vía de detección desde el servidor, sin tocar la DB.
+
+export async function diagnoseLiveDetection(): Promise<Record<string, unknown>> {
+  const out: Record<string, unknown> = {};
+
+  try {
+    const res = await fetch(`https://www.youtube.com/channel/${PLATZI_CHANNEL_ID}/live`, {
+      headers: { "User-Agent": BROWSER_UA, "Accept-Language": "en-US,en;q=0.9" },
+      signal: AbortSignal.timeout(10_000),
+    });
+    const html = await res.text();
+    out.livePage = {
+      status: res.status,
+      finalUrl: res.url,
+      htmlLength: html.length,
+      hasIsLiveNowTrue: html.includes('"isLiveNow":true'),
+      hasIsLiveNowFalse: html.includes('"isLiveNow":false'),
+      canonicalVideoId: firstMatch(
+        html,
+        /<link rel="canonical" href="https:\/\/www\.youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})"/
+      ),
+      canonicalHref: firstMatch(html, /<link rel="canonical" href="([^"]+)"/),
+      metaTitle: firstMatch(html, /<meta name="title" content="([^"]*)"/),
+    };
+  } catch (err) {
+    out.livePage = { error: String(err) };
+  }
+
+  try {
+    const res = await fetch(`https://www.youtube.com/channel/${PLATZI_CHANNEL_ID}/streams`, {
+      headers: { "User-Agent": BROWSER_UA, "Accept-Language": "en-US,en;q=0.9" },
+      signal: AbortSignal.timeout(10_000),
+    });
+    const html = await res.text();
+    const marker = "var ytInitialData = ";
+    const start = html.indexOf(marker);
+    const info: Record<string, unknown> = {
+      status: res.status,
+      htmlLength: html.length,
+      hasYtInitialData: start !== -1,
+    };
+    if (start !== -1) {
+      const scriptEnd = html.indexOf(";</script>", start + marker.length);
+      const data: RawData = JSON.parse(html.slice(start + marker.length, scriptEnd));
+      const renderers = extractVideoRenderers(data);
+      info.rendererCount = renderers.length;
+      info.liveVideoIds = renderers.filter(isLiveRenderer).map((v) => v.videoId);
+      // Muestra de los estilos que YouTube está usando, por si cambiaron
+      info.sample = renderers.slice(0, 3).map((v) => ({
+        videoId: v.videoId,
+        overlayStyles: (v.thumbnailOverlays ?? [])
+          .map((o) => o.thumbnailOverlayTimeStatusRenderer?.style)
+          .filter(Boolean),
+        badgeStyles: (v.badges ?? [])
+          .map((b) => b.metadataBadgeRenderer?.style)
+          .filter(Boolean),
+      }));
+    }
+    out.streamsTab = info;
+  } catch (err) {
+    out.streamsTab = { error: String(err) };
+  }
+
+  return out;
+}
+
 // ── Metadatos por video (fechas exactas, sin API de Google) ──────────────────
 // La página watch incrusta ytInitialPlayerResponse con publishDate y
 // liveBroadcastDetails{startTimestamp,endTimestamp}; con eso basta un regex.
