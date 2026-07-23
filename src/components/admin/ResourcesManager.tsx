@@ -103,14 +103,14 @@ export function ResourcesManager({ secret }: { secret: string }) {
 
   return (
     <section>
-      <h2 className="mb-4 text-lg font-bold text-white">
-        Recursos <span className="text-[#0aeb8b]">del catálogo</span>
+      <h2 className="mb-4 text-lg font-bold text-foreground">
+        Recursos <span className="text-accent">del catálogo</span>
       </h2>
 
       {/* Alta de recurso */}
       <form
         onSubmit={handleAdd}
-        className="mb-6 flex flex-col gap-3 rounded-xl bg-[#14171c] p-4 ring-1 ring-white/10"
+        className="mb-6 flex flex-col gap-3 rounded-xl bg-surface p-4 ring-1 ring-border"
       >
         <div className="flex flex-col gap-2 sm:flex-row">
           <input
@@ -118,19 +118,19 @@ export function ResourcesManager({ secret }: { secret: string }) {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="Pega una URL de video o de playlist de YouTube…"
-            className="flex-1 rounded-lg bg-[#0e1013] px-4 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
+            className="flex-1 rounded-lg bg-background px-4 py-2 text-sm text-foreground ring-1 ring-border focus:outline-none focus:ring-accent/50"
           />
           <button
             type="submit"
             disabled={loading || !detected}
-            className="rounded-lg bg-[#0aeb8b] px-5 py-2 text-sm font-semibold text-[#0e1013] hover:bg-[#08c975] disabled:opacity-50 transition"
+            className="rounded-lg bg-accent px-5 py-2 text-sm font-semibold text-on-accent hover:opacity-90 disabled:opacity-50 transition"
           >
             {loading ? "Agregando…" : "Agregar"}
           </button>
         </div>
 
         {url.trim() && (
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-faint">
             {detected
               ? `Detectado: ${detected.kind === "playlist" ? "📚 Playlist" : "🎬 Video"} (${detected.id})`
               : "No se reconoce como video ni playlist de YouTube"}
@@ -143,12 +143,12 @@ export function ResourcesManager({ secret }: { secret: string }) {
             value={manualTitle}
             onChange={(e) => setManualTitle(e.target.value)}
             placeholder="Título de la playlist (no se pudo leer de YouTube)…"
-            className="rounded-lg bg-[#0e1013] px-4 py-2 text-sm text-white ring-1 ring-amber-500/40 focus:outline-none focus:ring-amber-500/60"
+            className="rounded-lg bg-background px-4 py-2 text-sm text-foreground ring-1 ring-amber-500/40 focus:outline-none focus:ring-amber-500/60"
           />
         )}
 
         <div>
-          <p className="mb-2 text-xs text-gray-400">Categorías:</p>
+          <p className="mb-2 text-xs text-muted">Categorías:</p>
           <CategoryMultiSelect
             categories={categories}
             selected={selectedCats}
@@ -158,35 +158,35 @@ export function ResourcesManager({ secret }: { secret: string }) {
       </form>
 
       {status && (
-        <p className={`mb-4 text-sm ${status.ok ? "text-[#0aeb8b]" : "text-red-400"}`}>
+        <p className={`mb-4 text-sm ${status.ok ? "text-accent" : "text-red-400"}`}>
           {status.text}
         </p>
       )}
 
       {/* Tabla de recursos */}
       {resources.length === 0 ? (
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted">
           Aún no hay recursos. Pega arriba la URL de un video o una playlist de YouTube.
         </p>
       ) : (
         <ul className="flex flex-col gap-3">
           {resources.map((r) => (
-            <li key={r.id} className="rounded-xl bg-[#14171c] ring-1 ring-white/10">
+            <li key={r.id} className="rounded-xl bg-surface ring-1 ring-border">
               <div className="flex items-start justify-between gap-3 p-4">
                 <div className="min-w-0">
-                  <p className="flex items-center gap-2 text-sm font-medium text-white">
+                  <p className="flex items-center gap-2 text-sm font-medium text-foreground">
                     <span
                       className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
                         r.kind === "playlist"
                           ? "bg-[#4a90e0]/20 text-[#7fb3ea]"
-                          : "bg-white/10 text-gray-300"
+                          : "bg-fill-strong text-muted"
                       }`}
                     >
                       {r.kind === "playlist" ? `Playlist · ${r.video_count ?? 0}` : "Video"}
                     </span>
                     <span className="truncate">{r.title}</span>
                   </p>
-                  <p className="mt-0.5 truncate text-xs text-gray-500">
+                  <p className="mt-0.5 truncate text-xs text-faint">
                     {r.channel_title ? `${r.channel_title} · ` : ""}
                     {r.youtube_id}
                   </p>
@@ -202,13 +202,13 @@ export function ResourcesManager({ secret }: { secret: string }) {
                       <div className="flex gap-2">
                         <button
                           onClick={() => saveCats(r.id)}
-                          className="rounded-lg bg-[#0aeb8b] px-3 py-1 text-xs font-semibold text-[#0e1013]"
+                          className="rounded-lg bg-accent px-3 py-1 text-xs font-semibold text-on-accent"
                         >
                           Guardar
                         </button>
                         <button
                           onClick={() => setEditId(null)}
-                          className="rounded-lg border border-white/10 px-3 py-1 text-xs text-gray-300"
+                          className="rounded-lg border border-border px-3 py-1 text-xs text-muted"
                         >
                           Cancelar
                         </button>
@@ -222,7 +222,7 @@ export function ResourcesManager({ secret }: { secret: string }) {
                         r.resource_categories.map((rc) => (
                           <span
                             key={rc.category_id}
-                            className="rounded-full bg-white/5 px-2 py-0.5 text-[11px] text-gray-300"
+                            className="rounded-full bg-fill px-2 py-0.5 text-[11px] text-muted"
                           >
                             {catName(rc.category_id)}
                           </span>
@@ -233,7 +233,7 @@ export function ResourcesManager({ secret }: { secret: string }) {
                           setEditId(r.id);
                           setEditCats(r.resource_categories.map((rc) => rc.category_id));
                         }}
-                        className="text-[11px] text-[#0aeb8b] hover:underline"
+                        className="text-[11px] text-accent hover:underline"
                       >
                         editar
                       </button>
@@ -347,15 +347,15 @@ function PlaylistItemsEditor({
   }
 
   return (
-    <div className="border-t border-white/10 bg-[#0e1013]/60 p-4">
+    <div className="border-t border-border bg-background/60 p-4">
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-xs font-semibold text-gray-300">
+        <p className="text-xs font-semibold text-muted">
           Episodios ({items.length})
         </p>
         <button
           onClick={resync}
           disabled={busy}
-          className="rounded-lg border border-[#0aeb8b]/30 px-3 py-1 text-xs text-[#0aeb8b] hover:bg-[#0aeb8b]/10 disabled:opacity-50 transition"
+          className="rounded-lg border border-accent/30 px-3 py-1 text-xs text-accent hover:bg-accent/10 disabled:opacity-50 transition"
         >
           {busy ? "…" : "Resincronizar con YouTube"}
         </button>
@@ -367,30 +367,30 @@ function PlaylistItemsEditor({
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="Agregar un video por URL/ID…"
-          className="flex-1 rounded-lg bg-[#0e1013] px-3 py-1.5 text-xs text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
+          className="flex-1 rounded-lg bg-background px-3 py-1.5 text-xs text-foreground ring-1 ring-border focus:outline-none focus:ring-accent/50"
         />
         <button
           type="submit"
           disabled={busy || !url.trim()}
-          className="rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white hover:bg-white/20 disabled:opacity-50 transition"
+          className="rounded-lg bg-fill-strong px-3 py-1.5 text-xs text-foreground hover:bg-fill-strong disabled:opacity-50 transition"
         >
           Agregar
         </button>
       </form>
 
-      {msg && <p className="mb-2 text-xs text-gray-400">{msg}</p>}
+      {msg && <p className="mb-2 text-xs text-muted">{msg}</p>}
 
       {items.length === 0 ? (
-        <p className="text-xs text-gray-500">Sin episodios todavía.</p>
+        <p className="text-xs text-faint">Sin episodios todavía.</p>
       ) : (
         <ol className="flex flex-col gap-1">
           {items.map((it) => (
             <li
               key={it.id}
-              className="flex items-center justify-between gap-2 rounded px-2 py-1 text-xs hover:bg-white/5"
+              className="flex items-center justify-between gap-2 rounded px-2 py-1 text-xs hover:bg-fill"
             >
-              <span className="min-w-0 truncate text-gray-300">
-                <span className="text-gray-600">{it.position}.</span> {it.title}
+              <span className="min-w-0 truncate text-muted">
+                <span className="text-faint">{it.position}.</span> {it.title}
               </span>
               <button
                 onClick={() => removeItem(it.youtube_video_id)}

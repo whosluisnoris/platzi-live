@@ -44,7 +44,7 @@ export function DailyChart({ data, series, tooltipExtra }: DailyChartProps) {
 
   if (max === 0) {
     return (
-      <p className="text-sm text-gray-400">
+      <p className="text-sm text-muted">
         Aún no hay actividad en los últimos {data.length} días.
       </p>
     );
@@ -61,7 +61,7 @@ export function DailyChart({ data, series, tooltipExtra }: DailyChartProps) {
   return (
     <div>
       {/* Leyenda (identidad siempre con chip + texto, nunca solo color) */}
-      <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-300">
+      <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
         {series.map((s) => (
           <span key={s.key} className="inline-flex items-center gap-1.5">
             <span
@@ -172,14 +172,14 @@ export function DailyChart({ data, series, tooltipExtra }: DailyChartProps) {
       </svg>
 
       {/* vista de tabla accesible */}
-      <details className="mt-2 text-xs text-gray-400">
-        <summary className="cursor-pointer hover:text-gray-200">
+      <details className="mt-2 text-xs text-muted">
+        <summary className="cursor-pointer hover:text-foreground">
           Ver como tabla
         </summary>
         <div className="mt-2 overflow-x-auto">
           <table className="w-full min-w-[420px] text-left">
             <thead>
-              <tr className="text-gray-500">
+              <tr className="text-faint">
                 <th className="py-1 pr-3 font-medium">Día</th>
                 {series.map((s) => (
                   <th key={s.key} className="py-1 pr-3 text-right font-medium">
@@ -190,7 +190,7 @@ export function DailyChart({ data, series, tooltipExtra }: DailyChartProps) {
             </thead>
             <tbody>
               {data.map((row) => (
-                <tr key={String(row.date)} className="border-t border-white/5">
+                <tr key={String(row.date)} className="border-t border-border">
                   <td className="py-1 pr-3">{fullDay(String(row.date))}</td>
                   {series.map((s) => (
                     <td key={s.key} className="py-1 pr-3 text-right">

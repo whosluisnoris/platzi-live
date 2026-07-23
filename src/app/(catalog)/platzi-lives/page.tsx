@@ -78,7 +78,7 @@ export default function PlatziLivesPage() {
       {/* Barra propia de la pestaña */}
       <div className="mb-6 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold text-white">Platzi Lives</h1>
+          <h1 className="text-xl font-bold text-foreground">Platzi Lives</h1>
           {liveNow.length > 0 && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600/15 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-red-400 ring-1 ring-red-600/40">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
@@ -89,7 +89,7 @@ export default function PlatziLivesPage() {
         <button
           onClick={refresh}
           disabled={loading}
-          className="rounded-lg border border-[#0aeb8b]/30 bg-transparent px-4 py-2 text-sm font-medium text-[#0aeb8b] transition hover:bg-[#0aeb8b]/10 disabled:opacity-50"
+          className="rounded-lg border border-accent/30 bg-transparent px-4 py-2 text-sm font-medium text-accent transition hover:bg-accent/10 disabled:opacity-50"
         >
           {loading ? "Buscando…" : "Actualizar"}
         </button>
@@ -108,14 +108,14 @@ export default function PlatziLivesPage() {
           {displayed ? (
             <PlayerPanel stream={displayed} autoplay={chosen !== null} />
           ) : (
-            <div className="aspect-video w-full animate-pulse rounded-xl bg-[#14171c]" />
+            <div className="aspect-video w-full animate-pulse rounded-xl bg-surface" />
           )}
         </div>
 
         {/* Lista lateral */}
         <aside className="glass backdrop-blur-md custom-scroll flex flex-col gap-10 rounded-2xl p-4 sm:p-5 lg:max-h-[80vh] lg:overflow-y-auto">
           <section aria-label="En vivo ahora">
-            <h2 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-gray-300">
+            <h2 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-muted">
               <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
               En vivo ahora
             </h2>
@@ -140,14 +140,14 @@ export default function PlatziLivesPage() {
 
           <section aria-label="Lives anteriores">
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-sm font-bold uppercase tracking-wide text-gray-300">
+              <h2 className="text-sm font-bold uppercase tracking-wide text-muted">
                 Lives anteriores
               </h2>
               <select
                 value={order}
                 onChange={(e) => setOrder(e.target.value as SortOrder)}
                 aria-label="Ordenar lives"
-                className="rounded-lg bg-[#14171c] px-3 py-1.5 text-xs text-gray-300 ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
+                className="rounded-lg bg-surface px-3 py-1.5 text-xs text-muted ring-1 ring-border focus:outline-none focus:ring-accent/50"
               >
                 <option value="desc">Más recientes primero</option>
                 <option value="asc">Más antiguos primero</option>
@@ -157,11 +157,11 @@ export default function PlatziLivesPage() {
             {loading && streams.length === 0 ? (
               <div className="flex flex-col gap-3">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="h-24 animate-pulse rounded-xl bg-[#14171c]" />
+                  <div key={i} className="h-24 animate-pulse rounded-xl bg-surface" />
                 ))}
               </div>
             ) : past.length === 0 ? (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-faint">
                 Aún no hay lives guardados. Cuando Platzi transmita, aparecerá
                 aquí automáticamente.
               </p>

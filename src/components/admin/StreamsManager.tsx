@@ -92,7 +92,7 @@ export function StreamsManager({ secret }: { secret: string }) {
 
   return (
     <section>
-      <p className="mb-6 text-sm text-gray-400">
+      <p className="mb-6 text-sm text-muted">
         Los lives se detectan y guardan automáticamente. Aquí puedes agregar uno a
         mano o quitar los que no quieras mostrar.
       </p>
@@ -104,39 +104,39 @@ export function StreamsManager({ secret }: { secret: string }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Pega una URL de YouTube o un ID de video…"
-          className="flex-1 rounded-lg bg-[#14171c] px-4 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
+          className="flex-1 rounded-lg bg-surface px-4 py-2 text-sm text-foreground ring-1 ring-border focus:outline-none focus:ring-accent/50"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="rounded-lg bg-[#0aeb8b] px-5 py-2 text-sm font-semibold text-[#0e1013] hover:bg-[#08c975] disabled:opacity-50 transition"
+          className="rounded-lg bg-accent px-5 py-2 text-sm font-semibold text-on-accent hover:opacity-90 disabled:opacity-50 transition"
         >
           {loading ? "Agregando…" : "Agregar"}
         </button>
       </form>
 
       {status && (
-        <p className={`mb-4 text-sm ${status.ok ? "text-[#0aeb8b]" : "text-red-400"}`}>
+        <p className={`mb-4 text-sm ${status.ok ? "text-accent" : "text-red-400"}`}>
           {status.text}
         </p>
       )}
 
       {/* Lista de videos guardados */}
       {streams.length === 0 ? (
-        <p className="text-sm text-gray-400">No hay videos guardados.</p>
+        <p className="text-sm text-muted">No hay videos guardados.</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {streams.map((s) => (
             <li
               key={s.videoId}
-              className="flex items-center justify-between rounded-lg bg-[#14171c] px-4 py-3 ring-1 ring-[#0aeb8b]/20"
+              className="flex items-center justify-between rounded-lg bg-surface px-4 py-3 ring-1 ring-accent/20"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-white">{s.title}</p>
-                <p className="text-xs text-gray-400">
+                <p className="truncate text-sm font-medium text-foreground">{s.title}</p>
+                <p className="text-xs text-muted">
                   {s.videoId}
                   {s.liveStartedAt && (
-                    <span className="text-gray-500">
+                    <span className="text-faint">
                       {" · "}
                       {formatDate(s.liveStartedAt)}
                     </span>

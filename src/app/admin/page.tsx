@@ -36,13 +36,13 @@ export default function AdminPage() {
 
   if (!authed) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#0e1013] px-4">
+      <main className="flex min-h-screen items-center justify-center bg-background px-4">
         <form onSubmit={handleLogin} className="flex w-full max-w-sm flex-col gap-4">
           <div className="mb-2">
-            <h1 className="text-2xl font-bold text-white">
-              Panel <span className="text-[#0aeb8b]">Admin</span>
+            <h1 className="text-2xl font-bold text-foreground">
+              Panel <span className="text-accent">Admin</span>
             </h1>
-            <p className="mt-1 text-sm text-gray-400">
+            <p className="mt-1 text-sm text-muted">
               Gestiona el catálogo y los lives
             </p>
           </div>
@@ -51,12 +51,12 @@ export default function AdminPage() {
             value={secret}
             onChange={(e) => setSecret(e.target.value)}
             placeholder="Contraseña de administrador"
-            className="rounded-lg bg-[#14171c] px-4 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
+            className="rounded-lg bg-surface px-4 py-2 text-sm text-foreground ring-1 ring-border focus:outline-none focus:ring-accent/50"
           />
           {error && <p className="text-sm text-red-400">{error}</p>}
           <button
             type="submit"
-            className="rounded-lg bg-[#0aeb8b] py-2 text-sm font-semibold text-[#0e1013] hover:bg-[#08c975] transition"
+            className="rounded-lg bg-accent py-2 text-sm font-semibold text-on-accent hover:opacity-90 transition"
           >
             Entrar
           </button>
@@ -68,24 +68,24 @@ export default function AdminPage() {
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-10">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">
-          Panel <span className="text-[#0aeb8b]">Admin</span>
+        <h1 className="text-2xl font-bold text-foreground">
+          Panel <span className="text-accent">Admin</span>
         </h1>
-        <p className="mt-1 text-sm text-gray-400">
+        <p className="mt-1 text-sm text-muted">
           Organiza recursos de aprendizaje y los lives de Platzi
         </p>
       </div>
 
       {/* Pestañas internas */}
-      <div className="mb-8 flex gap-1 border-b border-white/10">
+      <div className="mb-8 flex gap-1 border-b border-border">
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition ${
               tab === t.key
-                ? "border-[#0aeb8b] text-[#0aeb8b]"
-                : "border-transparent text-gray-400 hover:text-white"
+                ? "border-accent text-accent"
+                : "border-transparent text-muted hover:text-foreground"
             }`}
           >
             {t.label}

@@ -6,6 +6,7 @@ export interface Category {
   description: string | null;
   sort_order: number;
   is_active: boolean;
+  color: string | null;
   created_at?: string;
 }
 

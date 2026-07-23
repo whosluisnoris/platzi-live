@@ -33,13 +33,29 @@ En móvil las columnas se apilan (reproductor arriba). Rejilla:
 Las tarjetas muestran "hace 3 semanas · 3 h 58 min" (fecha relativa + duración del
 video); el reproductor añade además la fecha absoluta.
 
+## Paleta, tema claro/oscuro y color por categoría
+
+Tras el pivot, la marca dejó el verde de Platzi por una paleta propia (definida en
+[`globals.css`](../src/app/globals.css)): crema `#FFF8F0`, vino `#5E0035`, crema-verdosa
+`#F5F8DE`, rojo `#FF4242` y magenta `#FB62F6`.
+
+- **Tokens semánticos** (`background`, `surface`, `foreground`, `muted`, `border`,
+  `fill`, `accent`, …) mapeados en `@theme`. Los componentes usan estos tokens, no
+  colores fijos, así que el mismo marcado sirve para ambos temas.
+- **Tema claro/oscuro**: `[data-theme]` en `<html>`. Un script en el `<body>` lo fija
+  antes del primer paint (elección guardada en `localStorage` o preferencia del sistema),
+  sin parpadeo; `ThemeToggle` lo alterna. Por defecto: oscuro (base vino-negro).
+- **Color por categoría**: cada categoría tiene su `color` (columna en DB, editable en
+  `/admin`). Se usa en la pestaña activa, la cabecera de la categoría y el marco de sus
+  tarjetas; en la landing los colores de todas las categorías se **mezclan** en un
+  degradado y en manchas de fondo. El degradado de marca (rojo → magenta) firma los CTAs
+  (`.brand-gradient` / `.brand-text`).
+
 ## Estilo glass y barra de scroll
 
-- Tonos base más cercanos al negro y unificados: fondo `#0e1013`, superficie `#14171c`
-  (variables en [`globals.css`](../src/app/globals.css)).
-- Clase `.glass`: degradado sutil de gris claro + `backdrop-blur` + borde luminoso.
+- Clase `.glass`: tinte sutil derivado del fondo + `backdrop-blur` + borde luminoso.
   Se usa en el header, el panel de la lista, la encuesta flotante y las tarjetas del
-  admin.
+  admin. Adaptada a tokens para verse bien en claro y oscuro.
 - Clase `.custom-scroll`: barra de 10px con degradado claro y carril tenue, uniforme
   en las dos zonas con scroll propio (más visible que la nativa).
 

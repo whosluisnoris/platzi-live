@@ -25,6 +25,7 @@ export function CategoriesManager({
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [description, setDescription] = useState("");
+  const [color, setColor] = useState("#fb62f6");
   const [status, setStatus] = useState<{ text: string; ok: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -59,13 +60,14 @@ export function CategoriesManager({
     const res = await fetch("/api/admin/categories", {
       method: "POST",
       headers,
-      body: JSON.stringify({ name: name.trim(), slug: finalSlug, description }),
+      body: JSON.stringify({ name: name.trim(), slug: finalSlug, description, color }),
     });
     if (res.ok) {
       setName("");
       setSlug("");
       setSlugTouched(false);
       setDescription("");
+      setColor("#fb62f6");
       setStatus({ text: "Categoría creada ✓", ok: true });
       await refresh();
     } else {
@@ -121,15 +123,15 @@ export function CategoriesManager({
 
   return (
     <section className="mb-10">
-      <h2 className="mb-4 text-lg font-bold text-white">
-        Categorías <span className="text-[#0aeb8b]">del catálogo</span>
+      <h2 className="mb-4 text-lg font-bold text-foreground">
+        Categorías <span className="text-accent">del catálogo</span>
       </h2>
 
       <form
         onSubmit={handleCreate}
-        className="mb-6 flex flex-col gap-3 rounded-xl bg-[#14171c] p-4 ring-1 ring-white/10 sm:flex-row sm:flex-wrap sm:items-end"
+        className="mb-6 flex flex-col gap-3 rounded-xl bg-surface p-4 ring-1 ring-border sm:flex-row sm:flex-wrap sm:items-end"
       >
-        <label className="flex flex-1 flex-col gap-1 text-xs text-gray-400">
+        <label className="flex flex-1 flex-col gap-1 text-xs text-muted">
           Nombre
           <input
             type="text"
@@ -139,10 +141,10 @@ export function CategoriesManager({
               if (!slugTouched) setSlug(slugify(e.target.value));
             }}
             placeholder="p. ej. Visión por computadora"
-            className="rounded-lg bg-[#0e1013] px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
+            className="rounded-lg bg-background px-3 py-2 text-sm text-foreground ring-1 ring-border focus:outline-none focus:ring-accent/50"
           />
         </label>
-        <label className="flex flex-1 flex-col gap-1 text-xs text-gray-400">
+        <label className="flex flex-1 flex-col gap-1 text-xs text-muted">
           Slug (URL)
           <input
             type="text"
@@ -152,43 +154,53 @@ export function CategoriesManager({
               setSlugTouched(true);
             }}
             placeholder="vision-por-computadora"
-            className="rounded-lg bg-[#0e1013] px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
+            className="rounded-lg bg-background px-3 py-2 text-sm text-foreground ring-1 ring-border focus:outline-none focus:ring-accent/50"
           />
         </label>
-        <label className="flex flex-[2_2_0%] flex-col gap-1 text-xs text-gray-400">
+        <label className="flex flex-[2_2_0%] flex-col gap-1 text-xs text-muted">
           Descripción (opcional)
           <input
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Breve descripción de la temática"
-            className="rounded-lg bg-[#0e1013] px-3 py-2 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
+            className="rounded-lg bg-background px-3 py-2 text-sm text-foreground ring-1 ring-border focus:outline-none focus:ring-accent/50"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-muted">
+          Color
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            aria-label="Color de la categoría"
+            className="h-9 w-14 cursor-pointer rounded-lg bg-background ring-1 ring-border"
           />
         </label>
         <button
           type="submit"
           disabled={loading || !name.trim()}
-          className="rounded-lg bg-[#0aeb8b] px-5 py-2 text-sm font-semibold text-[#0e1013] hover:bg-[#08c975] disabled:opacity-50 transition"
+          className="rounded-lg bg-accent px-5 py-2 text-sm font-semibold text-on-accent hover:opacity-90 disabled:opacity-50 transition"
         >
           {loading ? "Creando…" : "Crear"}
         </button>
       </form>
 
       {status && (
-        <p className={`mb-4 text-sm ${status.ok ? "text-[#0aeb8b]" : "text-red-400"}`}>
+        <p className={`mb-4 text-sm ${status.ok ? "text-accent" : "text-red-400"}`}>
           {status.text}
         </p>
       )}
 
       {categories.length === 0 ? (
-        <p className="text-sm text-gray-400">Aún no hay categorías.</p>
+        <p className="text-sm text-muted">Aún no hay categorías.</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {categories.map((c, i) => (
             <li
               key={c.id}
-              className={`flex items-center justify-between gap-3 rounded-lg bg-[#14171c] px-4 py-3 ring-1 ${
-                c.is_active ? "ring-white/10" : "opacity-60 ring-white/5"
+              className={`flex items-center justify-between gap-3 rounded-lg bg-surface px-4 py-3 ring-1 ${
+                c.is_active ? "ring-border" : "opacity-60 ring-border"
               }`}
             >
               <div className="flex items-center gap-3">
@@ -197,7 +209,7 @@ export function CategoriesManager({
                     onClick={() => move(i, -1)}
                     disabled={i === 0}
                     aria-label="Subir"
-                    className="text-gray-500 hover:text-white disabled:opacity-20"
+                    className="text-faint hover:text-foreground disabled:opacity-20"
                   >
                     ▲
                   </button>
@@ -205,18 +217,26 @@ export function CategoriesManager({
                     onClick={() => move(i, 1)}
                     disabled={i === categories.length - 1}
                     aria-label="Bajar"
-                    className="text-gray-500 hover:text-white disabled:opacity-20"
+                    className="text-faint hover:text-foreground disabled:opacity-20"
                   >
                     ▼
                   </button>
                 </div>
+                <input
+                  type="color"
+                  value={c.color ?? "#fb62f6"}
+                  onChange={(e) => patch(c.id, { color: e.target.value })}
+                  aria-label={`Color de ${c.name}`}
+                  title="Cambiar color de la categoría"
+                  className="h-7 w-7 shrink-0 cursor-pointer rounded-md bg-transparent ring-1 ring-border"
+                />
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-white">
+                  <p className="text-sm font-medium text-foreground">
                     {c.name}{" "}
-                    <span className="font-mono text-xs text-gray-500">/{c.slug}</span>
+                    <span className="font-mono text-xs text-faint">/{c.slug}</span>
                   </p>
                   {c.description && (
-                    <p className="truncate text-xs text-gray-500">{c.description}</p>
+                    <p className="truncate text-xs text-faint">{c.description}</p>
                   )}
                 </div>
               </div>
@@ -225,8 +245,8 @@ export function CategoriesManager({
                   onClick={() => patch(c.id, { isActive: !c.is_active })}
                   className={`rounded-lg px-3 py-1.5 text-xs transition ${
                     c.is_active
-                      ? "border border-white/10 text-gray-300 hover:bg-white/5"
-                      : "border border-[#0aeb8b]/30 text-[#0aeb8b] hover:bg-[#0aeb8b]/10"
+                      ? "border border-border text-muted hover:bg-fill"
+                      : "border border-accent/30 text-accent hover:bg-accent/10"
                   }`}
                 >
                   {c.is_active ? "Activa" : "Inactiva"}

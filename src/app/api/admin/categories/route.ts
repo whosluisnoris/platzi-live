@@ -6,6 +6,14 @@ export const dynamic = "force-dynamic";
 
 // slug para la URL: minúsculas, números y guiones (kebab-case)
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+
+function cleanColor(v: unknown): string | null | undefined {
+  if (typeof v !== "string") return undefined;
+  const c = v.trim();
+  if (c === "") return null;
+  return HEX_RE.test(c) ? c : undefined;
+}
 
 // GET /api/admin/categories — todas las categorías (incluye inactivas)
 export async function GET(request: NextRequest) {
@@ -60,9 +68,17 @@ export async function POST(request: NextRequest) {
       ? body.sortOrder
       : (maxRow?.sort_order ?? 0) + 1;
 
+  const color = cleanColor(body.color);
+
   const { error } = await admin
     .from("categories")
-    .insert({ slug, name, description, sort_order: sortOrder });
+    .insert({
+      slug,
+      name,
+      description,
+      sort_order: sortOrder,
+      ...(color !== undefined && { color }),
+    });
 
   if (error) {
     const conflict = error.code === "23505";
@@ -92,6 +108,8 @@ export async function PATCH(request: NextRequest) {
     updates.description = body.description.trim() || null;
   if (typeof body.sortOrder === "number") updates.sort_order = body.sortOrder;
   if (typeof body.isActive === "boolean") updates.is_active = body.isActive;
+  const color = cleanColor(body.color);
+  if (color !== undefined) updates.color = color;
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: "Nada que actualizar" }, { status: 400 });

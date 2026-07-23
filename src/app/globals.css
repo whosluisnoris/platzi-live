@@ -1,70 +1,142 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────────────────────
+   Paleta base (los 5 colores de marca)
+   cream #FFF8F0 · wine #5E0035 · pale #F5F8DE · red #FF4242 · magenta #FB62F6
+   Los tokens semánticos de abajo se derivan de estos y cambian por tema.
+   ───────────────────────────────────────────────────────────── */
+
 :root {
-  --platzi-green: #0aeb8b;
-  --platzi-green-dark: #08c975;
-  --platzi-bg: #0e1013;      /* Vampire Black llevado un paso hacia el negro */
-  --platzi-surface: #14171c; /* superficie apenas más clara, misma familia */
-  --platzi-border: rgba(10, 235, 139, 0.15);
+  /* marca cruda (constantes en ambos temas) */
+  --brand-cream: #fff8f0;
+  --brand-wine: #5e0035;
+  --brand-pale: #f5f8de;
+  --brand-red: #ff4242;
+  --brand-magenta: #fb62f6;
+
+  /* ── Tema oscuro (por defecto) ── */
+  --bg: #150610;
+  --bg-elevated: #1e0c18;
+  --surface: #24101d;
+  --surface-2: #311827;
+  --foreground: #fff8f0;
+  --muted: rgba(255, 248, 240, 0.62);
+  --faint: rgba(255, 248, 240, 0.4);
+  --border: rgba(255, 248, 240, 0.12);
+  --border-strong: rgba(255, 248, 240, 0.22);
+  --fill: rgba(255, 248, 240, 0.05);
+  --fill-strong: rgba(255, 248, 240, 0.1);
+  --accent: #fb62f6;        /* magenta: enlaces, foco, estados activos */
+  --accent-2: #ff4242;      /* rojo: acento secundario */
+  --on-accent: #21000f;     /* texto sobre rellenos vivos */
+  --glass-tint: rgba(255, 248, 240, 0.05);
+  --glass-border: rgba(255, 248, 240, 0.1);
+  --scroll-thumb: rgba(255, 248, 240, 0.34);
+  --scroll-track: rgba(255, 248, 240, 0.05);
 }
 
+:root[data-theme="light"] {
+  --bg: #fff8f0;
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f5f8de;
+  --foreground: #3d0021;
+  --muted: rgba(61, 0, 33, 0.64);
+  --faint: rgba(61, 0, 33, 0.42);
+  --border: rgba(94, 0, 53, 0.16);
+  --border-strong: rgba(94, 0, 53, 0.32);
+  --fill: rgba(94, 0, 53, 0.045);
+  --fill-strong: rgba(94, 0, 53, 0.09);
+  --accent: #d61f95;        /* magenta más profundo, legible sobre crema */
+  --accent-2: #ff4242;
+  --on-accent: #fff8f0;
+  --glass-tint: rgba(94, 0, 53, 0.03);
+  --glass-border: rgba(94, 0, 53, 0.12);
+  --scroll-thumb: rgba(94, 0, 53, 0.3);
+  --scroll-track: rgba(94, 0, 53, 0.06);
+}
+
+/* Mapeo a utilidades de Tailwind (bg-background, text-foreground, …).
+   Al referenciar variables, las clases resuelven en runtime y cambian de tema. */
 @theme inline {
-  --color-background: var(--platzi-bg);
-  --color-foreground: #ffffff;
-  --color-platzi: var(--platzi-green);
+  --color-background: var(--bg);
+  --color-elevated: var(--bg-elevated);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fill: var(--fill);
+  --color-fill-strong: var(--fill-strong);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-on-accent: var(--on-accent);
+  --color-brand-red: var(--brand-red);
+  --color-brand-magenta: var(--brand-magenta);
+  --color-brand-wine: var(--brand-wine);
+  --color-brand-cream: var(--brand-cream);
+  --color-brand-pale: var(--brand-pale);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-body {
-  background: var(--platzi-bg);
-  color: #ffffff;
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+html {
+  color-scheme: dark;
+}
+html[data-theme="light"] {
+  color-scheme: light;
 }
 
-/* ── Barra de scroll visible y uniforme para las zonas con scroll propio ── */
+body {
+  background: var(--bg);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Degradado de marca (rojo → magenta), para momentos "hero" y CTAs. */
+.brand-gradient {
+  background-image: linear-gradient(100deg, var(--brand-red), var(--brand-magenta));
+}
+.brand-text {
+  background-image: linear-gradient(100deg, var(--brand-red), var(--brand-magenta));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ── Barra de scroll uniforme para las zonas con scroll propio ── */
 .custom-scroll::-webkit-scrollbar {
   width: 10px;
 }
 .custom-scroll::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--scroll-track);
   border-radius: 999px;
 }
 .custom-scroll::-webkit-scrollbar-thumb {
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
-  background-image: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.38),
-    rgba(255, 255, 255, 0.16)
-  );
+  background-color: var(--scroll-thumb);
 }
-.custom-scroll::-webkit-scrollbar-thumb:hover {
-  background-image: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.52),
-    rgba(255, 255, 255, 0.28)
-  );
-}
-/* Firefox (sin ::-webkit-scrollbar): color equivalente con ancho estándar */
 @supports not selector(::-webkit-scrollbar) {
   .custom-scroll {
     scrollbar-width: auto;
-    scrollbar-color: rgba(255, 255, 255, 0.35) rgba(255, 255, 255, 0.05);
+    scrollbar-color: var(--scroll-thumb) var(--scroll-track);
   }
 }
 
-/* ── Efecto glass sutil: degradado gris claro + borde luminoso ──
-   El blur lo pone la utilidad `backdrop-blur-md` de Tailwind en cada uso
-   (Lightning CSS elimina backdrop-filter escrito a mano en este archivo). */
+/* ── Efecto glass: tinte sutil + borde luminoso (el blur lo pone
+      backdrop-blur-* de Tailwind en cada uso). ── */
 .glass {
-  background-color: rgba(14, 16, 19, 0.72);
+  background-color: color-mix(in srgb, var(--bg) 72%, transparent);
   background-image: linear-gradient(
     165deg,
-    rgba(255, 255, 255, 0.08),
-    rgba(255, 255, 255, 0.02) 55%,
-    rgba(255, 255, 255, 0.05)
+    var(--glass-tint),
+    transparent 55%,
+    var(--glass-tint)
   );
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--glass-border);
 }

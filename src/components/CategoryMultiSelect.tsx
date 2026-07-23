@@ -15,7 +15,7 @@ export function CategoryMultiSelect({
 }) {
   if (categories.length === 0) {
     return (
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-faint">
         Crea al menos una categoría para poder asignarla.
       </p>
     );
@@ -39,8 +39,8 @@ export function CategoryMultiSelect({
             aria-pressed={on}
             className={`rounded-full px-3 py-1.5 text-xs font-medium transition active:scale-95 ${
               on
-                ? "bg-[#0aeb8b] text-[#0e1013]"
-                : "bg-white/5 text-gray-300 ring-1 ring-white/10 hover:bg-white/10"
+                ? "bg-accent text-on-accent"
+                : "bg-fill text-muted ring-1 ring-border hover:bg-fill-strong"
             }`}
           >
             {on && "✓ "}

@@ -48,8 +48,8 @@ export function ResourceDetail({
         <PlayerPanel stream={displayed} autoplay={chosen !== null} dateVerb="Publicado" />
       </div>
       <aside className="glass backdrop-blur-md custom-scroll flex max-h-[75vh] flex-col gap-3 rounded-2xl p-4 sm:p-5 lg:overflow-y-auto">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-gray-300">
-          Episodios <span className="text-gray-500">({episodes.length})</span>
+        <h2 className="text-sm font-bold uppercase tracking-wide text-muted">
+          Episodios <span className="text-faint">({episodes.length})</span>
         </h2>
         {episodes.map((ep) => (
           <VideoListItem

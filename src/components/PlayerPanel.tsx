@@ -22,7 +22,7 @@ export function PlayerPanel({ stream, autoplay, dateVerb = "Transmitido" }: Play
 
   return (
     <section aria-label="Reproductor">
-      <div className="aspect-video w-full overflow-hidden rounded-xl bg-black shadow-2xl ring-1 ring-white/10">
+      <div className="aspect-video w-full overflow-hidden rounded-xl bg-black shadow-2xl ring-1 ring-border">
         <iframe
           key={embedSrc} /* re-monta el iframe al cambiar de video */
           src={embedSrc}
@@ -34,20 +34,20 @@ export function PlayerPanel({ stream, autoplay, dateVerb = "Transmitido" }: Play
       </div>
 
       <div className="mt-5 flex flex-col gap-3">
-        <h1 className="text-lg font-bold leading-snug text-white sm:text-xl">
+        <h1 className="text-lg font-bold leading-snug text-foreground sm:text-xl">
           {stream.title}
         </h1>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400">
-            <span className="font-semibold text-white">{stream.channelTitle}</span>
+          <div className="flex flex-wrap items-center gap-3 text-sm text-muted">
+            <span className="font-semibold text-foreground">{stream.channelTitle}</span>
             {stream.isLive ? (
               <StatusBadge />
             ) : (
               relative && (
                 <span>
                   {dateVerb} {relative}
-                  {absolute && <span className="text-gray-500"> · {absolute}</span>}
-                  {duration && <span className="text-gray-500"> · {duration}</span>}
+                  {absolute && <span className="text-faint"> · {absolute}</span>}
+                  {duration && <span className="text-faint"> · {duration}</span>}
                 </span>
               )
             )}
@@ -57,7 +57,7 @@ export function PlayerPanel({ stream, autoplay, dateVerb = "Transmitido" }: Play
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackEvent(stream.videoId, "open_youtube")}
-            className="rounded-lg border border-[#0aeb8b]/30 px-4 py-2 text-sm font-semibold text-[#0aeb8b] transition hover:bg-[#0aeb8b]/10 active:scale-95"
+            className="rounded-lg border border-accent/30 px-4 py-2 text-sm font-semibold text-accent transition hover:bg-accent/10 active:scale-95"
           >
             Ver en YouTube ↗
           </a>

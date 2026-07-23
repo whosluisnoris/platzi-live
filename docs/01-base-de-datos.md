@@ -67,6 +67,7 @@ El pivot a centro de recursos añade cuatro tablas nuevas (todas aditivas, sin t
 | `description` | text | Opcional, para landing y encabezado de la pestaña |
 | `sort_order` | integer | Orden de las pestañas (editable en `/admin`) |
 | `is_active` | boolean | Ocultar sin borrar (default `true`) |
+| `color` | text | Color predominante (hex, p. ej. `#FB62F6`); la UI cae al acento si es `null` |
 | `created_at` | timestamptz | |
 
 > "Platzi Lives" y "Todo" **no** son filas de esta tabla: son pestañas fijas en código.
@@ -152,3 +153,5 @@ Las escrituras siempre pasan por rutas API del servidor con `SUPABASE_SERVICE_RO
    el código anterior sigue funcionando sin cambios.
 6. **`seed_default_categories`** (2026-07-23): inserta las categorías iniciales (IA,
    Agentes, Datos) con `ON CONFLICT (slug) DO NOTHING` (idempotente).
+7. **`add_category_color`** (2026-07-23): columna `color` en `categories` (aditiva) +
+   asignación de la paleta de marca a IA (magenta), Agentes (rojo) y Datos (vino).
