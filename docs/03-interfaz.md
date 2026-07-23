@@ -36,8 +36,9 @@ video); el reproductor añade además la fecha absoluta.
 ## Paleta, tema claro/oscuro y color por categoría
 
 Tras el pivot, la marca dejó el verde de Platzi por una paleta propia (definida en
-[`globals.css`](../src/app/globals.css)): crema `#FFF8F0`, vino `#5E0035`, crema-verdosa
-`#F5F8DE`, rojo `#FF4242` y magenta `#FB62F6`.
+[`globals.css`](../src/app/globals.css)). Esta rama usa la variante **carbon & flame**:
+un esquema minimalista monocromo con un único acento — flame `#F15025`, blanco
+`#FFFFFF`, alabastro `#E6E8E6`, gris polvo `#CED0CE` y carbón `#191919`.
 
 - **Tokens semánticos** (`background`, `surface`, `foreground`, `muted`, `border`,
   `fill`, `accent`, …) mapeados en `@theme`. Los componentes usan estos tokens, no
@@ -45,11 +46,11 @@ Tras el pivot, la marca dejó el verde de Platzi por una paleta propia (definida
 - **Tema claro/oscuro**: `[data-theme]` en `<html>`. Un script en el `<body>` lo fija
   antes del primer paint (elección guardada en `localStorage` o preferencia del sistema),
   sin parpadeo; `ThemeToggle` lo alterna. Por defecto: oscuro (base vino-negro).
-- **Color por categoría**: cada categoría tiene su `color` (columna en DB, editable en
-  `/admin`). Se usa en la pestaña activa, la cabecera de la categoría y el marco de sus
-  tarjetas; en la landing los colores de todas las categorías se **mezclan** en un
-  degradado y en manchas de fondo. El degradado de marca (rojo → magenta) firma los CTAs
-  (`.brand-gradient` / `.brand-text`).
+- **Acento único**: al ser una paleta monocromo con un solo color, todo el acento
+  (pestaña activa, cabecera de categoría, marco de tarjetas, CTAs) usa el flame. La
+  columna `color` por categoría sigue existiendo en la DB, pero aquí `catColor()` la
+  ignora y devuelve el acento para mantener la coherencia. La landing usa el degradado
+  de la paleta completa (`--blend`) como firma.
 
 ## Estilo glass y barra de scroll
 

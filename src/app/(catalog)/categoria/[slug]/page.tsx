@@ -38,7 +38,7 @@ export default async function CategoryPage({
       <ResourceGrid
         resources={resources}
         from={slug}
-        accent={category.color}
+        accent={color}
         empty="Aún no hay recursos en esta categoría. Pronto agregaremos más."
       />
     </main>

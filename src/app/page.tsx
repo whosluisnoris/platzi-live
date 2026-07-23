@@ -3,7 +3,6 @@ import { getActiveCategories, getCategoryResourceCounts } from "@/lib/catalog";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SITE_NAME } from "@/lib/constants";
-import { catColor } from "@/lib/color";
 
 export const dynamic = "force-dynamic";
 
@@ -32,29 +31,25 @@ export default async function LandingPage() {
     getCategoryResourceCounts(),
   ]);
 
-  // Mezcla de los colores de las categorías (el "predominante" de cada una) en
-  // un solo degradado que firma la página principal.
-  const palette = categories.map((c) => catColor(c.color));
-  const blend =
-    palette.length >= 2
-      ? `linear-gradient(100deg, ${palette.join(", ")})`
-      : "linear-gradient(100deg, var(--brand-red), var(--brand-magenta))";
+  // Firma de la landing: degradado que mezcla toda la paleta (definido por tema
+  // en globals.css). El acento naranja es único, así que la mezcla vive aquí.
+  const blend = "var(--blend)";
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden">
-      {/* Manchas de color de fondo (mezcla de las temáticas), muy sutiles */}
+      {/* Resplandor de acento (flame) de fondo, muy sutil */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div
-          className="absolute -left-32 -top-40 h-[36rem] w-[36rem] rounded-full opacity-25 blur-[120px]"
-          style={{ background: palette[0] ?? "var(--brand-magenta)" }}
+          className="absolute -left-32 -top-40 h-[36rem] w-[36rem] rounded-full opacity-20 blur-[120px]"
+          style={{ background: "var(--brand-flame)" }}
         />
         <div
-          className="absolute -right-32 top-10 h-[32rem] w-[32rem] rounded-full opacity-20 blur-[120px]"
-          style={{ background: palette[1] ?? "var(--brand-red)" }}
+          className="absolute -right-40 top-10 h-[30rem] w-[30rem] rounded-full opacity-10 blur-[120px]"
+          style={{ background: "var(--brand-dust)" }}
         />
         <div
-          className="absolute bottom-0 left-1/3 h-[28rem] w-[28rem] rounded-full opacity-15 blur-[120px]"
-          style={{ background: palette[2] ?? "var(--brand-wine)" }}
+          className="absolute bottom-0 left-1/3 h-[26rem] w-[26rem] rounded-full opacity-15 blur-[120px]"
+          style={{ background: "var(--brand-flame)" }}
         />
       </div>
 
@@ -99,7 +94,7 @@ export default async function LandingPage() {
         <div className="mt-9 flex flex-wrap items-center gap-5">
           <Link
             href="/todo"
-            className="brand-gradient rounded-full px-7 py-3.5 text-sm font-bold text-[#fff8f0] shadow-lg shadow-black/20 transition hover:brightness-110 active:scale-95"
+            className="brand-gradient rounded-full px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-black/20 transition hover:brightness-110 active:scale-95"
           >
             Explorar los recursos
           </Link>
@@ -156,7 +151,7 @@ export default async function LandingPage() {
 
           <div className="border-t border-border">
             {categories.map((c) => {
-              const color = catColor(c.color);
+              const color = "var(--accent)";
               const n = counts.get(c.id) ?? 0;
               return (
                 <Link

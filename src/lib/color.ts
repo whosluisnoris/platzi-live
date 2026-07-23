@@ -1,8 +1,11 @@
 // Utilidades de color para los acentos por categoría. Puras y server-safe.
 
-// Color de categoría con fallback al acento del tema si no hay uno definido.
-export function catColor(color: string | null | undefined): string {
-  return color && /^#[0-9a-fA-F]{6}$/.test(color) ? color : "var(--accent)";
+// Paleta carbon & flame: monocromo con un único acento. Se ignora el color por
+// categoría guardado en la DB (compartida con la otra rama) y todo usa el acento
+// del tema, para mantener la coherencia minimalista de esta paleta.
+export function catColor(_color: string | null | undefined): string {
+  void _color;
+  return "var(--accent)";
 }
 
 // Luminancia relativa aproximada (sRGB) para decidir texto legible encima.

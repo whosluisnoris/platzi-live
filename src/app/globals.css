@@ -1,63 +1,65 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────────────────────
-   Paleta base (los 5 colores de marca)
-   cream #FFF8F0 · wine #5E0035 · pale #F5F8DE · red #FF4242 · magenta #FB62F6
-   Los tokens semánticos de abajo se derivan de estos y cambian por tema.
+   Paleta base (carbon & flame): minimalista monocromo + un acento.
+   flame #F15025 · white #FFFFFF · alabaster #E6E8E6 · dust #CED0CE · carbon #191919
+   Los tokens semánticos se derivan de estos y cambian por tema.
    ───────────────────────────────────────────────────────────── */
 
 :root {
   /* marca cruda (constantes en ambos temas) */
-  --brand-cream: #fff8f0;
-  --brand-wine: #5e0035;
-  --brand-pale: #f5f8de;
-  --brand-red: #ff4242;
-  --brand-magenta: #fb62f6;
+  --brand-flame: #f15025;
+  --brand-white: #ffffff;
+  --brand-alabaster: #e6e8e6;
+  --brand-dust: #ced0ce;
+  --brand-carbon: #191919;
 
   /* ── Tema oscuro (por defecto) ── */
-  --bg: #150610;
-  --bg-elevated: #1e0c18;
-  --surface: #24101d;
-  --surface-2: #311827;
-  --foreground: #fff8f0;
-  --muted: rgba(255, 248, 240, 0.62);
-  --faint: rgba(255, 248, 240, 0.4);
-  --border: rgba(255, 248, 240, 0.12);
-  --border-strong: rgba(255, 248, 240, 0.22);
-  --fill: rgba(255, 248, 240, 0.05);
-  --fill-strong: rgba(255, 248, 240, 0.1);
-  --accent: #fb62f6;        /* magenta: enlaces, foco, estados activos */
-  --accent-2: #ff4242;      /* rojo: acento secundario */
-  --on-accent: #21000f;     /* texto sobre rellenos vivos */
-  --glass-tint: rgba(255, 248, 240, 0.05);
-  --glass-border: rgba(255, 248, 240, 0.1);
-  --scroll-thumb: rgba(255, 248, 240, 0.34);
-  --scroll-track: rgba(255, 248, 240, 0.05);
+  --bg: #161616;
+  --bg-elevated: #1f1f1f;
+  --surface: #202020;
+  --surface-2: #2a2a2a;
+  --foreground: #f4f4f2;
+  --muted: rgba(244, 244, 242, 0.6);
+  --faint: rgba(244, 244, 242, 0.4);
+  --border: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.22);
+  --fill: rgba(255, 255, 255, 0.05);
+  --fill-strong: rgba(255, 255, 255, 0.1);
+  --accent: #f15025;        /* flame: enlaces, foco, estados activos, CTAs */
+  --accent-2: #f15025;
+  --on-accent: #191919;     /* carbon sobre naranja (legible) */
+  --glass-tint: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --scroll-thumb: rgba(255, 255, 255, 0.34);
+  --scroll-track: rgba(255, 255, 255, 0.05);
+  /* firma de la landing: mezcla de toda la paleta */
+  --blend: linear-gradient(90deg, #f15025, #ffffff, #e6e8e6, #ced0ce, #191919);
 }
 
 :root[data-theme="light"] {
-  --bg: #fff8f0;
+  --bg: #ffffff;
   --bg-elevated: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f5f8de;
-  --foreground: #3d0021;
-  --muted: rgba(61, 0, 33, 0.64);
-  --faint: rgba(61, 0, 33, 0.42);
-  --border: rgba(94, 0, 53, 0.16);
-  --border-strong: rgba(94, 0, 53, 0.32);
-  --fill: rgba(94, 0, 53, 0.045);
-  --fill-strong: rgba(94, 0, 53, 0.09);
-  --accent: #d61f95;        /* magenta más profundo, legible sobre crema */
-  --accent-2: #ff4242;
-  --on-accent: #fff8f0;
-  --glass-tint: rgba(94, 0, 53, 0.03);
-  --glass-border: rgba(94, 0, 53, 0.12);
-  --scroll-thumb: rgba(94, 0, 53, 0.3);
-  --scroll-track: rgba(94, 0, 53, 0.06);
+  --surface-2: #e6e8e6;
+  --foreground: #191919;
+  --muted: rgba(25, 25, 25, 0.62);
+  --faint: rgba(25, 25, 25, 0.42);
+  --border: rgba(25, 25, 25, 0.14);
+  --border-strong: rgba(25, 25, 25, 0.3);
+  --fill: rgba(25, 25, 25, 0.04);
+  --fill-strong: rgba(25, 25, 25, 0.08);
+  --accent: #f15025;
+  --accent-2: #f15025;
+  --on-accent: #ffffff;     /* blanco sobre naranja en claro */
+  --glass-tint: rgba(25, 25, 25, 0.03);
+  --glass-border: rgba(25, 25, 25, 0.12);
+  --scroll-thumb: rgba(25, 25, 25, 0.3);
+  --scroll-track: rgba(25, 25, 25, 0.06);
+  --blend: linear-gradient(90deg, #f15025, #ced0ce, #191919);
 }
 
-/* Mapeo a utilidades de Tailwind (bg-background, text-foreground, …).
-   Al referenciar variables, las clases resuelven en runtime y cambian de tema. */
+/* Mapeo a utilidades de Tailwind (bg-background, text-foreground, …). */
 @theme inline {
   --color-background: var(--bg);
   --color-elevated: var(--bg-elevated);
@@ -73,11 +75,10 @@
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
   --color-on-accent: var(--on-accent);
-  --color-brand-red: var(--brand-red);
-  --color-brand-magenta: var(--brand-magenta);
-  --color-brand-wine: var(--brand-wine);
-  --color-brand-cream: var(--brand-cream);
-  --color-brand-pale: var(--brand-pale);
+  --color-brand-flame: var(--brand-flame);
+  --color-brand-carbon: var(--brand-carbon);
+  --color-brand-dust: var(--brand-dust);
+  --color-brand-alabaster: var(--brand-alabaster);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -96,12 +97,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Degradado de marca (rojo → magenta), para momentos "hero" y CTAs. */
+/* Degradado de marca (naranja), para CTAs y momentos "hero". */
 .brand-gradient {
-  background-image: linear-gradient(100deg, var(--brand-red), var(--brand-magenta));
+  background-image: linear-gradient(100deg, #f15025, #ff8a5c);
 }
 .brand-text {
-  background-image: linear-gradient(100deg, var(--brand-red), var(--brand-magenta));
+  background-image: linear-gradient(100deg, #f15025, #ff8a5c);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -128,8 +129,7 @@ body {
   }
 }
 
-/* ── Efecto glass: tinte sutil + borde luminoso (el blur lo pone
-      backdrop-blur-* de Tailwind en cada uso). ── */
+/* ── Efecto glass: tinte sutil + borde (el blur lo pone backdrop-blur-*). ── */
 .glass {
   background-color: color-mix(in srgb, var(--bg) 72%, transparent);
   background-image: linear-gradient(

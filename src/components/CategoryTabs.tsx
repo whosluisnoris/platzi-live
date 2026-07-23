@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { Category } from "@/lib/types";
 import { SITE_NAME } from "@/lib/constants";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { catColor } from "@/lib/color";
 
 type Tab = { href: string; label: string; color?: string | null };
 
@@ -37,7 +38,7 @@ export function CategoryTabs({ categories }: { categories: Category[] }) {
         <nav className="custom-scroll -mx-1 flex flex-1 gap-1 overflow-x-auto px-1">
           {tabs.map((t) => {
             const active = pathname === t.href || pathname.startsWith(`${t.href}/`);
-            const color = t.color;
+            const color = t.color ? catColor(t.color) : undefined;
             return (
               <Link
                 key={t.href}
