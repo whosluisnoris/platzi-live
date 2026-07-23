@@ -19,9 +19,10 @@ export interface VideoDetails {
   liveEndedAt: string | null;
   isLiveNow: boolean;
   durationSeconds: number | null;
+  channelId: string | null;
 }
 
-const PLATZI_CHANNEL_ID = "UC55-mxUj5Nj3niXFReG44OQ";
+export const PLATZI_CHANNEL_ID = "UC55-mxUj5Nj3niXFReG44OQ";
 const BROWSER_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
@@ -431,5 +432,10 @@ export async function fetchVideoDetails(videoId: string): Promise<VideoDetails> 
     isLiveNow,
     // en un live activo lengthSeconds es 0: la duración real llega al terminar
     durationSeconds: length && length > 0 && !isLiveNow ? length : null,
+    // Canal dueño del video, para descartar lives ajenos que YouTube mezcla
+    // como recomendaciones en las páginas del canal.
+    channelId:
+      firstMatch(html, /<meta itemprop="(?:channelId|identifier)" content="(UC[0-9A-Za-z_-]{22})"/) ??
+      firstMatch(html, /"channelId":"(UC[0-9A-Za-z_-]{22})"/),
   };
 }

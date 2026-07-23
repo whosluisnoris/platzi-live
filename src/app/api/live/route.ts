@@ -3,6 +3,7 @@ import {
   diagnoseLiveDetection,
   fetchPlatziLiveStreams,
   fetchVideoDetails,
+  PLATZI_CHANNEL_ID,
 } from "@/lib/invidious";
 import { getSupabase, getSupabaseAdmin } from "@/lib/supabase";
 import type { LiveStream } from "@/lib/invidious";
@@ -59,36 +60,6 @@ async function fetchStoredStreams() {
   return (data as StreamRow[]).map(rowToStream);
 }
 
-// Fila lista para upsert con los metadatos scrapeados del video
-async function buildEnrichedRow(stream: LiveStream) {
-  const base = {
-    video_id: stream.videoId,
-    title: stream.title,
-    channel_title: stream.channelTitle,
-    is_live: true,
-    thumbnail_url: `https://i.ytimg.com/vi/${stream.videoId}/maxresdefault.jpg`,
-  };
-  try {
-    const d = await fetchVideoDetails(stream.videoId);
-    return {
-      ...base,
-      published_at: d.publishedAt,
-      live_started_at: d.liveStartedAt ?? new Date().toISOString(),
-      live_ended_at: d.isLiveNow ? null : d.liveEndedAt,
-      is_live: d.isLiveNow,
-      duration_seconds: d.durationSeconds,
-      enriched_at: new Date().toISOString(),
-    };
-  } catch {
-    // Sin metadatos por ahora: enriched_at queda null y la auto-reparación
-    // lo completará en un request posterior.
-    return {
-      ...base,
-      live_started_at: new Date().toISOString(),
-      enriched_at: null,
-    };
-  }
-}
 
 export async function GET(request: NextRequest) {
   // ?debug=ADMIN_SECRET — reporta qué ve cada vía de detección, sin tocar la DB
@@ -144,14 +115,46 @@ export async function GET(request: NextRequest) {
     admin = null;
   }
 
-  // 1. Lives recién detectados → guardar con fechas (el live sigue visible
-  //    después de terminar; los visitantes pueden ver la grabación)
-  const newLive = auto.filter((s) => !storedIds.has(s.videoId));
-  if (admin && newLive.length > 0) {
-    const rows = await Promise.all(
-      newLive.slice(0, MAX_ENRICH_PER_REQUEST).map(buildEnrichedRow)
-    );
-    await admin.from("streams").upsert(rows, { onConflict: "video_id" });
+  // 1. Lives recién detectados → verificar el canal en su página watch antes
+  //    de aceptarlos: las páginas del canal mezclan lives ajenos recomendados
+  //    por YouTube. Solo lo publicado por el canal de Platzi entra a la
+  //    plataforma; sin verificación exitosa no se acepta (se reintenta luego).
+  const newCandidates = auto.filter((s) => !storedIds.has(s.videoId));
+  const newLive: LiveStream[] = [];
+  for (const s of newCandidates.slice(0, MAX_ENRICH_PER_REQUEST)) {
+    try {
+      const d = await fetchVideoDetails(s.videoId);
+      if (d.channelId !== PLATZI_CHANNEL_ID) continue; // live ajeno
+      const liveStartedAt = d.liveStartedAt ?? new Date().toISOString();
+      newLive.push({
+        ...s,
+        publishedAt: d.publishedAt,
+        liveStartedAt,
+        liveEndedAt: d.isLiveNow ? null : d.liveEndedAt,
+        isLive: d.isLiveNow,
+        durationSeconds: d.durationSeconds,
+      });
+      if (admin) {
+        await admin.from("streams").upsert(
+          {
+            video_id: s.videoId,
+            title: s.title,
+            channel_title: s.channelTitle,
+            thumbnail_url: `https://i.ytimg.com/vi/${s.videoId}/maxresdefault.jpg`,
+            published_at: d.publishedAt,
+            live_started_at: liveStartedAt,
+            live_ended_at: d.isLiveNow ? null : d.liveEndedAt,
+            is_live: d.isLiveNow,
+            duration_seconds: d.durationSeconds,
+            enriched_at: new Date().toISOString(),
+          },
+          { onConflict: "video_id" }
+        );
+      }
+    } catch {
+      // Página watch no disponible: no se puede confirmar el canal, así que
+      // no se acepta por ahora; el siguiente request lo reintenta.
+    }
   }
 
   // Lives confirmados por su página watch aunque el scrape del canal no los
