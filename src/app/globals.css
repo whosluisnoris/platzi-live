@@ -26,9 +26,11 @@
   --border-strong: rgba(255, 255, 255, 0.22);
   --fill: rgba(255, 255, 255, 0.05);
   --fill-strong: rgba(255, 255, 255, 0.1);
-  --accent: #f15025;        /* flame: enlaces, foco, estados activos, CTAs */
-  --accent-2: #f15025;
-  --on-accent: #191919;     /* carbon sobre naranja (legible) */
+  --accent: #f15025;        /* flame: rellenos, foco, estados activos, CTAs */
+  --accent-ink: #ff6a42;    /* naranja como texto sobre carbón (contraste alto) */
+  --on-accent: #191919;     /* carbón sobre naranja (4.4:1) */
+  --complement: #29c2ce;    /* teal: complementario del naranja (íconos, acentos) */
+  --on-complement: #062a2d; /* teal muy oscuro sobre teal claro */
   --glass-tint: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
   --scroll-thumb: rgba(255, 255, 255, 0.34);
@@ -50,8 +52,10 @@
   --fill: rgba(25, 25, 25, 0.04);
   --fill-strong: rgba(25, 25, 25, 0.08);
   --accent: #f15025;
-  --accent-2: #f15025;
-  --on-accent: #ffffff;     /* blanco sobre naranja en claro */
+  --accent-ink: #c0370c;    /* naranja más profundo como texto sobre blanco (~5:1) */
+  --on-accent: #191919;     /* carbón sobre naranja (4.4:1) */
+  --complement: #0b7c88;    /* teal profundo, legible sobre blanco (~4.6:1) */
+  --on-complement: #ffffff; /* blanco sobre teal profundo */
   --glass-tint: rgba(25, 25, 25, 0.03);
   --glass-border: rgba(25, 25, 25, 0.12);
   --scroll-thumb: rgba(25, 25, 25, 0.3);
@@ -73,14 +77,16 @@
   --color-fill: var(--fill);
   --color-fill-strong: var(--fill-strong);
   --color-accent: var(--accent);
-  --color-accent-2: var(--accent-2);
+  --color-accent-ink: var(--accent-ink);
   --color-on-accent: var(--on-accent);
+  --color-complement: var(--complement);
+  --color-on-complement: var(--on-complement);
   --color-brand-flame: var(--brand-flame);
   --color-brand-carbon: var(--brand-carbon);
   --color-brand-dust: var(--brand-dust);
   --color-brand-alabaster: var(--brand-alabaster);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
 }
 
 html {
@@ -93,8 +99,16 @@ html[data-theme="light"] {
 body {
   background: var(--bg);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), Roboto, Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Títulos en Bricolage Grotesque (display); el resto hereda Roboto del body. */
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display), var(--font-body), sans-serif;
 }
 
 /* Degradado de marca (naranja), para CTAs y momentos "hero". */
@@ -106,6 +120,11 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+/* En claro el naranja claro pierde contraste sobre blanco: se usa una mezcla
+   más profunda para que el texto de marca siga legible. */
+:root[data-theme="light"] .brand-text {
+  background-image: linear-gradient(100deg, #c0370c, #f15025);
 }
 
 /* ── Barra de scroll uniforme para las zonas con scroll propio ── */

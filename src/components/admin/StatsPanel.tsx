@@ -97,11 +97,11 @@ export function StatsPanel({ secret }: { secret: string }) {
     <section>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-bold text-foreground">
-          Estadísticas <span className="text-accent">de reproducción</span>
+          Estadísticas <span className="text-accent-ink">de reproducción</span>
         </h2>
         <button
           onClick={loadStats}
-          className="rounded-lg border border-accent/30 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/10 transition"
+          className="rounded-lg border border-accent/30 px-3 py-1.5 text-xs font-medium text-accent-ink hover:bg-accent/10 transition"
         >
           Actualizar
         </button>
@@ -143,7 +143,7 @@ export function StatsPanel({ secret }: { secret: string }) {
                   <td className="max-w-[280px] truncate px-4 py-3 text-foreground" title={r.title}>
                     {r.title}
                   </td>
-                  <td className="px-3 py-3 text-right font-semibold text-accent">{r.plays}</td>
+                  <td className="px-3 py-3 text-right font-semibold text-accent-ink">{r.plays}</td>
                   <td className="px-3 py-3 text-right text-muted">{r.autoplays}</td>
                   <td className="px-3 py-3 text-right text-muted">{r.youtubeOpens}</td>
                   <td className="px-3 py-3 text-right text-muted">{r.uniqueSessions}</td>
@@ -159,7 +159,7 @@ export function StatsPanel({ secret }: { secret: string }) {
 
       {/* Visitas (Vercel Web Analytics) */}
       <h2 className="mb-4 mt-14 text-lg font-bold text-foreground">
-        Visitas <span className="text-accent">(Vercel Web Analytics)</span>
+        Visitas <span className="text-accent-ink">(Vercel Web Analytics)</span>
       </h2>
       {!visits || !visits.configured ? (
         <div className="glass backdrop-blur-md max-w-2xl rounded-2xl p-5 text-sm text-muted">
@@ -207,7 +207,7 @@ export function StatsPanel({ secret }: { secret: string }) {
 
       {/* Encuesta */}
       <h2 className="mb-4 mt-14 text-lg font-bold text-foreground">
-        Encuesta <span className="text-accent">de la plataforma</span>
+        Encuesta <span className="text-accent-ink">de la plataforma</span>
       </h2>
       <p className="mb-3 text-sm text-muted">
         &ldquo;¿Te gustaría tener una funcionalidad así en Platzi?&rdquo;

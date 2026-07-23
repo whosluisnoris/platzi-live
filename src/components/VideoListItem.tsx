@@ -46,7 +46,7 @@ export function VideoListItem({ stream, active, onSelect, badge }: VideoListItem
             className={`absolute bottom-1 right-1 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
               badge === "EN VIVO"
                 ? "bg-red-600 text-foreground"
-                : "bg-black/80 text-accent"
+                : "bg-black/80 text-accent-ink"
             }`}
           >
             {badge}
@@ -57,7 +57,7 @@ export function VideoListItem({ stream, active, onSelect, badge }: VideoListItem
       <div className="flex min-w-0 flex-col gap-1 py-0.5">
         <h3
           className={`line-clamp-2 text-sm font-semibold leading-snug ${
-            active ? "text-accent" : "text-foreground"
+            active ? "text-accent-ink" : "text-foreground"
           }`}
         >
           {stream.title}

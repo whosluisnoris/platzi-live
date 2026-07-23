@@ -38,7 +38,25 @@ video); el reproductor añade además la fecha absoluta.
 Tras el pivot, la marca dejó el verde de Platzi por una paleta propia (definida en
 [`globals.css`](../src/app/globals.css)). Esta rama usa la variante **carbon & flame**:
 un esquema minimalista monocromo con un único acento — flame `#F15025`, blanco
-`#FFFFFF`, alabastro `#E6E8E6`, gris polvo `#CED0CE` y carbón `#191919`.
+`#FFFFFF`, alabastro `#E6E8E6`, gris polvo `#CED0CE` y carbón `#191919` — más un
+**complementario teal** (opuesto del naranja en la rueda cromática) para íconos y
+acentos secundarios: `#29C2CE` en oscuro y `#0B7C88` en claro.
+
+Todos los pares texto/fondo fueron verificados contra WCAG: los usos de texto normal
+cumplen AA (≥4.5:1) en ambos temas; el naranja como texto usa variantes propias
+(`--accent-ink`: `#FF6A42` en oscuro, `#C0370C` en claro) porque el flame puro no
+alcanza el ratio sobre carbón/blanco — el flame puro queda para rellenos y titulares
+grandes (donde AA pide ≥3:1).
+
+**Tipografías**: [Bricolage Grotesque](https://fonts.google.com/specimen/Bricolage+Grotesque)
+para títulos (`h1`–`h3` y `.font-display`, regla global en `globals.css`) y
+[Roboto](https://fonts.google.com/specimen/Roboto) para el resto del texto, ambas vía
+`next/font/google` en [`layout.tsx`](../src/app/layout.tsx).
+
+**Íconos por categoría**: [`CategoryIcon`](../src/components/CategoryIcon.tsx) — SVGs
+de línea que referencian cada temática (IA → destellos, Agentes → robot, Datos →
+cilindro de base de datos; cuadrícula genérica para categorías nuevas). Se muestran en
+discos teal en la landing y en la cabecera de cada categoría.
 
 - **Tokens semánticos** (`background`, `surface`, `foreground`, `muted`, `border`,
   `fill`, `accent`, …) mapeados en `@theme`. Los componentes usan estos tokens, no

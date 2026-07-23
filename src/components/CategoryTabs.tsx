@@ -56,7 +56,7 @@ export function CategoryTabs({ categories }: { categories: Category[] }) {
                   active
                     ? color
                       ? "text-foreground"
-                      : "bg-accent/15 text-accent ring-1 ring-accent/40"
+                      : "bg-accent/15 text-accent-ink ring-1 ring-accent/40"
                     : "text-muted hover:bg-fill hover:text-foreground"
                 }`}
               >

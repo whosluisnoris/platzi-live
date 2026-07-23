@@ -124,7 +124,7 @@ export function CategoriesManager({
   return (
     <section className="mb-10">
       <h2 className="mb-4 text-lg font-bold text-foreground">
-        Categorías <span className="text-accent">del catálogo</span>
+        Categorías <span className="text-accent-ink">del catálogo</span>
       </h2>
 
       <form
@@ -187,7 +187,7 @@ export function CategoriesManager({
       </form>
 
       {status && (
-        <p className={`mb-4 text-sm ${status.ok ? "text-accent" : "text-red-400"}`}>
+        <p className={`mb-4 text-sm ${status.ok ? "text-accent-ink" : "text-red-400"}`}>
           {status.text}
         </p>
       )}
@@ -233,7 +233,7 @@ export function CategoriesManager({
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-foreground">
                     {c.name}{" "}
-                    <span className="font-mono text-xs text-faint">/{c.slug}</span>
+                    <span className="font-sans text-xs text-faint">/{c.slug}</span>
                   </p>
                   {c.description && (
                     <p className="truncate text-xs text-faint">{c.description}</p>
@@ -246,7 +246,7 @@ export function CategoriesManager({
                   className={`rounded-lg px-3 py-1.5 text-xs transition ${
                     c.is_active
                       ? "border border-border text-muted hover:bg-fill"
-                      : "border border-accent/30 text-accent hover:bg-accent/10"
+                      : "border border-accent/30 text-accent-ink hover:bg-accent/10"
                   }`}
                 >
                   {c.is_active ? "Activa" : "Inactiva"}

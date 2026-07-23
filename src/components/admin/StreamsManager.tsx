@@ -116,7 +116,7 @@ export function StreamsManager({ secret }: { secret: string }) {
       </form>
 
       {status && (
-        <p className={`mb-4 text-sm ${status.ok ? "text-accent" : "text-red-400"}`}>
+        <p className={`mb-4 text-sm ${status.ok ? "text-accent-ink" : "text-red-400"}`}>
           {status.text}
         </p>
       )}

@@ -7,7 +7,7 @@ export function SiteFooter() {
         href="https://www.linkedin.com/in/luisnorisgarcia/"
         target="_blank"
         rel="noopener noreferrer"
-        className="underline underline-offset-2 transition-colors hover:text-accent"
+        className="underline underline-offset-2 transition-colors hover:text-accent-ink"
       >
         Luis Noris
       </a>

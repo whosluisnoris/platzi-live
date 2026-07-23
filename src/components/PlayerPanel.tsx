@@ -57,7 +57,7 @@ export function PlayerPanel({ stream, autoplay, dateVerb = "Transmitido" }: Play
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackEvent(stream.videoId, "open_youtube")}
-            className="rounded-lg border border-accent/30 px-4 py-2 text-sm font-semibold text-accent transition hover:bg-accent/10 active:scale-95"
+            className="rounded-lg border border-accent/30 px-4 py-2 text-sm font-semibold text-accent-ink transition hover:bg-accent/10 active:scale-95"
           >
             Ver en YouTube ↗
           </a>

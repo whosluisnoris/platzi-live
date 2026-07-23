@@ -89,7 +89,7 @@ export default function PlatziLivesPage() {
         <button
           onClick={refresh}
           disabled={loading}
-          className="rounded-lg border border-accent/30 bg-transparent px-4 py-2 text-sm font-medium text-accent transition hover:bg-accent/10 disabled:opacity-50"
+          className="rounded-lg border border-accent/30 bg-transparent px-4 py-2 text-sm font-medium text-accent-ink transition hover:bg-accent/10 disabled:opacity-50"
         >
           {loading ? "Buscando…" : "Actualizar"}
         </button>

@@ -3,6 +3,7 @@ import { getActiveCategories, getCategoryResourceCounts } from "@/lib/catalog";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SITE_NAME } from "@/lib/constants";
+import { CategoryIcon } from "@/components/CategoryIcon";
 
 export const dynamic = "force-dynamic";
 
@@ -75,7 +76,7 @@ export default async function LandingPage() {
 
       {/* Hero */}
       <section className="mx-auto w-full max-w-[1500px] px-5 pb-14 pt-14 sm:px-8 sm:pt-24">
-        <p className="mb-6 font-mono text-xs uppercase tracking-[0.25em] text-muted">
+        <p className="mb-6 font-sans text-xs uppercase tracking-[0.25em] text-muted">
           Aprende IA y datos, sin el caos
         </p>
         <h1 className="max-w-4xl text-5xl font-black leading-[0.98] tracking-tight text-foreground sm:text-7xl">
@@ -94,7 +95,7 @@ export default async function LandingPage() {
         <div className="mt-9 flex flex-wrap items-center gap-5">
           <Link
             href="/todo"
-            className="brand-gradient rounded-full px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-black/20 transition hover:brightness-110 active:scale-95"
+            className="brand-gradient rounded-full px-7 py-3.5 text-sm font-bold text-on-accent shadow-lg shadow-black/20 transition hover:brightness-110 active:scale-95"
           >
             Explorar los recursos
           </Link>
@@ -124,7 +125,7 @@ export default async function LandingPage() {
                 i > 0 ? "border-t border-border sm:border-l sm:border-t-0" : "sm:pl-0"
               }`}
             >
-              <span className="font-mono text-sm text-accent">{p.n}</span>
+              <span className="text-sm font-bold text-complement">{p.n}</span>
               <h3 className="mt-3 text-xl font-bold tracking-tight text-foreground">
                 {p.title}
               </h3>
@@ -151,7 +152,6 @@ export default async function LandingPage() {
 
           <div className="border-t border-border">
             {categories.map((c) => {
-              const color = "var(--accent)";
               const n = counts.get(c.id) ?? 0;
               return (
                 <Link
@@ -160,10 +160,11 @@ export default async function LandingPage() {
                   className="group flex items-center gap-5 border-b border-border py-6 transition hover:bg-fill"
                 >
                   <span
-                    className="h-12 w-12 shrink-0 rounded-full transition group-hover:scale-110"
-                    style={{ backgroundColor: color }}
-                    aria-hidden="true"
-                  />
+                    className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-on-complement transition group-hover:scale-105"
+                    style={{ backgroundColor: "var(--complement)" }}
+                  >
+                    <CategoryIcon slug={c.slug} className="h-6 w-6" />
+                  </span>
                   <div className="min-w-0 flex-1">
                     <h3 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
                       {c.name}
@@ -172,12 +173,11 @@ export default async function LandingPage() {
                       <p className="mt-0.5 truncate text-sm text-muted">{c.description}</p>
                     )}
                   </div>
-                  <span className="shrink-0 font-mono text-sm text-muted">
+                  <span className="shrink-0 text-sm text-muted">
                     {n} {n === 1 ? "recurso" : "recursos"}
                   </span>
                   <span
-                    className="shrink-0 text-xl transition group-hover:translate-x-1"
-                    style={{ color }}
+                    className="shrink-0 text-xl text-complement transition group-hover:translate-x-1"
                     aria-hidden="true"
                   >
                     →

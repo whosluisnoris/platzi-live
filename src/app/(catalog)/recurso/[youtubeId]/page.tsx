@@ -45,7 +45,7 @@ export default async function ResourcePage({
     <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-6 sm:px-8">
       <Link
         href={back.href}
-        className="mb-5 inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-accent"
+        className="mb-5 inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-accent-ink"
       >
         ← Volver a {back.label}
       </Link>

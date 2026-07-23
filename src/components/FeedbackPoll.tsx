@@ -185,7 +185,7 @@ export function FeedbackPoll({
       <button
         onClick={reopen}
         aria-label="Abrir encuesta"
-        className={`glass backdrop-blur-md fixed bottom-5 right-5 z-50 rounded-full px-4 py-2.5 text-sm font-semibold text-accent shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 ${
+        className={`glass backdrop-blur-md fixed bottom-5 right-5 z-50 rounded-full px-4 py-2.5 text-sm font-semibold text-accent-ink shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 ${
           open ? "pointer-events-none translate-y-3 opacity-0" : "opacity-100"
         }`}
       >
@@ -230,7 +230,7 @@ export function FeedbackPoll({
                 className={`rounded-lg px-3.5 py-2 text-sm font-medium transition active:scale-95 disabled:opacity-50 ${
                   voted === o.value
                     ? "bg-accent text-on-accent"
-                    : "bg-fill text-foreground ring-1 ring-border hover:bg-accent/15 hover:text-accent"
+                    : "bg-fill text-foreground ring-1 ring-border hover:bg-accent/15 hover:text-accent-ink"
                 }`}
               >
                 {o.emoji} {o.label}
@@ -248,7 +248,7 @@ export function FeedbackPoll({
                 <div key={o.value} className="flex items-center gap-2 text-xs">
                   <span
                     className={`w-36 shrink-0 ${
-                      mine ? "font-bold text-accent" : "text-muted"
+                      mine ? "font-bold text-accent-ink" : "text-muted"
                     }`}
                   >
                     {o.emoji} {o.label}
@@ -304,7 +304,7 @@ export function FeedbackPoll({
               </span>
               <button
                 onClick={() => setChanging(true)}
-                className="text-accent hover:underline"
+                className="text-accent-ink hover:underline"
               >
                 Cambiar respuesta
               </button>

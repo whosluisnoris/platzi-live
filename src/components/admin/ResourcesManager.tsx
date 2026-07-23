@@ -104,7 +104,7 @@ export function ResourcesManager({ secret }: { secret: string }) {
   return (
     <section>
       <h2 className="mb-4 text-lg font-bold text-foreground">
-        Recursos <span className="text-accent">del catálogo</span>
+        Recursos <span className="text-accent-ink">del catálogo</span>
       </h2>
 
       {/* Alta de recurso */}
@@ -158,7 +158,7 @@ export function ResourcesManager({ secret }: { secret: string }) {
       </form>
 
       {status && (
-        <p className={`mb-4 text-sm ${status.ok ? "text-accent" : "text-red-400"}`}>
+        <p className={`mb-4 text-sm ${status.ok ? "text-accent-ink" : "text-red-400"}`}>
           {status.text}
         </p>
       )}
@@ -233,7 +233,7 @@ export function ResourcesManager({ secret }: { secret: string }) {
                           setEditId(r.id);
                           setEditCats(r.resource_categories.map((rc) => rc.category_id));
                         }}
-                        className="text-[11px] text-accent hover:underline"
+                        className="text-[11px] text-accent-ink hover:underline"
                       >
                         editar
                       </button>
@@ -355,7 +355,7 @@ function PlaylistItemsEditor({
         <button
           onClick={resync}
           disabled={busy}
-          className="rounded-lg border border-accent/30 px-3 py-1 text-xs text-accent hover:bg-accent/10 disabled:opacity-50 transition"
+          className="rounded-lg border border-accent/30 px-3 py-1 text-xs text-accent-ink hover:bg-accent/10 disabled:opacity-50 transition"
         >
           {busy ? "…" : "Resincronizar con YouTube"}
         </button>

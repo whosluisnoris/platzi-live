@@ -40,7 +40,7 @@ export default function AdminPage() {
         <form onSubmit={handleLogin} className="flex w-full max-w-sm flex-col gap-4">
           <div className="mb-2">
             <h1 className="text-2xl font-bold text-foreground">
-              Panel <span className="text-accent">Admin</span>
+              Panel <span className="text-accent-ink">Admin</span>
             </h1>
             <p className="mt-1 text-sm text-muted">
               Gestiona el catálogo y los lives
@@ -69,7 +69,7 @@ export default function AdminPage() {
     <main className="mx-auto w-full max-w-4xl px-4 py-10">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">
-          Panel <span className="text-accent">Admin</span>
+          Panel <span className="text-accent-ink">Admin</span>
         </h1>
         <p className="mt-1 text-sm text-muted">
           Organiza recursos de aprendizaje y los lives de Platzi
@@ -84,7 +84,7 @@ export default function AdminPage() {
             onClick={() => setTab(t.key)}
             className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition ${
               tab === t.key
-                ? "border-accent text-accent"
+                ? "border-accent text-accent-ink"
                 : "border-transparent text-muted hover:text-foreground"
             }`}
           >
