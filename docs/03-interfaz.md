@@ -33,13 +33,49 @@ En móvil las columnas se apilan (reproductor arriba). Rejilla:
 Las tarjetas muestran "hace 3 semanas · 3 h 58 min" (fecha relativa + duración del
 video); el reproductor añade además la fecha absoluta.
 
+## Paleta, tema claro/oscuro y color por categoría
+
+Tras el pivot, la marca dejó el verde de Platzi por una paleta propia (definida en
+[`globals.css`](../src/app/globals.css)). Esta rama usa la variante **carbon & flame**:
+un esquema minimalista monocromo con un único acento — flame `#F15025`, blanco
+`#FFFFFF`, alabastro `#E6E8E6`, gris polvo `#CED0CE` y carbón `#191919` — más un
+**amarillo ámbar** (análogo del naranja en la rueda cromática, combinan de forma
+natural) para detalles, íconos y acentos secundarios: `#FFC53D` en oscuro y dorado
+profundo `#8A6100` en claro (5.5:1 sobre blanco).
+
+Todos los pares texto/fondo fueron verificados contra WCAG: los usos de texto normal
+cumplen AA (≥4.5:1) en ambos temas; el naranja como texto usa variantes propias
+(`--accent-ink`: `#FF6A42` en oscuro, `#C0370C` en claro) porque el flame puro no
+alcanza el ratio sobre carbón/blanco — el flame puro queda para rellenos y titulares
+grandes (donde AA pide ≥3:1).
+
+**Tipografías**: [Bricolage Grotesque](https://fonts.google.com/specimen/Bricolage+Grotesque)
+para títulos (`h1`–`h3` y `.font-display`, regla global en `globals.css`) y
+[Roboto](https://fonts.google.com/specimen/Roboto) para el resto del texto, ambas vía
+`next/font/google` en [`layout.tsx`](../src/app/layout.tsx).
+
+**Íconos por categoría**: [`CategoryIcon`](../src/components/CategoryIcon.tsx) — SVGs
+de línea que referencian cada temática (IA → destellos, Agentes → robot, Datos →
+cilindro de base de datos; cuadrícula genérica para categorías nuevas). Se muestran en
+discos ámbar en la landing y en la cabecera de cada categoría.
+
+- **Tokens semánticos** (`background`, `surface`, `foreground`, `muted`, `border`,
+  `fill`, `accent`, …) mapeados en `@theme`. Los componentes usan estos tokens, no
+  colores fijos, así que el mismo marcado sirve para ambos temas.
+- **Tema claro/oscuro**: `[data-theme]` en `<html>`. Un script en el `<body>` lo fija
+  antes del primer paint (elección guardada en `localStorage` o preferencia del sistema),
+  sin parpadeo; `ThemeToggle` lo alterna. Por defecto: oscuro (base vino-negro).
+- **Acento único**: al ser una paleta monocromo con un solo color, todo el acento
+  (pestaña activa, cabecera de categoría, marco de tarjetas, CTAs) usa el flame. La
+  columna `color` por categoría sigue existiendo en la DB, pero aquí `catColor()` la
+  ignora y devuelve el acento para mantener la coherencia. La landing usa el degradado
+  de la paleta completa (`--blend`) como firma.
+
 ## Estilo glass y barra de scroll
 
-- Tonos base más cercanos al negro y unificados: fondo `#0e1013`, superficie `#14171c`
-  (variables en [`globals.css`](../src/app/globals.css)).
-- Clase `.glass`: degradado sutil de gris claro + `backdrop-blur` + borde luminoso.
+- Clase `.glass`: tinte sutil derivado del fondo + `backdrop-blur` + borde luminoso.
   Se usa en el header, el panel de la lista, la encuesta flotante y las tarjetas del
-  admin.
+  admin. Adaptada a tokens para verse bien en claro y oscuro.
 - Clase `.custom-scroll`: barra de 10px con degradado claro y carril tenue, uniforme
   en las dos zonas con scroll propio (más visible que la nativa).
 

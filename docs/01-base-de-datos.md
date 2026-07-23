@@ -51,6 +51,72 @@ respuesta (upsert). Si el navegador bloquea localStorage, el voto entra sin sesi
 `NULL` no chocan con la restricción). RLS activo sin políticas públicas, igual que
 `watch_events`.
 
+## Catálogo de recursos (IA/Datos)
+
+El pivot a centro de recursos añade cuatro tablas nuevas (todas aditivas, sin tocar
+`streams`/`watch_events`/`feedback_votes`). Detalle completo en
+[07-catalogo-de-recursos.md](07-catalogo-de-recursos.md).
+
+### Tabla `categories` — taxonomía extensible
+
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `id` | uuid (PK) | Autogenerado |
+| `slug` | text (único) | Identificador en la URL (`ia`, `agentes`, `datos`) |
+| `name` | text | Etiqueta visible ("IA") |
+| `description` | text | Opcional, para landing y encabezado de la pestaña |
+| `sort_order` | integer | Orden de las pestañas (editable en `/admin`) |
+| `is_active` | boolean | Ocultar sin borrar (default `true`) |
+| `color` | text | Color predominante (hex, p. ej. `#FB62F6`); la UI cae al acento si es `null` |
+| `created_at` | timestamptz | |
+
+> "Platzi Lives" y "Todo" **no** son filas de esta tabla: son pestañas fijas en código.
+
+### Tabla `resources` — video suelto o playlist
+
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `id` | uuid (PK) | Autogenerado |
+| `kind` | text | `video` \| `playlist` (CHECK en DB) |
+| `youtube_id` | text | ID de video (11) o de playlist (`PL…`) |
+| `title` | text | Título del recurso |
+| `channel_title` | text | Canal o curador |
+| `description` | text | Opcional |
+| `thumbnail_url` | text | Miniatura |
+| `video_count` | integer | Solo `kind='playlist'`: nº de videos importados |
+| `duration_seconds` | integer | Solo `kind='video'` |
+| `published_at` | timestamptz | Fecha de publicación (videos) |
+| `added_at` | timestamptz | Cuándo se curó en la plataforma |
+| `synced_at` | timestamptz | Última importación/resync exitosa |
+| `source` | text | `manual` \| `playlist_import` (CHECK en DB) |
+
+`UNIQUE (kind, youtube_id)`: evita duplicar el mismo recurso.
+
+### Tabla `playlist_items` — videos ordenados de una playlist
+
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `id` | uuid (PK) | Autogenerado |
+| `playlist_resource_id` | uuid (FK → `resources`, ON DELETE CASCADE) | Playlist dueña |
+| `position` | integer | Orden dentro de la playlist |
+| `youtube_video_id` | text | ID del video |
+| `title` | text | Título del video |
+| `thumbnail_url` | text | Miniatura |
+| `added_at` | timestamptz | |
+
+`UNIQUE (playlist_resource_id, youtube_video_id)` + índice `(playlist_resource_id, position)`.
+
+### Tabla `resource_categories` — relación N:N
+
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `resource_id` | uuid (FK → `resources`, ON DELETE CASCADE) | |
+| `category_id` | uuid (FK → `categories`, ON DELETE CASCADE) | |
+| `created_at` | timestamptz | |
+
+PK `(resource_id, category_id)` + índice adicional en `category_id`. Un recurso puede
+pertenecer a varias categorías.
+
 ## Vista `watch_stats`
 
 Agregados por video: `plays`, `autoplays`, `youtube_opens`, `unique_sessions`,
@@ -63,6 +129,7 @@ Agregados por video: `plays`, `autoplays`, `youtube_opens`, `unique_sessions`,
 | `streams` | RLS activo; `SELECT` público (la anon key solo lee) |
 | `watch_events` | RLS activo **sin políticas públicas**: solo el service role (rutas API del servidor) puede leer/escribir |
 | `watch_stats` | `security_invoker = true`: hereda las restricciones de `watch_events` (anon bloqueado) |
+| `categories`, `resources`, `playlist_items`, `resource_categories` | RLS activo; `SELECT` público (contenido curado sin PII); escrituras solo vía service role en `/api/admin/*` |
 
 Las escrituras siempre pasan por rutas API del servidor con `SUPABASE_SERVICE_ROLE_KEY`
 (nunca expuesta al navegador).
@@ -80,3 +147,11 @@ Las escrituras siempre pasan por rutas API del servidor con `SUPABASE_SERVICE_RO
    políticas públicas e índice por pregunta.
 4. **`add_duration_seconds`** (2026-07-17): columna de duración en `streams` (aditiva)
    + backfill de las 23 filas scrapeando `lengthSeconds` de cada página watch.
+5. **`add_resource_catalog`** (2026-07-23): cuatro tablas nuevas del catálogo
+   (`categories`, `resources`, `playlist_items`, `resource_categories`) con índices y
+   RLS (`SELECT` público). Todo `CREATE TABLE IF NOT EXISTS`, **sin ningún `DROP`/`DELETE`**;
+   el código anterior sigue funcionando sin cambios.
+6. **`seed_default_categories`** (2026-07-23): inserta las categorías iniciales (IA,
+   Agentes, Datos) con `ON CONFLICT (slug) DO NOTHING` (idempotente).
+7. **`add_category_color`** (2026-07-23): columna `color` en `categories` (aditiva) +
+   asignación de la paleta de marca a IA (magenta), Agentes (rojo) y Datos (vino).

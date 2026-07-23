@@ -1,70 +1,161 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────────────────────
+   Paleta base (carbon & flame): minimalista monocromo + un acento.
+   flame #F15025 · white #FFFFFF · alabaster #E6E8E6 · dust #CED0CE · carbon #191919
+   Los tokens semánticos se derivan de estos y cambian por tema.
+   ───────────────────────────────────────────────────────────── */
+
 :root {
-  --platzi-green: #0aeb8b;
-  --platzi-green-dark: #08c975;
-  --platzi-bg: #0e1013;      /* Vampire Black llevado un paso hacia el negro */
-  --platzi-surface: #14171c; /* superficie apenas más clara, misma familia */
-  --platzi-border: rgba(10, 235, 139, 0.15);
+  /* marca cruda (constantes en ambos temas) */
+  --brand-flame: #f15025;
+  --brand-white: #ffffff;
+  --brand-alabaster: #e6e8e6;
+  --brand-dust: #ced0ce;
+  --brand-carbon: #191919;
+
+  /* ── Tema oscuro (por defecto) ── */
+  --bg: #161616;
+  --bg-elevated: #1f1f1f;
+  --surface: #202020;
+  --surface-2: #2a2a2a;
+  --foreground: #f4f4f2;
+  --muted: rgba(244, 244, 242, 0.6);
+  --faint: rgba(244, 244, 242, 0.4);
+  --border: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.22);
+  --fill: rgba(255, 255, 255, 0.05);
+  --fill-strong: rgba(255, 255, 255, 0.1);
+  --accent: #f15025;        /* flame: rellenos, foco, estados activos, CTAs */
+  --accent-ink: #ff6a42;    /* naranja como texto sobre carbón (contraste alto) */
+  --on-accent: #191919;     /* carbón sobre naranja (4.4:1) */
+  --complement: #ffc53d;    /* amarillo ámbar: análogo del naranja (detalles, íconos) */
+  --on-complement: #2e2000; /* marrón muy oscuro sobre el ámbar */
+  --glass-tint: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --scroll-thumb: rgba(255, 255, 255, 0.34);
+  --scroll-track: rgba(255, 255, 255, 0.05);
+  /* firma de la landing: mezcla de toda la paleta */
+  --blend: linear-gradient(90deg, #f15025, #ffffff, #e6e8e6, #ced0ce, #191919);
 }
 
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #e6e8e6;
+  --foreground: #191919;
+  --muted: rgba(25, 25, 25, 0.62);
+  --faint: rgba(25, 25, 25, 0.42);
+  --border: rgba(25, 25, 25, 0.14);
+  --border-strong: rgba(25, 25, 25, 0.3);
+  --fill: rgba(25, 25, 25, 0.04);
+  --fill-strong: rgba(25, 25, 25, 0.08);
+  --accent: #f15025;
+  --accent-ink: #c0370c;    /* naranja más profundo como texto sobre blanco (~5:1) */
+  --on-accent: #191919;     /* carbón sobre naranja (4.4:1) */
+  --complement: #8a6100;    /* dorado profundo, legible sobre blanco (5.5:1) */
+  --on-complement: #ffffff; /* blanco sobre dorado profundo */
+  --glass-tint: rgba(25, 25, 25, 0.03);
+  --glass-border: rgba(25, 25, 25, 0.12);
+  --scroll-thumb: rgba(25, 25, 25, 0.3);
+  --scroll-track: rgba(25, 25, 25, 0.06);
+  --blend: linear-gradient(90deg, #f15025, #ced0ce, #191919);
+}
+
+/* Mapeo a utilidades de Tailwind (bg-background, text-foreground, …). */
 @theme inline {
-  --color-background: var(--platzi-bg);
-  --color-foreground: #ffffff;
-  --color-platzi: var(--platzi-green);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg);
+  --color-elevated: var(--bg-elevated);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fill: var(--fill);
+  --color-fill-strong: var(--fill-strong);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-on-accent: var(--on-accent);
+  --color-complement: var(--complement);
+  --color-on-complement: var(--on-complement);
+  --color-brand-flame: var(--brand-flame);
+  --color-brand-carbon: var(--brand-carbon);
+  --color-brand-dust: var(--brand-dust);
+  --color-brand-alabaster: var(--brand-alabaster);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+}
+
+html {
+  color-scheme: dark;
+}
+html[data-theme="light"] {
+  color-scheme: light;
 }
 
 body {
-  background: var(--platzi-bg);
-  color: #ffffff;
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--foreground);
+  font-family: var(--font-body), Roboto, Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ── Barra de scroll visible y uniforme para las zonas con scroll propio ── */
+/* Títulos en Bricolage Grotesque (display); el resto hereda Roboto del body. */
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+}
+
+/* Degradado de marca (naranja), para CTAs y momentos "hero". */
+.brand-gradient {
+  background-image: linear-gradient(100deg, #f15025, #ff8a5c);
+}
+.brand-text {
+  background-image: linear-gradient(100deg, #f15025, #ff8a5c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+/* En claro el naranja claro pierde contraste sobre blanco: se usa una mezcla
+   más profunda para que el texto de marca siga legible. */
+:root[data-theme="light"] .brand-text {
+  background-image: linear-gradient(100deg, #c0370c, #f15025);
+}
+
+/* ── Barra de scroll uniforme para las zonas con scroll propio ── */
 .custom-scroll::-webkit-scrollbar {
   width: 10px;
 }
 .custom-scroll::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--scroll-track);
   border-radius: 999px;
 }
 .custom-scroll::-webkit-scrollbar-thumb {
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
-  background-image: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.38),
-    rgba(255, 255, 255, 0.16)
-  );
+  background-color: var(--scroll-thumb);
 }
-.custom-scroll::-webkit-scrollbar-thumb:hover {
-  background-image: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.52),
-    rgba(255, 255, 255, 0.28)
-  );
-}
-/* Firefox (sin ::-webkit-scrollbar): color equivalente con ancho estándar */
 @supports not selector(::-webkit-scrollbar) {
   .custom-scroll {
     scrollbar-width: auto;
-    scrollbar-color: rgba(255, 255, 255, 0.35) rgba(255, 255, 255, 0.05);
+    scrollbar-color: var(--scroll-thumb) var(--scroll-track);
   }
 }
 
-/* ── Efecto glass sutil: degradado gris claro + borde luminoso ──
-   El blur lo pone la utilidad `backdrop-blur-md` de Tailwind en cada uso
-   (Lightning CSS elimina backdrop-filter escrito a mano en este archivo). */
+/* ── Efecto glass: tinte sutil + borde (el blur lo pone backdrop-blur-*). ── */
 .glass {
-  background-color: rgba(14, 16, 19, 0.72);
+  background-color: color-mix(in srgb, var(--bg) 72%, transparent);
   background-image: linear-gradient(
     165deg,
-    rgba(255, 255, 255, 0.08),
-    rgba(255, 255, 255, 0.02) 55%,
-    rgba(255, 255, 255, 0.05)
+    var(--glass-tint),
+    transparent 55%,
+    var(--glass-tint)
   );
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--glass-border);
 }

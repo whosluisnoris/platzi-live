@@ -1,5 +1,11 @@
 import type { LiveStream } from "./invidious";
 
+// Nombre de la plataforma (marca). Punto ÚNICO de cambio: se usa en el header
+// del catálogo, la landing y los metadatos.
+export const SITE_NAME = "Sendari";
+export const SITE_TAGLINE =
+  "Te ayudamos a encontrar tu senda en el mundo infinito de videos.";
+
 // Radio lofi 24/7 de Claude: video por defecto cuando no hay un Platzi Live activo.
 // No vive en la base de datos; es una constante de la aplicación.
 export const LOFI_STREAM: LiveStream = {

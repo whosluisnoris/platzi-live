@@ -1,23 +1,30 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Roboto } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { SITE_NAME, SITE_TAGLINE } from "@/lib/constants";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Bricolage Grotesque para títulos (display), Roboto para el resto del texto.
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-display",
   subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const roboto = Roboto({
+  variable: "--font-body",
   subsets: ["latin"],
+  weight: ["400", "500", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "Platzi Live — todos los lives en un solo lugar",
+  title: `${SITE_NAME} — encuentra tu senda para aprender IA y datos`,
   description:
-    "Mira los Platzi Lives en vivo, explora el histórico de transmisiones y concéntrate con la radio lofi 24/7.",
+    `${SITE_TAGLINE} Playlists y videos de YouTube curados por temática (IA, agentes, datos) más los lives de Platzi, gratis y en español.`,
 };
+
+// Fija el tema antes del primer paint: elección guardada o preferencia del sistema.
+const themeScript = `(function(){try{var t=localStorage.getItem('pl_theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();`;
 
 export default function RootLayout({
   children,
@@ -27,9 +34,12 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      data-theme="dark"
+      suppressHydrationWarning
+      className={`${bricolage.variable} ${roboto.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#0e1013] text-white">
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         {children}
         <Analytics />
       </body>

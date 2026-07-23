@@ -1,217 +1,196 @@
-"use client";
+import Link from "next/link";
+import { getActiveCategories, getCategoryResourceCounts } from "@/lib/catalog";
+import { SiteFooter } from "@/components/SiteFooter";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { SITE_NAME } from "@/lib/constants";
+import { CategoryIcon } from "@/components/CategoryIcon";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useLiveStreams } from "@/hooks/useLiveStreams";
-import { PlayerPanel } from "@/components/PlayerPanel";
-import { VideoListItem } from "@/components/VideoListItem";
-import { FeedbackPoll } from "@/components/FeedbackPoll";
-import { LOFI_STREAM } from "@/lib/constants";
-import { trackEvent } from "@/lib/analytics";
-import type { LiveStream } from "@/lib/invidious";
+export const dynamic = "force-dynamic";
 
-type SortOrder = "desc" | "asc";
+// Intro editorial (sin tarjetas): tres ideas numeradas separadas por hairlines.
+const PRINCIPLES = [
+  {
+    n: "01",
+    title: "Curado por área",
+    text: "Cada recurso vive en su temática. Nada de buscar a ciegas entre resultados infinitos.",
+  },
+  {
+    n: "02",
+    title: "En español y gratis",
+    text: "Solo contenido de calidad, gratuito y en tu idioma, reunido en un mismo lugar.",
+  },
+  {
+    n: "03",
+    title: "Sendas paso a paso",
+    text: "Playlists curadas y en orden, listas para seguirlas de principio a fin sin perderte entre mil pestañas.",
+  },
+];
 
-// Fecha para ordenar: el inicio real de la transmisión
-const sortKey = (s: LiveStream) => s.liveStartedAt ?? "";
+export default async function LandingPage() {
+  const [categories, counts] = await Promise.all([
+    getActiveCategories(),
+    getCategoryResourceCounts(),
+  ]);
 
-export default function Home() {
-  const { streams, loading, error, refresh } = useLiveStreams();
-  // Video elegido explícitamente por el usuario (con clic); null = automático
-  const [chosen, setChosen] = useState<LiveStream | null>(null);
-  const [order, setOrder] = useState<SortOrder>("desc");
-  // ?v= leído una sola vez; en el servidor no existe window y queda null
-  const [requestedId] = useState(() =>
-    typeof window === "undefined"
-      ? null
-      : new URLSearchParams(window.location.search).get("v")
-  );
-
-  const liveNow = useMemo(() => streams.filter((s) => s.isLive), [streams]);
-
-  const past = useMemo(() => {
-    const rest = streams.filter((s) => !s.isLive);
-    return [...rest].sort((a, b) =>
-      order === "desc"
-        ? sortKey(b).localeCompare(sortKey(a))
-        : sortKey(a).localeCompare(sortKey(b))
-    );
-  }, [streams, order]);
-
-  // Selección derivada (sin estado extra): clic del usuario → deep-link ?v= →
-  // Platzi live activo → radio lofi. Mientras no haya clic, un live que
-  // empiece toma el reproductor automáticamente. La radio lofi es solo
-  // relleno: un live activo la desplaza aunque haya sido clic o deep-link.
-  const displayed = useMemo(() => {
-    const live = liveNow[0] ?? null;
-    if (chosen) {
-      if (live && chosen.videoId === LOFI_STREAM.videoId) return live;
-      return chosen;
-    }
-    if (loading && streams.length === 0) return null; // primera carga
-    if (requestedId) {
-      if (requestedId === LOFI_STREAM.videoId) return live ?? LOFI_STREAM;
-      const match = streams.find((s) => s.videoId === requestedId);
-      if (match) return match;
-    }
-    return live ?? LOFI_STREAM;
-  }, [chosen, loading, streams, liveNow, requestedId]);
-
-  // Registra el video servido automáticamente (los clics se registran aparte)
-  const lastTracked = useRef<string | null>(null);
-  useEffect(() => {
-    if (!displayed || lastTracked.current === displayed.videoId) return;
-    const isFirst = lastTracked.current === null;
-    lastTracked.current = displayed.videoId;
-    if (chosen) return;
-    trackEvent(
-      displayed.videoId,
-      isFirst && requestedId === displayed.videoId ? "play" : "autoplay_default"
-    );
-  }, [displayed, chosen, requestedId]);
-
-  function handleSelect(stream: LiveStream) {
-    setChosen(stream);
-    trackEvent(stream.videoId, "play");
-    // deep-link compartible sin recargar
-    const url = new URL(window.location.href);
-    url.searchParams.set("v", stream.videoId);
-    window.history.replaceState(null, "", url);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+  // Firma de la landing: degradado que mezcla toda la paleta (definido por tema
+  // en globals.css). El acento naranja es único, así que la mezcla vive aquí.
+  const blend = "var(--blend)";
 
   return (
-    // En lg+ la página ocupa exactamente el viewport: el reproductor queda fijo
-    // y cada columna hace scroll por su cuenta solo si su contenido no cabe.
-    <div className="flex min-h-screen flex-col lg:h-dvh">
-      {/* Barra superior (glass) */}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0e1013]/80 bg-gradient-to-b from-white/[0.06] to-transparent backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between gap-4 px-3 py-3 sm:px-8">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-white">
-              Platzi <span className="text-[#0aeb8b]">Live</span>
-            </h1>
-            {liveNow.length > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600/15 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-red-400 ring-1 ring-red-600/40">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
-                En vivo
-              </span>
-            )}
-          </div>
-          <button
-            onClick={refresh}
-            disabled={loading}
-            className="rounded-lg border border-[#0aeb8b]/30 bg-transparent px-4 py-2 text-sm font-medium text-[#0aeb8b] transition hover:bg-[#0aeb8b]/10 disabled:opacity-50"
+    <div className="relative flex min-h-screen flex-col overflow-hidden">
+      {/* Resplandor de acento (flame) de fondo, muy sutil */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div
+          className="absolute -left-32 -top-40 h-[36rem] w-[36rem] rounded-full opacity-20 blur-[120px]"
+          style={{ background: "var(--brand-flame)" }}
+        />
+        <div
+          className="absolute -right-40 top-10 h-[30rem] w-[30rem] rounded-full opacity-10 blur-[120px]"
+          style={{ background: "var(--brand-dust)" }}
+        />
+        <div
+          className="absolute bottom-0 left-1/3 h-[26rem] w-[26rem] rounded-full opacity-15 blur-[120px]"
+          style={{ background: "var(--brand-flame)" }}
+        />
+      </div>
+
+      {/* Header */}
+      <header className="mx-auto flex w-full max-w-[1500px] items-center justify-between px-5 py-5 sm:px-8">
+        <span className="font-display text-lg font-black tracking-tight brand-text">
+          {SITE_NAME}
+        </span>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/platzi-lives"
+            className="rounded-full px-3 py-2 text-sm text-muted transition hover:text-foreground"
           >
-            {loading ? "Buscando…" : "Actualizar"}
-          </button>
+            Platzi Lives
+          </Link>
+          <Link
+            href="/todo"
+            className="rounded-full px-4 py-2 text-sm font-semibold text-muted transition hover:text-foreground"
+          >
+            Explorar
+          </Link>
+          <ThemeToggle />
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-8 sm:px-8 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden">
-        {error && (
-          <div className="mb-5 rounded-lg bg-red-900/30 px-4 py-3 text-sm text-red-300 ring-1 ring-red-700/50">
-            No se pudo comprobar el canal ahora mismo: {error}. Mostrando el
-            histórico guardado.
-          </div>
-        )}
+      {/* Hero */}
+      <section className="mx-auto w-full max-w-[1500px] px-5 pb-14 pt-14 sm:px-8 sm:pt-24">
+        <p className="mb-6 text-xs uppercase tracking-[0.25em] text-muted">
+          Aprende IA y datos, sin perderte
+        </p>
+        <h1 className="max-w-4xl text-5xl font-black leading-[0.98] tracking-tight text-foreground sm:text-7xl">
+          En un mundo infinito de videos,{" "}
+          <span className="brand-text">tu senda empieza aquí.</span>
+        </h1>
+        <p className="mt-7 max-w-xl text-lg leading-relaxed text-muted">
+          {SITE_NAME} reúne lo mejor de YouTube para aprender IA y datos
+          —gratis y en español— y lo convierte en sendas claras, para que
+          avances paso a paso en vez de perderte en el scroll.
+        </p>
 
-        <div className="grid gap-10 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_400px] lg:grid-rows-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_430px]">
-          {/* Reproductor principal: fijo; solo scrollea si su contenido no cabe */}
-          <div className="custom-scroll lg:min-h-0 lg:overflow-y-auto lg:pr-2">
-            {displayed ? (
-              <PlayerPanel stream={displayed} autoplay={chosen !== null} />
-            ) : (
-              <div className="aspect-video w-full animate-pulse rounded-xl bg-[#14171c]" />
-            )}
-          </div>
-
-          {/* Lista lateral: panel glass que marca la zona con scroll */}
-          <aside className="glass backdrop-blur-md custom-scroll flex flex-col gap-10 rounded-2xl p-4 sm:p-5 lg:min-h-0 lg:overflow-y-auto">
-            <section aria-label="En vivo ahora">
-              <h2 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-gray-300">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-                En vivo ahora
-              </h2>
-              <div className="flex flex-col gap-3">
-                {liveNow.map((s) => (
-                  <VideoListItem
-                    key={s.videoId}
-                    stream={s}
-                    active={displayed?.videoId === s.videoId}
-                    onSelect={handleSelect}
-                    badge="EN VIVO"
-                  />
-                ))}
-                <VideoListItem
-                  stream={LOFI_STREAM}
-                  active={displayed?.videoId === LOFI_STREAM.videoId}
-                  onSelect={handleSelect}
-                  badge="24/7"
-                />
-              </div>
-            </section>
-
-            <section aria-label="Lives anteriores">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <h2 className="text-sm font-bold uppercase tracking-wide text-gray-300">
-                  Lives anteriores
-                </h2>
-                <select
-                  value={order}
-                  onChange={(e) => setOrder(e.target.value as SortOrder)}
-                  aria-label="Ordenar lives"
-                  className="rounded-lg bg-[#14171c] px-3 py-1.5 text-xs text-gray-300 ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
-                >
-                  <option value="desc">Más recientes primero</option>
-                  <option value="asc">Más antiguos primero</option>
-                </select>
-              </div>
-
-              {loading && streams.length === 0 ? (
-                <div className="flex flex-col gap-3">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div
-                      key={i}
-                      className="h-24 animate-pulse rounded-xl bg-[#14171c]"
-                    />
-                  ))}
-                </div>
-              ) : past.length === 0 ? (
-                <p className="text-sm text-gray-500">
-                  Aún no hay lives guardados. Cuando Platzi transmita, aparecerá
-                  aquí automáticamente.
-                </p>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {past.map((s) => (
-                    <VideoListItem
-                      key={s.videoId}
-                      stream={s}
-                      active={displayed?.videoId === s.videoId}
-                      onSelect={handleSelect}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          </aside>
+        {/* Un solo CTA dominante (ley de Hick) + una acción secundaria discreta */}
+        <div className="mt-9 flex flex-wrap items-center gap-5">
+          <Link
+            href="/todo"
+            className="brand-gradient rounded-full px-7 py-3.5 text-sm font-bold text-on-accent shadow-lg shadow-black/20 transition hover:brightness-110 active:scale-95"
+          >
+            Empieza tu senda
+          </Link>
+          <Link
+            href="/platzi-lives"
+            className="text-sm font-semibold text-foreground underline decoration-2 underline-offset-4 transition hover:text-muted"
+          >
+            o mira los Platzi Lives
+          </Link>
         </div>
-      </main>
 
-      <footer className="mx-auto w-full max-w-[1500px] mb-2 pb-4 px-4 text-center text-xs text-gray-600 sm:px-4">
-      Hecho con cariño para la comunidad de Platzi 💚. Por{" "}
-      <a
-        href="https://www.linkedin.com/in/luisnorisgarcia/"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="underline underline-offset-2 transition-colors hover:text-[#0aeb8b]"
-      >
-        Luis Noris
-      </a>
-      </footer>
+        {/* Barra que mezcla los colores de las temáticas */}
+        <div
+          className="mt-14 h-1.5 w-full max-w-3xl rounded-full"
+          style={{ backgroundImage: blend }}
+          aria-hidden="true"
+        />
+      </section>
 
-      {/* Encuesta flotante (esquina inferior derecha) */}
-      <FeedbackPoll />
+      {/* Cómo funciona — editorial, sin tarjetas, separado por hairlines */}
+      <section className="mx-auto w-full max-w-[1500px] px-5 py-10 sm:px-8">
+        <div className="grid gap-0 sm:grid-cols-3">
+          {PRINCIPLES.map((p, i) => (
+            <div
+              key={p.n}
+              className={`py-6 sm:px-8 sm:py-2 ${
+                i > 0 ? "border-t border-border sm:border-l sm:border-t-0" : "sm:pl-0"
+              }`}
+            >
+              <span className="text-sm font-bold text-complement">{p.n}</span>
+              <h3 className="mt-3 text-xl font-bold tracking-tight text-foreground">
+                {p.title}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{p.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Temáticas — cada una con su color predominante */}
+      {categories.length > 0 && (
+        <section className="mx-auto w-full max-w-[1500px] px-5 py-12 sm:px-8">
+          <div className="mb-2 flex items-end justify-between">
+            <h2 className="text-2xl font-black tracking-tight text-foreground">
+              Explora por temática
+            </h2>
+            <Link
+              href="/todo"
+              className="text-sm font-semibold text-muted transition hover:text-foreground"
+            >
+              Ver todo →
+            </Link>
+          </div>
+
+          <div className="border-t border-border">
+            {categories.map((c) => {
+              const n = counts.get(c.id) ?? 0;
+              return (
+                <Link
+                  key={c.id}
+                  href={`/categoria/${c.slug}`}
+                  className="group flex items-center gap-5 border-b border-border py-6 transition hover:bg-fill"
+                >
+                  <span
+                    className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-on-complement transition group-hover:scale-105"
+                    style={{ backgroundColor: "var(--complement)" }}
+                  >
+                    <CategoryIcon slug={c.slug} className="h-6 w-6" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+                      {c.name}
+                    </h3>
+                    {c.description && (
+                      <p className="mt-0.5 truncate text-sm text-muted">{c.description}</p>
+                    )}
+                  </div>
+                  <span className="shrink-0 text-sm text-muted">
+                    {n} {n === 1 ? "recurso" : "recursos"}
+                  </span>
+                  <span
+                    className="shrink-0 text-xl text-complement transition group-hover:translate-x-1"
+                    aria-hidden="true"
+                  >
+                    →
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      <div className="flex-1" />
+      <SiteFooter />
     </div>
   );
 }

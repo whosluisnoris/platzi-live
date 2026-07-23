@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { getSessionId } from "@/lib/analytics";
 
-const QUESTION_ID = "live_platform_v1";
-const STORAGE_KEY = `pl_poll_${QUESTION_ID}`;
-const DISMISS_KEY = `pl_poll_${QUESTION_ID}_cerrada`;
-const COMMENT_KEY = `pl_poll_${QUESTION_ID}_comentario`;
+// Pregunta y texto por defecto (retrocompatibles con los votos ya recogidos).
+// Para una pregunta post-pivot, pasa props distintas y añade el nuevo id a la
+// lista blanca QUESTIONS en src/app/api/feedback/route.ts.
+const DEFAULT_QUESTION_ID = "live_platform_v1";
+const DEFAULT_TITLE = "¿Te gustaría tener una funcionalidad así en Platzi?";
 
 type Answer = "si" | "puede_mejorar" | "no";
 
@@ -21,18 +22,18 @@ const OPTIONS: { value: Answer; emoji: string; label: string }[] = [
   { value: "no", emoji: "😕", label: "No me convence" },
 ];
 
-function readStoredVote(): Answer | null {
+function readStoredVote(storageKey: string): Answer | null {
   try {
-    const v = localStorage.getItem(STORAGE_KEY);
+    const v = localStorage.getItem(storageKey);
     return v === "si" || v === "puede_mejorar" || v === "no" ? v : null;
   } catch {
     return null;
   }
 }
 
-async function fetchResults(): Promise<Results | null> {
+async function fetchResults(questionId: string): Promise<Results | null> {
   try {
-    const res = await fetch(`/api/feedback?question=${QUESTION_ID}`);
+    const res = await fetch(`/api/feedback?question=${questionId}`);
     if (!res.ok) return null;
     return (await res.json()) as Results;
   } catch {
@@ -41,8 +42,19 @@ async function fetchResults(): Promise<Results | null> {
 }
 
 // Encuesta flotante tipo notificación: esquina inferior derecha, se puede
-// cerrar y reabrir con la pastilla "📊 Encuesta".
-export function FeedbackPoll() {
+// cerrar y reabrir con la pastilla "📊 Encuesta". La pregunta es parametrizable
+// para poder cambiarla tras el pivot sin tocar la lógica.
+export function FeedbackPoll({
+  questionId = DEFAULT_QUESTION_ID,
+  title = DEFAULT_TITLE,
+}: {
+  questionId?: string;
+  title?: string;
+} = {}) {
+  const STORAGE_KEY = `pl_poll_${questionId}`;
+  const DISMISS_KEY = `pl_poll_${questionId}_cerrada`;
+  const COMMENT_KEY = `pl_poll_${questionId}_comentario`;
+
   const [open, setOpen] = useState(false);
   const [voted, setVoted] = useState<Answer | null>(null);
   const [results, setResults] = useState<Results | null>(null);
@@ -65,7 +77,7 @@ export function FeedbackPoll() {
   // Estado inicial (async para no divergir del SSR): recupera el voto y
   // auto-abre tras un momento solo si nunca votó ni la cerró antes.
   useEffect(() => {
-    const stored = readStoredVote();
+    const stored = readStoredVote(STORAGE_KEY);
     const dismissed = (() => {
       try {
         return localStorage.getItem(DISMISS_KEY) === "1";
@@ -75,7 +87,7 @@ export function FeedbackPoll() {
     })();
 
     if (stored) {
-      fetchResults().then((r) => {
+      fetchResults(questionId).then((r) => {
         setVoted(stored);
         if (r) setResults(r);
       });
@@ -85,6 +97,8 @@ export function FeedbackPoll() {
       const t = setTimeout(() => setOpen(true), 1500);
       return () => clearTimeout(t);
     }
+    // Solo al montar: la pregunta no cambia durante la vida del componente.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function close() {
@@ -99,7 +113,7 @@ export function FeedbackPoll() {
 
   async function reopen() {
     setOpen(true);
-    if (voted && !results) setResults(await fetchResults());
+    if (voted && !results) setResults(await fetchResults(questionId));
   }
 
   async function vote(answer: Answer) {
@@ -110,7 +124,7 @@ export function FeedbackPoll() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          questionId: QUESTION_ID,
+          questionId,
           answer,
           sessionId: getSessionId(),
         }),
@@ -123,7 +137,7 @@ export function FeedbackPoll() {
       }
       setVoted(answer);
       setChanging(false);
-      setResults(await fetchResults());
+      setResults(await fetchResults(questionId));
     } catch {
       setError(true);
     } finally {
@@ -142,7 +156,7 @@ export function FeedbackPoll() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          questionId: QUESTION_ID,
+          questionId,
           answer: voted,
           sessionId: getSessionId(),
           comment: text.slice(0, 500),
@@ -171,7 +185,7 @@ export function FeedbackPoll() {
       <button
         onClick={reopen}
         aria-label="Abrir encuesta"
-        className={`glass backdrop-blur-md fixed bottom-5 right-5 z-50 rounded-full px-4 py-2.5 text-sm font-semibold text-[#0aeb8b] shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 ${
+        className={`glass backdrop-blur-md fixed bottom-5 right-5 z-50 rounded-full px-4 py-2.5 text-sm font-semibold text-accent-ink shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 ${
           open ? "pointer-events-none translate-y-3 opacity-0" : "opacity-100"
         }`}
       >
@@ -189,20 +203,20 @@ export function FeedbackPoll() {
         }`}
       >
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-sm font-bold text-white">
-            📊 ¿Te gustaría tener una funcionalidad así en Platzi?
+          <h2 className="text-sm font-bold text-foreground">
+            📊 {title}
           </h2>
           <button
             onClick={close}
             aria-label="Cerrar encuesta"
-            className="-mr-1 -mt-1 rounded-full p-1.5 text-gray-400 transition hover:bg-white/10 hover:text-white"
+            className="-mr-1 -mt-1 rounded-full p-1.5 text-muted transition hover:bg-fill-strong hover:text-foreground"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
               <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </button>
         </div>
-        <p className="mt-1 text-xs text-gray-400">
+        <p className="mt-1 text-xs text-muted">
           Tu opinión es anónima y nos ayuda a proponer esta sección.
         </p>
 
@@ -215,8 +229,8 @@ export function FeedbackPoll() {
                 disabled={sending}
                 className={`rounded-lg px-3.5 py-2 text-sm font-medium transition active:scale-95 disabled:opacity-50 ${
                   voted === o.value
-                    ? "bg-[#0aeb8b] text-[#0e1013]"
-                    : "bg-white/5 text-gray-200 ring-1 ring-white/10 hover:bg-[#0aeb8b]/15 hover:text-[#0aeb8b]"
+                    ? "bg-accent text-on-accent"
+                    : "bg-fill text-foreground ring-1 ring-border hover:bg-accent/15 hover:text-accent-ink"
                 }`}
               >
                 {o.emoji} {o.label}
@@ -234,21 +248,21 @@ export function FeedbackPoll() {
                 <div key={o.value} className="flex items-center gap-2 text-xs">
                   <span
                     className={`w-36 shrink-0 ${
-                      mine ? "font-bold text-[#0aeb8b]" : "text-gray-300"
+                      mine ? "font-bold text-accent-ink" : "text-muted"
                     }`}
                   >
                     {o.emoji} {o.label}
                     {mine && " ✓"}
                   </span>
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/5">
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-fill">
                     <div
                       className={`h-full rounded-full ${
-                        mine ? "bg-[#0aeb8b]" : "bg-white/20"
+                        mine ? "bg-accent" : "bg-fill-strong"
                       }`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <span className="w-10 shrink-0 text-right text-gray-400">
+                  <span className="w-10 shrink-0 text-right text-muted">
                     {pct}%
                   </span>
                 </div>
@@ -256,7 +270,7 @@ export function FeedbackPoll() {
             })}
             {/* Comentario opcional */}
             {commentSent ? (
-              <p className="mt-1 text-xs text-gray-400">
+              <p className="mt-1 text-xs text-muted">
                 💬 ¡Gracias por tu comentario!
               </p>
             ) : (
@@ -267,13 +281,13 @@ export function FeedbackPoll() {
                   maxLength={500}
                   rows={2}
                   placeholder="¿Quieres contarnos por qué? (opcional)"
-                  className="w-full resize-none rounded-lg bg-white/5 px-3 py-2 text-xs text-white placeholder-gray-500 ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
+                  className="w-full resize-none rounded-lg bg-fill px-3 py-2 text-xs text-foreground placeholder-faint ring-1 ring-border focus:outline-none focus:ring-accent/50"
                 />
                 {commentText.trim().length > 0 && (
                   <button
                     type="submit"
                     disabled={sendingComment}
-                    className="self-end rounded-lg bg-[#0aeb8b] px-3.5 py-1.5 text-xs font-semibold text-[#0e1013] transition hover:bg-[#08c975] active:scale-95 disabled:opacity-50"
+                    className="self-end rounded-lg bg-accent px-3.5 py-1.5 text-xs font-semibold text-on-accent transition hover:opacity-90 active:scale-95 disabled:opacity-50"
                   >
                     {sendingComment ? "Enviando…" : "Enviar comentario"}
                   </button>
@@ -281,7 +295,7 @@ export function FeedbackPoll() {
               </form>
             )}
 
-            <div className="mt-1.5 flex items-center justify-between text-xs text-gray-400">
+            <div className="mt-1.5 flex items-center justify-between text-xs text-muted">
               <span>
                 Gracias por tu opinión 💚
                 {results
@@ -290,7 +304,7 @@ export function FeedbackPoll() {
               </span>
               <button
                 onClick={() => setChanging(true)}
-                className="text-[#0aeb8b] hover:underline"
+                className="text-accent-ink hover:underline"
               >
                 Cambiar respuesta
               </button>
