@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchPlatziLiveStreams, fetchVideoDetails } from "@/lib/invidious";
+import {
+  diagnoseLiveDetection,
+  fetchPlatziLiveStreams,
+  fetchVideoDetails,
+} from "@/lib/invidious";
 import { getSupabase, getSupabaseAdmin } from "@/lib/supabase";
 import type { LiveStream } from "@/lib/invidious";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -87,6 +91,12 @@ async function buildEnrichedRow(stream: LiveStream) {
 }
 
 export async function GET(request: NextRequest) {
+  // ?debug=ADMIN_SECRET — reporta qué ve cada vía de detección, sin tocar la DB
+  const debug = request.nextUrl.searchParams.get("debug");
+  if (debug && process.env.ADMIN_SECRET && debug === process.env.ADMIN_SECRET) {
+    return NextResponse.json(await diagnoseLiveDetection());
+  }
+
   // ?test=VIDEO_ID — atajo solo-dev para previsualizar la UI como si hubiera un live
   if (IS_DEV) {
     const testId = request.nextUrl.searchParams.get("test");
