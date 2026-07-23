@@ -30,7 +30,7 @@ export function CategoryTabs({ categories }: { categories: Category[] }) {
       <div className="mx-auto flex w-full max-w-[1500px] items-center gap-4 px-3 py-3 sm:px-8">
         <Link
           href="/"
-          className="shrink-0 text-lg font-black tracking-tight brand-text"
+          className="font-display shrink-0 text-lg font-black tracking-tight brand-text"
         >
           {SITE_NAME}
         </Link>

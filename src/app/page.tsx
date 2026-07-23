@@ -56,7 +56,9 @@ export default async function LandingPage() {
 
       {/* Header */}
       <header className="mx-auto flex w-full max-w-[1500px] items-center justify-between px-5 py-5 sm:px-8">
-        <span className="text-lg font-black tracking-tight brand-text">{SITE_NAME}</span>
+        <span className="font-display text-lg font-black tracking-tight brand-text">
+          {SITE_NAME}
+        </span>
         <div className="flex items-center gap-2">
           <Link
             href="/platzi-lives"

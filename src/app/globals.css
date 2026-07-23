@@ -29,8 +29,8 @@
   --accent: #f15025;        /* flame: rellenos, foco, estados activos, CTAs */
   --accent-ink: #ff6a42;    /* naranja como texto sobre carbón (contraste alto) */
   --on-accent: #191919;     /* carbón sobre naranja (4.4:1) */
-  --complement: #29c2ce;    /* teal: complementario del naranja (íconos, acentos) */
-  --on-complement: #062a2d; /* teal muy oscuro sobre teal claro */
+  --complement: #ffc53d;    /* amarillo ámbar: análogo del naranja (detalles, íconos) */
+  --on-complement: #2e2000; /* marrón muy oscuro sobre el ámbar */
   --glass-tint: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
   --scroll-thumb: rgba(255, 255, 255, 0.34);
@@ -54,8 +54,8 @@
   --accent: #f15025;
   --accent-ink: #c0370c;    /* naranja más profundo como texto sobre blanco (~5:1) */
   --on-accent: #191919;     /* carbón sobre naranja (4.4:1) */
-  --complement: #0b7c88;    /* teal profundo, legible sobre blanco (~4.6:1) */
-  --on-complement: #ffffff; /* blanco sobre teal profundo */
+  --complement: #8a6100;    /* dorado profundo, legible sobre blanco (5.5:1) */
+  --on-complement: #ffffff; /* blanco sobre dorado profundo */
   --glass-tint: rgba(25, 25, 25, 0.03);
   --glass-border: rgba(25, 25, 25, 0.12);
   --scroll-thumb: rgba(25, 25, 25, 0.3);

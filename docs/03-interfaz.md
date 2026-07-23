@@ -39,8 +39,9 @@ Tras el pivot, la marca dejó el verde de Platzi por una paleta propia (definida
 [`globals.css`](../src/app/globals.css)). Esta rama usa la variante **carbon & flame**:
 un esquema minimalista monocromo con un único acento — flame `#F15025`, blanco
 `#FFFFFF`, alabastro `#E6E8E6`, gris polvo `#CED0CE` y carbón `#191919` — más un
-**complementario teal** (opuesto del naranja en la rueda cromática) para íconos y
-acentos secundarios: `#29C2CE` en oscuro y `#0B7C88` en claro.
+**amarillo ámbar** (análogo del naranja en la rueda cromática, combinan de forma
+natural) para detalles, íconos y acentos secundarios: `#FFC53D` en oscuro y dorado
+profundo `#8A6100` en claro (5.5:1 sobre blanco).
 
 Todos los pares texto/fondo fueron verificados contra WCAG: los usos de texto normal
 cumplen AA (≥4.5:1) en ambos temas; el naranja como texto usa variantes propias
@@ -56,7 +57,7 @@ para títulos (`h1`–`h3` y `.font-display`, regla global en `globals.css`) y
 **Íconos por categoría**: [`CategoryIcon`](../src/components/CategoryIcon.tsx) — SVGs
 de línea que referencian cada temática (IA → destellos, Agentes → robot, Datos →
 cilindro de base de datos; cuadrícula genérica para categorías nuevas). Se muestran en
-discos teal en la landing y en la cabecera de cada categoría.
+discos ámbar en la landing y en la cabecera de cada categoría.
 
 - **Tokens semánticos** (`background`, `surface`, `foreground`, `muted`, `border`,
   `fill`, `accent`, …) mapeados en `@theme`. Los componentes usan estos tokens, no
