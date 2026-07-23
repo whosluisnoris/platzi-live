@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveStreams } from "@/hooks/useLiveStreams";
 import { PlayerPanel } from "@/components/PlayerPanel";
 import { VideoListItem } from "@/components/VideoListItem";
+import { FeedbackPoll } from "@/components/FeedbackPoll";
 import { LOFI_STREAM } from "@/lib/constants";
 import { trackEvent } from "@/lib/analytics";
 import type { LiveStream } from "@/lib/invidious";
@@ -180,6 +181,10 @@ export default function PlatziLivesPage() {
           </section>
         </aside>
       </div>
+
+      {/* Encuesta flotante: su pregunta es sobre Platzi Lives, así que solo
+          se muestra en esta ruta (no en el resto del catálogo). */}
+      <FeedbackPoll />
     </main>
   );
 }

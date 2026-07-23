@@ -21,8 +21,8 @@ const PRINCIPLES = [
   },
   {
     n: "03",
-    title: "Playlists en orden",
-    text: "Rutas de videos listas para seguir paso a paso, sin perderte entre mil pestañas.",
+    title: "Sendas paso a paso",
+    text: "Playlists curadas y en orden, listas para seguirlas de principio a fin sin perderte entre mil pestañas.",
   },
 ];
 
@@ -76,19 +76,17 @@ export default async function LandingPage() {
 
       {/* Hero */}
       <section className="mx-auto w-full max-w-[1500px] px-5 pb-14 pt-14 sm:px-8 sm:pt-24">
-        <p className="mb-6 font-sans text-xs uppercase tracking-[0.25em] text-muted">
-          Aprende IA y datos, sin el caos
+        <p className="mb-6 text-xs uppercase tracking-[0.25em] text-muted">
+          Aprende IA y datos, sin perderte
         </p>
         <h1 className="max-w-4xl text-5xl font-black leading-[0.98] tracking-tight text-foreground sm:text-7xl">
-          Demasiado video suelto
-          <br />
-          para aprender.{" "}
-          <span className="brand-text">Aquí está ordenado.</span>
+          En un mundo infinito de videos,{" "}
+          <span className="brand-text">tu senda empieza aquí.</span>
         </h1>
         <p className="mt-7 max-w-xl text-lg leading-relaxed text-muted">
-          {SITE_NAME} reúne y organiza los mejores recursos de YouTube por
-          temática, para que estudies con una ruta clara en vez de perderte entre
-          miles de videos dispersos.
+          {SITE_NAME} reúne lo mejor de YouTube para aprender IA y datos
+          —gratis y en español— y lo convierte en sendas claras, para que
+          avances paso a paso en vez de perderte en el scroll.
         </p>
 
         {/* Un solo CTA dominante (ley de Hick) + una acción secundaria discreta */}
@@ -97,7 +95,7 @@ export default async function LandingPage() {
             href="/todo"
             className="brand-gradient rounded-full px-7 py-3.5 text-sm font-bold text-on-accent shadow-lg shadow-black/20 transition hover:brightness-110 active:scale-95"
           >
-            Explorar los recursos
+            Empieza tu senda
           </Link>
           <Link
             href="/platzi-lives"

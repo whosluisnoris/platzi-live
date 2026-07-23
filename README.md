@@ -1,12 +1,12 @@
-# Rutas IA
+# Sendari
 
-> Nombre provisional (`SITE_NAME` en `src/lib/constants.ts`) — cámbialo cuando decidas la marca final.
+**La plataforma que te ayuda a encontrar tu senda en el mundo infinito de videos.**
 
 Centro de recopilación y orden de **recursos de aprendizaje sobre IA y datos**:
 reúne y organiza contenido de calidad de YouTube (en español, gratuito) por área
 temática, para aprender de forma guiada en vez de perderse entre miles de videos
 dispersos. Incluye, como una pestaña más, el histórico de **Platzi Lives** con
-detección automática.
+detección automática. (La marca vive en `SITE_NAME`, `src/lib/constants.ts`.)
 
 **Producción**: https://platzi-live.vercel.app/
 
