@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { SITE_NAME, SITE_TAGLINE } from "@/lib/constants";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Platzi Live — todos los lives en un solo lugar",
+  title: `${SITE_NAME} — recursos para aprender IA y datos, en orden`,
   description:
-    "Mira los Platzi Lives en vivo, explora el histórico de transmisiones y concéntrate con la radio lofi 24/7.",
+    `${SITE_TAGLINE} Playlists y videos de YouTube curados por temática (IA, agentes, datos) más los lives de Platzi.`,
 };
 
 export default function RootLayout({

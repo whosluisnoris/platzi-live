@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { getSessionId } from "@/lib/analytics";
 
-const QUESTION_ID = "live_platform_v1";
-const STORAGE_KEY = `pl_poll_${QUESTION_ID}`;
-const DISMISS_KEY = `pl_poll_${QUESTION_ID}_cerrada`;
-const COMMENT_KEY = `pl_poll_${QUESTION_ID}_comentario`;
+// Pregunta y texto por defecto (retrocompatibles con los votos ya recogidos).
+// Para una pregunta post-pivot, pasa props distintas y añade el nuevo id a la
+// lista blanca QUESTIONS en src/app/api/feedback/route.ts.
+const DEFAULT_QUESTION_ID = "live_platform_v1";
+const DEFAULT_TITLE = "¿Te gustaría tener una funcionalidad así en Platzi?";
 
 type Answer = "si" | "puede_mejorar" | "no";
 
@@ -21,18 +22,18 @@ const OPTIONS: { value: Answer; emoji: string; label: string }[] = [
   { value: "no", emoji: "😕", label: "No me convence" },
 ];
 
-function readStoredVote(): Answer | null {
+function readStoredVote(storageKey: string): Answer | null {
   try {
-    const v = localStorage.getItem(STORAGE_KEY);
+    const v = localStorage.getItem(storageKey);
     return v === "si" || v === "puede_mejorar" || v === "no" ? v : null;
   } catch {
     return null;
   }
 }
 
-async function fetchResults(): Promise<Results | null> {
+async function fetchResults(questionId: string): Promise<Results | null> {
   try {
-    const res = await fetch(`/api/feedback?question=${QUESTION_ID}`);
+    const res = await fetch(`/api/feedback?question=${questionId}`);
     if (!res.ok) return null;
     return (await res.json()) as Results;
   } catch {
@@ -41,8 +42,19 @@ async function fetchResults(): Promise<Results | null> {
 }
 
 // Encuesta flotante tipo notificación: esquina inferior derecha, se puede
-// cerrar y reabrir con la pastilla "📊 Encuesta".
-export function FeedbackPoll() {
+// cerrar y reabrir con la pastilla "📊 Encuesta". La pregunta es parametrizable
+// para poder cambiarla tras el pivot sin tocar la lógica.
+export function FeedbackPoll({
+  questionId = DEFAULT_QUESTION_ID,
+  title = DEFAULT_TITLE,
+}: {
+  questionId?: string;
+  title?: string;
+} = {}) {
+  const STORAGE_KEY = `pl_poll_${questionId}`;
+  const DISMISS_KEY = `pl_poll_${questionId}_cerrada`;
+  const COMMENT_KEY = `pl_poll_${questionId}_comentario`;
+
   const [open, setOpen] = useState(false);
   const [voted, setVoted] = useState<Answer | null>(null);
   const [results, setResults] = useState<Results | null>(null);
@@ -65,7 +77,7 @@ export function FeedbackPoll() {
   // Estado inicial (async para no divergir del SSR): recupera el voto y
   // auto-abre tras un momento solo si nunca votó ni la cerró antes.
   useEffect(() => {
-    const stored = readStoredVote();
+    const stored = readStoredVote(STORAGE_KEY);
     const dismissed = (() => {
       try {
         return localStorage.getItem(DISMISS_KEY) === "1";
@@ -75,7 +87,7 @@ export function FeedbackPoll() {
     })();
 
     if (stored) {
-      fetchResults().then((r) => {
+      fetchResults(questionId).then((r) => {
         setVoted(stored);
         if (r) setResults(r);
       });
@@ -85,6 +97,8 @@ export function FeedbackPoll() {
       const t = setTimeout(() => setOpen(true), 1500);
       return () => clearTimeout(t);
     }
+    // Solo al montar: la pregunta no cambia durante la vida del componente.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function close() {
@@ -99,7 +113,7 @@ export function FeedbackPoll() {
 
   async function reopen() {
     setOpen(true);
-    if (voted && !results) setResults(await fetchResults());
+    if (voted && !results) setResults(await fetchResults(questionId));
   }
 
   async function vote(answer: Answer) {
@@ -110,7 +124,7 @@ export function FeedbackPoll() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          questionId: QUESTION_ID,
+          questionId,
           answer,
           sessionId: getSessionId(),
         }),
@@ -123,7 +137,7 @@ export function FeedbackPoll() {
       }
       setVoted(answer);
       setChanging(false);
-      setResults(await fetchResults());
+      setResults(await fetchResults(questionId));
     } catch {
       setError(true);
     } finally {
@@ -142,7 +156,7 @@ export function FeedbackPoll() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          questionId: QUESTION_ID,
+          questionId,
           answer: voted,
           sessionId: getSessionId(),
           comment: text.slice(0, 500),
@@ -190,7 +204,7 @@ export function FeedbackPoll() {
       >
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-sm font-bold text-white">
-            📊 ¿Te gustaría tener una funcionalidad así en Platzi?
+            📊 {title}
           </h2>
           <button
             onClick={close}

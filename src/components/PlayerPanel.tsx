@@ -9,9 +9,11 @@ interface PlayerPanelProps {
   stream: LiveStream;
   /** true cuando el usuario eligió el video con un clic (permite autoplay) */
   autoplay: boolean;
+  /** Verbo para la fecha de un video no-live ("Transmitido" en lives, "Publicado" en el catálogo) */
+  dateVerb?: string;
 }
 
-export function PlayerPanel({ stream, autoplay }: PlayerPanelProps) {
+export function PlayerPanel({ stream, autoplay, dateVerb = "Transmitido" }: PlayerPanelProps) {
   const embedSrc = `https://www.youtube.com/embed/${stream.videoId}?rel=0&autoplay=${autoplay ? 1 : 0}`;
   const dateIso = stream.liveStartedAt;
   const relative = timeAgo(dateIso);
@@ -43,7 +45,7 @@ export function PlayerPanel({ stream, autoplay }: PlayerPanelProps) {
             ) : (
               relative && (
                 <span>
-                  Transmitido {relative}
+                  {dateVerb} {relative}
                   {absolute && <span className="text-gray-500"> · {absolute}</span>}
                   {duration && <span className="text-gray-500"> · {duration}</span>}
                 </span>

@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { fetchVideoDetails } from "@/lib/invidious";
+import { isAuthorized } from "@/lib/admin-auth";
 
 const VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
-
-function isAuthorized(request: NextRequest): boolean {
-  const secret = process.env.ADMIN_SECRET;
-  if (!secret) return false;
-  const auth = request.headers.get("authorization") ?? "";
-  return auth === `Bearer ${secret}`;
-}
 
 // POST /api/admin/streams — add a stream
 export async function POST(request: NextRequest) {

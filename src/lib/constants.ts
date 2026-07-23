@@ -1,5 +1,12 @@
 import type { LiveStream } from "./invidious";
 
+// Nombre de la plataforma (marca). Punto ÚNICO de cambio para el rebrand: se usa
+// en el header del catálogo, la landing y los metadatos. Provisional — ajústalo
+// cuando decidas el nombre final.
+export const SITE_NAME = "Rutas IA";
+export const SITE_TAGLINE =
+  "Recursos gratis para aprender IA y datos, en español y en orden.";
+
 // Radio lofi 24/7 de Claude: video por defecto cuando no hay un Platzi Live activo.
 // No vive en la base de datos; es una constante de la aplicación.
 export const LOFI_STREAM: LiveStream = {

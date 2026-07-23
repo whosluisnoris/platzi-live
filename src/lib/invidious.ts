@@ -1,16 +1,9 @@
-export interface LiveStream {
-  videoId: string;
-  title: string;
-  thumbnailUrl: string;
-  channelTitle: string;
-  watchUrl: string;
-  embedUrl: string;
-  publishedAt: string | null;
-  liveStartedAt: string | null;
-  liveEndedAt: string | null;
-  isLive: boolean;
-  durationSeconds: number | null;
-}
+import type { Playable } from "./types";
+
+// `LiveStream` es el nombre histórico de `Playable`; se conserva como alias para
+// no tocar los imports existentes (hooks, componentes, rutas). Cualquier archivo
+// nuevo puede importar `Playable` directamente desde `@/lib/types`.
+export type LiveStream = Playable;
 
 // Metadatos de un video individual, extraídos de su página watch
 export interface VideoDetails {
@@ -438,4 +431,206 @@ export async function fetchVideoDetails(videoId: string): Promise<VideoDetails> 
       firstMatch(html, /<meta itemprop="(?:channelId|identifier)" content="(UC[0-9A-Za-z_-]{22})"/) ??
       firstMatch(html, /"channelId":"(UC[0-9A-Za-z_-]{22})"/),
   };
+}
+
+// ── Importación de playlists (scraping de youtube.com/playlist?list=) ─────────
+// Misma filosofía que la detección de lives: se descarga la página pública y se
+// parsea el `ytInitialData` embebido (sin YouTube Data API). Los videos llegan
+// como `playlistVideoRenderer` (formato legado) o `lockupViewModel` (formato
+// nuevo, el mismo que ya maneja `extractVideos` para los listados de canal).
+
+export interface PlaylistItemData {
+  videoId: string;
+  title: string;
+  thumbnailUrl: string;
+  position: number; // 1-based, orden dentro de la playlist
+}
+
+export interface PlaylistImport {
+  title: string | null;
+  channelTitle: string | null;
+  items: PlaylistItemData[];
+  hasMore: boolean; // true si YouTube dejó un continuation (playlist > ~100 videos)
+}
+
+interface PlaylistVideoRenderer {
+  videoId?: string;
+  title?: { runs?: Array<{ text?: string }>; simpleText?: string };
+}
+
+interface RawPlaylistItem {
+  videoId: string;
+  title: string | null;
+}
+
+// Recorre el árbol acumulando por separado los `playlistVideoRenderer` y los
+// `lockupViewModel` de tipo video, preservando el orden de aparición (que en la
+// página de playlist coincide con el orden de la lista). El caller prefiere los
+// renderers y solo cae a los lockups si no hubo ninguno, para no contaminar con
+// videos recomendados de la barra lateral.
+function extractPlaylistItems(
+  obj: unknown,
+  depth: number,
+  renderers: RawPlaylistItem[],
+  lockups: RawPlaylistItem[]
+): void {
+  if (depth > 40 || !obj || typeof obj !== "object") return;
+  if (Array.isArray(obj)) {
+    for (const item of obj) extractPlaylistItems(item, depth + 1, renderers, lockups);
+    return;
+  }
+  const record = obj as Record<string, unknown>;
+  if ("playlistVideoRenderer" in record) {
+    const v = record.playlistVideoRenderer as PlaylistVideoRenderer;
+    if (v?.videoId && YT_VIDEO_ID_RE.test(v.videoId)) {
+      renderers.push({
+        videoId: v.videoId,
+        title:
+          v.title?.runs?.map((r) => r.text ?? "").join("") ??
+          v.title?.simpleText ??
+          null,
+      });
+    }
+  }
+  if ("lockupViewModel" in record) {
+    const l = record.lockupViewModel as LockupViewModel;
+    const id = l?.contentId;
+    if (
+      id &&
+      YT_VIDEO_ID_RE.test(id) &&
+      (l.contentType == null || l.contentType === "LOCKUP_CONTENT_TYPE_VIDEO")
+    ) {
+      lockups.push({
+        videoId: id,
+        title: l.metadata?.lockupMetadataViewModel?.title?.content ?? null,
+      });
+    }
+  }
+  for (const v of Object.values(record)) {
+    extractPlaylistItems(v, depth + 1, renderers, lockups);
+  }
+}
+
+// Devuelve el primer valor asociado a `key` en cualquier profundidad del árbol.
+function findFirstValue(obj: unknown, key: string, depth = 0): unknown {
+  if (depth > 40 || !obj || typeof obj !== "object") return undefined;
+  if (Array.isArray(obj)) {
+    for (const item of obj) {
+      const r = findFirstValue(item, key, depth + 1);
+      if (r !== undefined) return r;
+    }
+    return undefined;
+  }
+  const record = obj as Record<string, unknown>;
+  if (key in record) return record[key];
+  for (const v of Object.values(record)) {
+    const r = findFirstValue(v, key, depth + 1);
+    if (r !== undefined) return r;
+  }
+  return undefined;
+}
+
+interface PlaylistHeaderRenderer {
+  title?: { simpleText?: string; runs?: Array<{ text?: string }> };
+  ownerText?: { runs?: Array<{ text?: string }> };
+}
+
+// Título y curador de la playlist. Prioriza el `playlistHeaderRenderer` del
+// ytInitialData; cae al `<meta property="og:title">` (muy estable) si el formato
+// del header cambió. El curador es best-effort: si no aparece, el admin lo edita.
+function extractPlaylistMeta(
+  data: RawData,
+  html: string
+): { title: string | null; channelTitle: string | null } {
+  const header = findFirstValue(data, "playlistHeaderRenderer") as
+    | PlaylistHeaderRenderer
+    | undefined;
+  const headerTitle =
+    header?.title?.simpleText ??
+    header?.title?.runs?.map((r) => r.text ?? "").join("") ??
+    null;
+  const ogTitle = firstMatch(html, /<meta property="og:title" content="([^"]*)"/);
+  const channelTitle =
+    header?.ownerText?.runs?.map((r) => r.text ?? "").join("") || null;
+  return {
+    title: headerTitle ?? (ogTitle ? decodeEntities(ogTitle) : null),
+    channelTitle,
+  };
+}
+
+export async function fetchPlaylistVideos(playlistId: string): Promise<PlaylistImport> {
+  const res = await fetch(`https://www.youtube.com/playlist?list=${playlistId}`, {
+    headers: { "User-Agent": BROWSER_UA, "Accept-Language": "en-US,en;q=0.9" },
+    signal: AbortSignal.timeout(12_000),
+  });
+  if (!res.ok) throw new Error(`YouTube playlist page returned ${res.status}`);
+  const html = await res.text();
+  const data = parseYtInitialData(html);
+  if (!data) throw new Error("ytInitialData not found in playlist page");
+
+  const renderers: RawPlaylistItem[] = [];
+  const lockups: RawPlaylistItem[] = [];
+  extractPlaylistItems(data, 0, renderers, lockups);
+  const raw = renderers.length > 0 ? renderers : lockups;
+
+  const seen = new Set<string>();
+  const items: PlaylistItemData[] = [];
+  for (const v of raw) {
+    if (seen.has(v.videoId)) continue;
+    seen.add(v.videoId);
+    items.push({
+      videoId: v.videoId,
+      title: v.title?.trim() || "Video",
+      thumbnailUrl: `https://i.ytimg.com/vi/${v.videoId}/maxresdefault.jpg`,
+      position: items.length + 1,
+    });
+  }
+
+  const meta = extractPlaylistMeta(data, html);
+  return {
+    title: meta.title,
+    channelTitle: meta.channelTitle,
+    items,
+    // YouTube solo embebe la primera página (~100 videos); un continuation en el
+    // JSON indica que hay más y que la importación quedó parcial.
+    hasMore: html.includes('"continuationItemRenderer"') && items.length >= 100,
+  };
+}
+
+// ── Diagnóstico de parseo de playlist (para verificar contra YouTube real) ────
+// Análogo a `diagnoseLiveDetection`: reporta qué claves aparecen en la página de
+// una playlist pública, para confirmar los supuestos del parser sin tocar la DB.
+
+export async function diagnosePlaylistParsing(
+  playlistId: string
+): Promise<Record<string, unknown>> {
+  const out: Record<string, unknown> = {};
+  try {
+    const res = await fetch(`https://www.youtube.com/playlist?list=${playlistId}`, {
+      headers: { "User-Agent": BROWSER_UA, "Accept-Language": "en-US,en;q=0.9" },
+      signal: AbortSignal.timeout(12_000),
+    });
+    const html = await res.text();
+    const data = parseYtInitialData(html);
+    const renderers: RawPlaylistItem[] = [];
+    const lockups: RawPlaylistItem[] = [];
+    if (data) extractPlaylistItems(data, 0, renderers, lockups);
+    const meta = data ? extractPlaylistMeta(data, html) : { title: null, channelTitle: null };
+    out.playlist = {
+      status: res.status,
+      htmlLength: html.length,
+      hasYtInitialData: data !== null,
+      playlistVideoRendererCountRaw: (html.match(/"playlistVideoRenderer"/g) ?? []).length,
+      lockupCountRaw: (html.match(/"lockupViewModel"/g) ?? []).length,
+      hasContinuation: html.includes('"continuationItemRenderer"'),
+      hasPlaylistHeaderRenderer: html.includes('"playlistHeaderRenderer"'),
+      extractedRenderers: renderers.length,
+      extractedLockups: lockups.length,
+      meta,
+      sample: (renderers.length > 0 ? renderers : lockups).slice(0, 3),
+    };
+  } catch (err) {
+    out.playlist = { error: String(err) };
+  }
+  return out;
 }

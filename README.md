@@ -1,25 +1,31 @@
-# Platzi Live
+# Rutas IA
 
-Plataforma tipo YouTube que reúne los lives del canal de [Platzi](https://platzi.com):
-reproductor principal + histórico de transmisiones como lista lateral, con detección
-automática de lives, fechas reales de transmisión y analítica anónima.
+> Nombre provisional (`SITE_NAME` en `src/lib/constants.ts`) — cámbialo cuando decidas la marca final.
+
+Centro de recopilación y orden de **recursos de aprendizaje sobre IA y datos**:
+reúne y organiza contenido de calidad de YouTube (en español, gratuito) por área
+temática, para aprender de forma guiada en vez de perderse entre miles de videos
+dispersos. Incluye, como una pestaña más, el histórico de **Platzi Lives** con
+detección automática.
 
 **Producción**: https://platzi-live.vercel.app/
 
 ## Características
 
-- 📺 **Reproductor principal**: al entrar carga el Platzi Live activo; si no hay, la radio lofi 24/7 de Claude
-- 🗂️ **Histórico ordenable**: todos los lives guardados, de más reciente a más antiguo (o al revés)
-- 🔴 **Detección automática**: los lives nuevos se guardan solos, con su fecha real de inicio, y se marcan "EN VIVO" mientras duran
-- 📊 **Analítica anónima**: qué lives se ven más, sin datos personales (panel en `/admin`)
-- 🔗 **Deep-links**: `?v=VIDEO_ID` para compartir un live específico
-- 🚫 **Sin API de YouTube/Google**: scraping de páginas públicas + fallback a Invidious
+- 🧭 **Landing** que explica la plataforma e invita a explorar el catálogo
+- 🗂️ **Catálogo por pestañas**: categorías extensibles (IA, Agentes, Datos…) + "Todo"
+- 🎬 **Dos tipos de recurso**: **playlists** curadas (reproductor + lista de episodios) y **videos** sueltos
+- ⬇️ **Importación de playlists de YouTube** por scraping (sin API de Google), con fallback manual
+- 🔴 **Pestaña Platzi Lives** intacta: detección automática de transmisiones, fechas reales, "EN VIVO"
+- 🛠️ **Panel `/admin`**: gestión de categorías, recursos y lives, más estadísticas
+- 📊 **Analítica anónima** de reproducciones (sin datos personales)
+- 🚫 **Sin API de YouTube/Google**: scraping de páginas públicas + oEmbed + fallback Invidious
 - ☁️ **Sin costo de video**: todo se reproduce en iframes de YouTube
 
 ## Stack
 
 - **Next.js 16** (App Router) + TypeScript + Tailwind CSS v4
-- **Supabase** (Postgres): histórico de lives y eventos de analítica
+- **Supabase** (Postgres): catálogo (categorías, recursos, playlists), histórico de lives y analítica
 - **Vercel**: hosting con deploy automático desde `master`
 
 ## Desarrollo
@@ -31,13 +37,13 @@ npm run dev
 
 Crea `.env.local` con las variables de [docs/05-pruebas-y-despliegue.md](docs/05-pruebas-y-despliegue.md).
 
-**Probar la UI con un live simulado** (solo dev):
+**Probar la pestaña Platzi Lives con un live simulado** (solo dev):
 
 ```
-http://localhost:3000?test=VIDEO_ID
+http://localhost:3000/platzi-lives?test=VIDEO_ID
 ```
 
 ## Documentación
 
-La documentación completa (arquitectura, base de datos, detección sin API, analítica,
-pruebas y la propuesta de buscador con IA) vive en [`docs/`](docs/00-resumen.md).
+La documentación completa (arquitectura, base de datos, catálogo de recursos,
+detección sin API, analítica, pruebas y despliegue) vive en [`docs/`](docs/00-resumen.md).
