@@ -74,6 +74,7 @@ Supabase (Postgres + Auth)
 | [06-propuesta-ia-gemini.md](06-propuesta-ia-gemini.md) | Plan del buscador con IA (fase futura) |
 | [07-catalogo-de-recursos.md](07-catalogo-de-recursos.md) | El pivot: catálogo de recursos, playlists y admin |
 | [08-cuentas-votacion-setup.md](08-cuentas-votacion-setup.md) | Cuentas, correo (Resend), roles, envíos y votación: puesta en marcha |
+| [09-plan-de-monetizacion.md](09-plan-de-monetizacion.md) | Opciones y hoja de ruta para monetizar la plataforma |
 
 ## Decisiones de diseño
 
