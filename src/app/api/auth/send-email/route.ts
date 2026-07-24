@@ -55,6 +55,40 @@ function verifySignature(rawBody: string, req: NextRequest, secret: string): boo
   });
 }
 
+// Resuelve el origen público de la app (p. ej. https://clusly.com) para construir
+// el enlace de confirmación. NO se usa `email_data.site_url`: en el payload del hook
+// ese campo es la URL de la API de auth de Supabase (https://<proj>.supabase.co/auth/v1),
+// no el "Site URL" del dashboard. Usarlo generaba enlaces .../auth/v1/auth/confirm que
+// el gateway de Supabase rechaza con "No API key found". Orden de confianza:
+//   1) env explícita (NEXT_PUBLIC_SITE_URL / SITE_URL),
+//   2) el host por el que Supabase llamó a este hook (clusly.com; la request está
+//      firmada y verificada antes de llegar aquí),
+//   3) el origen del redirect_to del signup,
+//   4) site_url como último recurso.
+function resolveAppOrigin(
+  request: NextRequest,
+  redirectTo: string | undefined,
+  siteUrl: string
+): string {
+  const env = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL;
+  if (env) return env.replace(/\/+$/, "");
+
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  if (host) {
+    const proto = request.headers.get("x-forwarded-proto") ?? "https";
+    return `${proto}://${host}`;
+  }
+
+  if (redirectTo) {
+    try {
+      return new URL(redirectTo).origin;
+    } catch {
+      /* redirect_to inválido: seguimos al último recurso */
+    }
+  }
+  return siteUrl;
+}
+
 export async function POST(request: NextRequest) {
   const secret = process.env.SEND_EMAIL_HOOK_SECRET;
   const apiKey = process.env.RESEND_API_KEY;
@@ -77,9 +111,22 @@ export async function POST(request: NextRequest) {
   const { user, email_data } = payload;
   const { token_hash, email_action_type, redirect_to, site_url } = email_data;
 
-  const next = redirect_to && redirect_to.startsWith("http") ? redirect_to : "/";
+  const origin = resolveAppOrigin(request, redirect_to, site_url);
+
+  // `next` debe ser una ruta relativa: la ruta /auth/confirm solo acepta paths
+  // (los que empiezan con "/"). Extraemos el path del redirect_to del signup.
+  let next = "/";
+  if (redirect_to) {
+    try {
+      const u = new URL(redirect_to);
+      next = `${u.pathname}${u.search}${u.hash}` || "/";
+    } catch {
+      /* redirect_to inválido: se queda en "/" */
+    }
+  }
+
   const actionUrl =
-    `${site_url}/auth/confirm?token_hash=${encodeURIComponent(token_hash)}` +
+    `${origin}/auth/confirm?token_hash=${encodeURIComponent(token_hash)}` +
     `&type=${encodeURIComponent(email_action_type)}` +
     `&next=${encodeURIComponent(next)}`;
 
