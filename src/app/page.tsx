@@ -21,7 +21,7 @@ const PRINCIPLES = [
   },
   {
     n: "03",
-    title: "Sendas paso a paso",
+    title: "Camino paso a paso",
     text: "Playlists curadas y en orden, listas para seguirlas de principio a fin sin perderte entre mil pestañas.",
   },
 ];
@@ -79,15 +79,14 @@ export default async function LandingPage() {
       {/* Hero */}
       <section className="mx-auto w-full max-w-[1500px] px-5 pb-14 pt-14 sm:px-8 sm:pt-24">
         <p className="mb-6 text-xs uppercase tracking-[0.25em] text-muted">
-          Aprende IA y datos, sin perderte
+          Aprende tecnología, sin perderte
         </p>
         <h1 className="max-w-4xl text-5xl font-black leading-[0.98] tracking-tight text-foreground sm:text-7xl">
           En un mundo infinito de videos,{" "}
-          <span className="brand-text">tu senda empieza aquí.</span>
+          <span className="brand-text">tu ruta empieza aquí.</span>
         </h1>
         <p className="mt-7 max-w-xl text-lg leading-relaxed text-muted">
-          {SITE_NAME} reúne lo mejor de YouTube para aprender IA y datos
-          —gratis y en español— y lo convierte en sendas claras, para que
+          {SITE_NAME} reúne lo mejor de YouTube para aprender tecnología, gratis, en en tu idioma y lo convierte en rutas claras, para que
           avances paso a paso en vez de perderte en el scroll.
         </p>
 
@@ -97,8 +96,7 @@ export default async function LandingPage() {
             href="/todo"
             className="brand-gradient rounded-full px-7 py-3.5 text-sm font-bold text-on-accent shadow-lg shadow-black/20 transition hover:brightness-110 active:scale-95"
           >
-            Empieza tu senda
-          </Link>
+            Empieza tu ruta
           <Link
             href="/platzi-lives"
             className="text-sm font-semibold text-foreground underline decoration-2 underline-offset-4 transition hover:text-muted"

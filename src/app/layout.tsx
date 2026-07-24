@@ -18,9 +18,9 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: `${SITE_NAME} — encuentra tu senda para aprender IA y datos`,
+  title: `${SITE_NAME} — encuentra tu senda para aprender tecnología`,
   description:
-    `${SITE_TAGLINE} Playlists y videos de YouTube curados por temática (IA, agentes, datos) más los lives de Platzi, gratis y en español.`,
+    `${SITE_TAGLINE} Playlists y videos de YouTube curados por temática (IA, agentes, datos) más los lives de Platzi, gratis y en tu idioma.`,
 };
 
 // Fija el tema antes del primer paint: elección guardada o preferencia del sistema.
