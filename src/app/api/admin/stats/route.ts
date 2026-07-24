@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { LOFI_STREAM } from "@/lib/constants";
-import { isAuthorized } from "@/lib/admin-auth";
+import { authorizeAdmin } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -62,7 +62,7 @@ function buildDaily(events: EventRow[]) {
 
 // GET /api/admin/stats — agregados de reproducción por video
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!(await authorizeAdmin(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

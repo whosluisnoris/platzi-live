@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { isAuthorized } from "@/lib/admin-auth";
+import { authorizeAdmin } from "@/lib/admin-auth";
 import { createResourceFromUrl, setCategories, cleanCategoryIds } from "@/lib/resources";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +8,7 @@ export const maxDuration = 30;
 
 // GET /api/admin/resources — recursos con sus categorías (para la tabla del admin)
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!(await authorizeAdmin(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { data, error } = await getSupabaseAdmin()
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 // Curado por el admin: sin submitted_by. Comparte la lógica con los envíos de la
 // comunidad (src/lib/resources.ts).
 export async function POST(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!(await authorizeAdmin(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
 // PATCH /api/admin/resources — reasignar categorías y/o editar título/descripción
 export async function PATCH(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!(await authorizeAdmin(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
@@ -89,7 +89,7 @@ export async function PATCH(request: NextRequest) {
 
 // DELETE /api/admin/resources — borra un recurso (items y categorías caen por cascade)
 export async function DELETE(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!(await authorizeAdmin(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;

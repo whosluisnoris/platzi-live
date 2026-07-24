@@ -20,13 +20,13 @@ function extractVideoId(input: string): string | null {
 
 // Gestión de los lives de Platzi (extraída tal cual del panel original): agregar
 // pegando URL/ID de YouTube y quitar. La detección automática sigue en /api/live.
-export function StreamsManager({ secret }: { secret: string }) {
+export function StreamsManager() {
   const [streams, setStreams] = useState<LiveStream[]>([]);
   const [input, setInput] = useState("");
   const [status, setStatus] = useState<{ text: string; ok: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const headers = { "Content-Type": "application/json", Authorization: `Bearer ${secret}` };
+  const headers = { "Content-Type": "application/json" };
 
   const loadStreams = useCallback(async () => {
     const res = await fetch("/api/live");

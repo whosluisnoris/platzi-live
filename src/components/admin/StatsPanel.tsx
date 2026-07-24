@@ -62,14 +62,14 @@ const POLL_LABELS: { key: keyof PollResults["counts"]; label: string }[] = [
 
 // Panel de estadísticas (extraído tal cual del admin original): reproducciones,
 // visitas de Vercel, encuesta y comentarios.
-export function StatsPanel({ secret }: { secret: string }) {
+export function StatsPanel() {
   const [stats, setStats] = useState<VideoStats[]>([]);
   const [daily, setDaily] = useState<DailyRow[]>([]);
   const [visits, setVisits] = useState<VisitsState | null>(null);
   const [poll, setPoll] = useState<PollResults | null>(null);
   const [comments, setComments] = useState<PollComment[]>([]);
 
-  const headers = { "Content-Type": "application/json", Authorization: `Bearer ${secret}` };
+  const headers = { "Content-Type": "application/json" };
 
   const loadStats = useCallback(async () => {
     const res = await fetch("/api/admin/stats", { headers });
@@ -87,7 +87,7 @@ export function StatsPanel({ secret }: { secret: string }) {
       .then((v) => setVisits(v))
       .catch(() => setVisits(null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [secret]);
+  }, []);
 
   useEffect(() => {
     loadStats();

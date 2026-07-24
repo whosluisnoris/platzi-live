@@ -14,10 +14,8 @@ function slugify(name: string): string {
 }
 
 export function CategoriesManager({
-  secret,
   onChange,
 }: {
-  secret: string;
   onChange?: () => void;
 }) {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -29,7 +27,7 @@ export function CategoriesManager({
   const [status, setStatus] = useState<{ text: string; ok: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const headers = { "Content-Type": "application/json", Authorization: `Bearer ${secret}` };
+  const headers = { "Content-Type": "application/json" };
 
   const load = useCallback(async () => {
     const res = await fetch("/api/admin/categories", { headers });
@@ -37,7 +35,7 @@ export function CategoriesManager({
     const data = await res.json();
     setCategories(data.categories ?? []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [secret]);
+  }, []);
 
   useEffect(() => {
     load();

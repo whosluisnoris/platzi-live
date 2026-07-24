@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { isAuthorized } from "@/lib/admin-auth";
+import { authorizeAdmin } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,7 @@ function cleanColor(v: unknown): string | null | undefined {
 
 // GET /api/admin/categories — todas las categorías (incluye inactivas)
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!(await authorizeAdmin(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { data, error } = await getSupabaseAdmin()
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
 // POST /api/admin/categories — crea una categoría
 export async function POST(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!(await authorizeAdmin(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
 
 // PATCH /api/admin/categories — actualiza nombre/descr/orden/activo
 export async function PATCH(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!(await authorizeAdmin(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -127,7 +127,7 @@ export async function PATCH(request: NextRequest) {
 
 // DELETE /api/admin/categories — borra una categoría (las relaciones caen por cascade)
 export async function DELETE(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!(await authorizeAdmin(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;

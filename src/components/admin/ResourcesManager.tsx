@@ -9,7 +9,7 @@ type AdminResource = ResourceRow & {
   resource_categories: { category_id: string }[];
 };
 
-export function ResourcesManager({ secret }: { secret: string }) {
+export function ResourcesManager() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [resources, setResources] = useState<AdminResource[]>([]);
   const [url, setUrl] = useState("");
@@ -26,7 +26,7 @@ export function ResourcesManager({ secret }: { secret: string }) {
   // Gestión de episodios de una playlist
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const headers = { "Content-Type": "application/json", Authorization: `Bearer ${secret}` };
+  const headers = { "Content-Type": "application/json" };
 
   const load = useCallback(async () => {
     const [catRes, resRes] = await Promise.all([
@@ -36,7 +36,7 @@ export function ResourcesManager({ secret }: { secret: string }) {
     if (catRes.ok) setCategories((await catRes.json()).categories ?? []);
     if (resRes.ok) setResources((await resRes.json()).resources ?? []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [secret]);
+  }, []);
 
   useEffect(() => {
     load();
@@ -260,7 +260,7 @@ export function ResourcesManager({ secret }: { secret: string }) {
               </div>
 
               {r.kind === "playlist" && expandedId === r.id && (
-                <PlaylistItemsEditor resourceId={r.id} secret={secret} onCountChange={load} />
+                <PlaylistItemsEditor resourceId={r.id} onCountChange={load} />
               )}
             </li>
           ))}
@@ -273,11 +273,9 @@ export function ResourcesManager({ secret }: { secret: string }) {
 // Editor de episodios de una playlist: lista, agregar por URL, quitar, resync.
 function PlaylistItemsEditor({
   resourceId,
-  secret,
   onCountChange,
 }: {
   resourceId: string;
-  secret: string;
   onCountChange: () => void;
 }) {
   const [items, setItems] = useState<PlaylistItemRow[]>([]);
@@ -285,13 +283,13 @@ function PlaylistItemsEditor({
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
-  const headers = { "Content-Type": "application/json", Authorization: `Bearer ${secret}` };
+  const headers = { "Content-Type": "application/json" };
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/admin/resources/${resourceId}/items`, { headers });
     if (res.ok) setItems((await res.json()).items ?? []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resourceId, secret]);
+  }, [resourceId]);
 
   useEffect(() => {
     load();

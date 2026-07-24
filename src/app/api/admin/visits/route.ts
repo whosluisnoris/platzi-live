@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAuthorized } from "@/lib/admin-auth";
+import { authorizeAdmin } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 //   ANALYTICS_TEAM_ID     — id del team (team_...), opcional en cuentas personales
 // Sin configurar responde { configured: false } y el panel muestra la guía.
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!(await authorizeAdmin(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

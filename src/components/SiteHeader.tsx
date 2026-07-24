@@ -2,7 +2,7 @@ import Link from "next/link";
 import { SITE_NAME } from "@/lib/constants";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AuthNav } from "@/components/AuthNav";
-import type { SessionUser } from "@/lib/auth";
+import { isStaff, type SessionUser } from "@/lib/auth";
 
 // Barra de navegación del catálogo: marca + enlaces + tema + sesión. El filtrado
 // por categoría ya no vive aquí (antes eran pestañas); ahora está en la página
@@ -31,6 +31,14 @@ export function SiteHeader({ user }: { user: SessionUser | null }) {
           >
             Platzi Lives
           </Link>
+          {isStaff(user?.role) && (
+            <Link
+              href="/admin"
+              className="rounded-full px-3 py-2 text-sm font-medium text-accent-ink transition hover:bg-fill"
+            >
+              Admin
+            </Link>
+          )}
         </nav>
 
         <ThemeToggle className="shrink-0" />
