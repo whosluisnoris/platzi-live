@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getUserVotes } from "@/lib/votes";
 import { ResourceGrid } from "@/components/ResourceGrid";
+import { getCategoriesForResources } from "@/lib/catalog";
 import type { ResourceRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -25,10 +26,11 @@ export default async function MisVideosPage() {
   const all = (data as ResourceRow[] | null) ?? [];
   const published = all.filter((r) => r.status !== "hidden");
   const hidden = all.filter((r) => r.status === "hidden");
-  const userVotes = await getUserVotes(
-    user.id,
-    published.map((r) => r.id)
-  );
+  const publishedIds = published.map((r) => r.id);
+  const [userVotes, categoriesByResource] = await Promise.all([
+    getUserVotes(user.id, publishedIds),
+    getCategoriesForResources(publishedIds),
+  ]);
 
   return (
     <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-8 sm:px-8">
@@ -74,6 +76,7 @@ export default async function MisVideosPage() {
           resources={published}
           from="mis-videos"
           userVotes={userVotes}
+          categoriesByResource={categoriesByResource}
           canVote
           empty="Todos tus videos están ocultos por ahora."
         />

@@ -30,9 +30,11 @@ export default async function TodoPage({
     getResourcesFiltered({ categorySlugs: selectedSlugs, sort }),
     getCurrentUser(),
   ]);
-  const userVotes = user
-    ? await getUserVotes(user.id, resources.map((r) => r.id))
-    : {};
+  const resourceIds = resources.map((r) => r.id);
+  const [userVotes, categoriesByResource] = await Promise.all([
+    user ? getUserVotes(user.id, resourceIds) : Promise.resolve<Record<string, number>>({}),
+    getCategoriesForResources(resourceIds),
+  ]);
 
   return (
     <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-8 sm:px-8">
@@ -58,6 +60,7 @@ export default async function TodoPage({
         resources={resources}
         from="todo"
         userVotes={userVotes}
+        categoriesByResource={categoriesByResource}
         canVote={!!user}
         empty={
           selectedSlugs.length > 0
