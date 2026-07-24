@@ -97,6 +97,7 @@ export default async function LandingPage() {
             className="brand-gradient rounded-full px-7 py-3.5 text-sm font-bold text-on-accent shadow-lg shadow-black/20 transition hover:brightness-110 active:scale-95"
           >
             Empieza tu ruta
+          </Link>
           <Link
             href="/platzi-lives"
             className="text-sm font-semibold text-foreground underline decoration-2 underline-offset-4 transition hover:text-muted"
