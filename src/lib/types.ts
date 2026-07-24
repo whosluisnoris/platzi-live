@@ -27,6 +27,9 @@ export interface ResourceRow {
   added_at: string;
   synced_at: string | null;
   source: string;
+  vote_count: number;
+  submitted_by?: string | null;
+  status?: string;
 }
 
 // Item de una playlist (tal como llega de la tabla `playlist_items`).

@@ -6,7 +6,7 @@ import type { Category, ResourceRow, PlaylistItemRow } from "@/lib/types";
 // hace falta una capa /api para leer — solo las escrituras pasan por /api/admin.
 
 const RESOURCE_COLS =
-  "id, kind, youtube_id, title, channel_title, description, thumbnail_url, video_count, duration_seconds, published_at, added_at, synced_at, source";
+  "id, kind, youtube_id, title, channel_title, description, thumbnail_url, video_count, duration_seconds, published_at, added_at, synced_at, source, vote_count";
 
 export async function getActiveCategories(): Promise<Category[]> {
   const { data } = await getSupabase()
@@ -27,21 +27,62 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
   return (data as Category | null) ?? null;
 }
 
-// Recursos de una categoría (join interno por resource_categories).
+// Recursos de una categoría (join interno por resource_categories), de más a
+// menos votados.
 export async function getResourcesByCategory(categoryId: string): Promise<ResourceRow[]> {
   const { data } = await getSupabase()
     .from("resources")
     .select(`${RESOURCE_COLS}, resource_categories!inner(category_id)`)
     .eq("resource_categories.category_id", categoryId)
+    .order("vote_count", { ascending: false })
     .order("added_at", { ascending: false });
   return ((data as ResourceRow[] | null) ?? []).map(stripJoin);
 }
 
-// Todos los recursos (pestaña "Todo").
+// Todos los recursos.
 export async function getAllResources(): Promise<ResourceRow[]> {
   const { data } = await getSupabase()
     .from("resources")
     .select(RESOURCE_COLS)
+    .order("vote_count", { ascending: false })
+    .order("added_at", { ascending: false });
+  return (data as ResourceRow[] | null) ?? [];
+}
+
+export type ResourceSort = "top" | "new";
+
+// Exploración con filtros: por categorías (unión de slugs) y orden (más votados o
+// más recientes). Resuelve slugs→ids y luego los recursos en esos ids, para no
+// duplicar filas cuando un recurso pertenece a varias categorías seleccionadas.
+export async function getResourcesFiltered(opts: {
+  categorySlugs?: string[];
+  sort?: ResourceSort;
+}): Promise<ResourceRow[]> {
+  const sort = opts.sort ?? "top";
+  const orderCol = sort === "new" ? "added_at" : "vote_count";
+  const supabase = getSupabase();
+
+  let query = supabase.from("resources").select(RESOURCE_COLS);
+
+  const slugs = opts.categorySlugs?.filter(Boolean) ?? [];
+  if (slugs.length > 0) {
+    const { data: cats } = await supabase.from("categories").select("id").in("slug", slugs);
+    const catIds = ((cats as { id: string }[] | null) ?? []).map((c) => c.id);
+    if (catIds.length === 0) return [];
+
+    const { data: links } = await supabase
+      .from("resource_categories")
+      .select("resource_id")
+      .in("category_id", catIds);
+    const ids = [
+      ...new Set(((links as { resource_id: string }[] | null) ?? []).map((l) => l.resource_id)),
+    ];
+    if (ids.length === 0) return [];
+    query = query.in("id", ids);
+  }
+
+  const { data } = await query
+    .order(orderCol, { ascending: false })
     .order("added_at", { ascending: false });
   return (data as ResourceRow[] | null) ?? [];
 }

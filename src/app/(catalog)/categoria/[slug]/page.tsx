@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { getCategoryBySlug, getResourcesByCategory } from "@/lib/catalog";
+import { getCurrentUser } from "@/lib/auth";
+import { getUserVotes } from "@/lib/votes";
 import { ResourceGrid } from "@/components/ResourceGrid";
 import { catColor } from "@/lib/color";
 import { CategoryIcon } from "@/components/CategoryIcon";
@@ -17,6 +19,8 @@ export default async function CategoryPage({
   if (!category) notFound();
 
   const resources = await getResourcesByCategory(category.id);
+  const user = await getCurrentUser();
+  const userVotes = user ? await getUserVotes(user.id, resources.map((r) => r.id)) : {};
   const color = catColor(category.color);
 
   return (
@@ -41,6 +45,8 @@ export default async function CategoryPage({
         resources={resources}
         from={slug}
         accent={color}
+        userVotes={userVotes}
+        canVote={!!user}
         empty="Aún no hay recursos en esta categoría. Pronto agregaremos más."
       />
     </main>

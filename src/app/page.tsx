@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { getActiveCategories, getCategoryResourceCounts } from "@/lib/catalog";
+import { getCurrentUser } from "@/lib/auth";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { AuthNav } from "@/components/AuthNav";
 import { SITE_NAME } from "@/lib/constants";
 import { CategoryIcon } from "@/components/CategoryIcon";
 
@@ -27,9 +29,10 @@ const PRINCIPLES = [
 ];
 
 export default async function LandingPage() {
-  const [categories, counts] = await Promise.all([
+  const [categories, counts, user] = await Promise.all([
     getActiveCategories(),
     getCategoryResourceCounts(),
+    getCurrentUser(),
   ]);
 
   // Firma de la landing: degradado que mezcla toda la paleta (definido por tema
@@ -62,17 +65,18 @@ export default async function LandingPage() {
         <div className="flex items-center gap-2">
           <Link
             href="/platzi-lives"
-            className="rounded-full px-3 py-2 text-sm text-muted transition hover:text-foreground"
+            className="hidden rounded-full px-3 py-2 text-sm text-muted transition hover:text-foreground sm:inline-block"
           >
             Platzi Lives
           </Link>
           <Link
             href="/todo"
-            className="rounded-full px-4 py-2 text-sm font-semibold text-muted transition hover:text-foreground"
+            className="rounded-full px-3 py-2 text-sm font-semibold text-muted transition hover:text-foreground"
           >
             Explorar
           </Link>
           <ThemeToggle />
+          <AuthNav user={user} />
         </div>
       </header>
 

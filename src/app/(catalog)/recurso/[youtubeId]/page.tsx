@@ -5,8 +5,11 @@ import {
   getPlaylistItems,
   getCategoryBySlug,
 } from "@/lib/catalog";
+import { getCurrentUser } from "@/lib/auth";
+import { getUserVote } from "@/lib/votes";
 import { resourceToPlayable, playlistItemToPlayable } from "@/lib/playable";
 import { ResourceDetail } from "@/components/ResourceDetail";
+import { VoteControl } from "@/components/VoteControl";
 import type { Playable } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +43,8 @@ export default async function ResourcePage({
   }
   const main = resourceToPlayable(resource);
   const back = await backTarget(from);
+  const user = await getCurrentUser();
+  const userVote = user ? await getUserVote(user.id, resource.id) : 0;
 
   return (
     <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-6 sm:px-8">
@@ -49,6 +54,19 @@ export default async function ResourcePage({
       >
         ← Volver a {back.label}
       </Link>
+
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <VoteControl
+          resourceId={resource.id}
+          score={resource.vote_count}
+          initialVote={userVote}
+          canVote={!!user}
+          size="lg"
+        />
+        <span className="text-sm text-muted">
+          ¿Te sirvió? Vótalo para que más gente lo encuentre.
+        </span>
+      </div>
 
       {resource.kind === "playlist" && (
         <div className="mb-5">

@@ -5,18 +5,23 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ResourceRow } from "@/lib/types";
 import { formatDuration, timeAgo } from "@/lib/dates";
+import { VoteControl } from "@/components/VoteControl";
 
-// Tarjeta del catálogo (grid). Enlaza al detalle del recurso; `from` alimenta el
-// breadcrumb de vuelta. `accent` (color de la categoría) tiñe el marco y el
-// distintivo de tipo, para que el color de cada área se lea en las tarjetas.
+// Tarjeta del catálogo (grid). El enlace envuelve la miniatura y el título; el
+// control de voto vive en un pie aparte para no anidar botones dentro de un <a>.
+// `accent` (color de la categoría) tiñe el marco y el distintivo de tipo.
 export function ResourceCard({
   resource,
   from,
   accent,
+  userVote,
+  canVote = false,
 }: {
   resource: ResourceRow;
   from?: string;
   accent?: string | null;
+  userVote?: number;
+  canVote?: boolean;
 }) {
   const [imgError, setImgError] = useState(false);
   const thumbnailUrl = imgError
@@ -33,8 +38,7 @@ export function ResourceCard({
     : formatDuration(resource.duration_seconds) ?? timeAgo(resource.published_at) ?? "";
 
   return (
-    <Link
-      href={href}
+    <div
       style={{ ["--line" as string]: line }}
       className="group relative flex flex-col overflow-hidden rounded-xl bg-surface ring-1 ring-border transition hover:ring-2 hover:ring-[var(--line)]"
     >
@@ -45,43 +49,54 @@ export function ResourceCard({
         aria-hidden="true"
       />
 
-      <div className="relative aspect-video w-full overflow-hidden bg-elevated">
-        {resource.thumbnail_url || resource.kind === "video" ? (
-          <Image
-            src={thumbnailUrl}
-            alt=""
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 320px"
-            className="object-cover transition duration-300 group-hover:scale-105"
-            onError={() => setImgError(true)}
-            unoptimized={imgError}
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <span className="text-xs font-bold uppercase tracking-widest text-faint">
-              Playlist
+      <Link href={href} className="flex flex-1 flex-col">
+        <div className="relative aspect-video w-full overflow-hidden bg-elevated">
+          {resource.thumbnail_url || resource.kind === "video" ? (
+            <Image
+              src={thumbnailUrl}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 320px"
+              className="object-cover transition duration-300 group-hover:scale-105"
+              onError={() => setImgError(true)}
+              unoptimized={imgError}
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <span className="text-xs font-bold uppercase tracking-widest text-faint">
+                Playlist
+              </span>
+            </div>
+          )}
+          {isPlaylist && (
+            <span
+              className="absolute bottom-2 right-2 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-on-accent"
+              style={{ backgroundColor: line }}
+            >
+              {resource.video_count ?? 0} videos
             </span>
-          </div>
-        )}
-        {isPlaylist && (
-          <span
-            className="absolute bottom-2 right-2 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-on-accent"
-            style={{ backgroundColor: line }}
-          >
-            {resource.video_count ?? 0} videos
-          </span>
-        )}
-      </div>
+          )}
+        </div>
 
-      <div className="flex flex-1 flex-col gap-1 p-3.5">
-        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
-          {resource.title}
-        </h3>
-        {resource.channel_title && (
-          <p className="truncate text-xs text-muted">{resource.channel_title}</p>
-        )}
-        {meta && <p className="mt-auto pt-1 text-xs text-faint">{meta}</p>}
+        <div className="flex flex-1 flex-col gap-1 p-3.5 pb-2">
+          <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
+            {resource.title}
+          </h3>
+          {resource.channel_title && (
+            <p className="truncate text-xs text-muted">{resource.channel_title}</p>
+          )}
+        </div>
+      </Link>
+
+      <div className="flex items-center justify-between gap-2 px-3.5 pb-3">
+        <VoteControl
+          resourceId={resource.id}
+          score={resource.vote_count}
+          initialVote={userVote}
+          canVote={canVote}
+        />
+        {meta && <span className="text-xs text-faint">{meta}</span>}
       </div>
-    </Link>
+    </div>
   );
 }
