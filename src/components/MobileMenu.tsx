@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { SITE_NAME } from "@/lib/constants";
 
@@ -13,7 +14,13 @@ const LINKS = [
   { href: "/platzi-lives", label: "Platzi Lives" },
 ];
 
-export function MobileMenu({ showAdmin = false }: { showAdmin?: boolean }) {
+export function MobileMenu({
+  showAdmin = false,
+  loggedIn = false,
+}: {
+  showAdmin?: boolean;
+  loggedIn?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const links = showAdmin ? [...LINKS, { href: "/admin", label: "Admin" }] : LINKS;
 
@@ -31,8 +38,8 @@ export function MobileMenu({ showAdmin = false }: { showAdmin?: boolean }) {
         </svg>
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50">
+      {open && createPortal(
+        <div className="fixed inset-0 z-[100] sm:hidden">
           <button
             type="button"
             aria-hidden="true"
@@ -74,8 +81,19 @@ export function MobileMenu({ showAdmin = false }: { showAdmin?: boolean }) {
                 </Link>
               ))}
             </nav>
+
+            {!loggedIn && (
+              <Link
+                href="/entrar"
+                onClick={() => setOpen(false)}
+                className="mt-auto rounded-lg px-3 py-2.5 text-sm font-semibold text-muted transition hover:bg-fill hover:text-foreground"
+              >
+                Entrar
+              </Link>
+            )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

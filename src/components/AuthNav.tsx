@@ -24,7 +24,7 @@ export function AuthNav({ user }: { user: SessionUser | null }) {
       <div className="flex shrink-0 items-center gap-1.5">
         <Link
           href="/entrar"
-          className="rounded-full px-3 py-2 text-sm font-medium text-muted transition hover:text-foreground"
+          className="hidden rounded-full px-3 py-2 text-sm font-medium text-muted transition hover:text-foreground sm:inline-block"
         >
           Entrar
         </Link>

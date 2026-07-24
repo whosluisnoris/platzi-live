@@ -11,8 +11,8 @@ import { isStaff, type SessionUser } from "@/lib/auth";
 export function SiteHeader({ user }: { user: SessionUser | null }) {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-[1500px] items-center gap-2 px-3 py-3 sm:gap-3 sm:px-8">
-        <MobileMenu showAdmin={isStaff(user?.role)} />
+      <div className="mx-auto flex w-full min-w-0 max-w-[1500px] items-center gap-2 px-3 py-3 sm:gap-3 sm:px-8">
+        <MobileMenu showAdmin={isStaff(user?.role)} loggedIn={!!user} />
 
         <Link
           href="/"

@@ -38,7 +38,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${bricolage.variable} ${roboto.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="min-h-full flex flex-col overflow-x-clip bg-background text-foreground">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         {children}
         <Analytics />
