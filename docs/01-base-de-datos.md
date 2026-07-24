@@ -117,6 +117,47 @@ El pivot a centro de recursos añade cuatro tablas nuevas (todas aditivas, sin t
 PK `(resource_id, category_id)` + índice adicional en `category_id`. Un recurso puede
 pertenecer a varias categorías.
 
+## Cuentas, envíos y votación
+
+Cuentas con **Supabase Auth** (email + contraseña, confirmación por correo). Detalle
+de puesta en marcha en [08-cuentas-votacion-setup.md](08-cuentas-votacion-setup.md).
+
+### Tabla `profiles` — perfil y rol por usuario
+
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `id` | uuid (PK, FK → `auth.users`, ON DELETE CASCADE) | Mismo id que la cuenta |
+| `display_name` | text | Nombre visible (de los metadatos del registro) |
+| `role` | text | `owner` \| `admin` \| `user` (CHECK en DB, default `user`) |
+| `created_at` | timestamptz | |
+
+Se crea sola al registrarse (trigger `on_auth_user_created` → `handle_new_user`). El
+rol define el acceso al panel: `owner` y `admin` son "staff" (`isStaff()` en
+`src/lib/auth.ts`). **Nadie puede auto-asignarse un rol**: se revocó el `UPDATE` de la
+columna `role` a `anon`/`authenticated`; solo el service role (servidor) la cambia.
+
+### Nuevas columnas en `resources`
+
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `submitted_by` | uuid (FK → `auth.users`, ON DELETE SET NULL) | Quién aportó el recurso (`null` = curado por el equipo) |
+| `status` | text | `published` \| `hidden` (CHECK; default `published`). El catálogo público solo ve `published` |
+| `vote_count` | integer | Suma de votos; la mantiene un trigger (default 0) |
+
+### Tabla `resource_votes` — un voto por usuario/recurso
+
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `resource_id` | uuid (FK → `resources`, ON DELETE CASCADE) | |
+| `user_id` | uuid (FK → `auth.users`, ON DELETE CASCADE) | |
+| `value` | smallint | `+1` \| `-1` (CHECK en DB) |
+| `created_at` | timestamptz | |
+
+PK `(resource_id, user_id)`: un voto por usuario y recurso. Un trigger
+(`sync_resource_vote_count`) mantiene `resources.vote_count` en INSERT/UPDATE/DELETE.
+RLS activo **sin políticas públicas**: el voto se procesa con el service role tras
+verificar la sesión en `/api/resources/[id]/vote`.
+
 ## Vista `watch_stats`
 
 Agregados por video: `plays`, `autoplays`, `youtube_opens`, `unique_sessions`,
@@ -129,10 +170,14 @@ Agregados por video: `plays`, `autoplays`, `youtube_opens`, `unique_sessions`,
 | `streams` | RLS activo; `SELECT` público (la anon key solo lee) |
 | `watch_events` | RLS activo **sin políticas públicas**: solo el service role (rutas API del servidor) puede leer/escribir |
 | `watch_stats` | `security_invoker = true`: hereda las restricciones de `watch_events` (anon bloqueado) |
-| `categories`, `resources`, `playlist_items`, `resource_categories` | RLS activo; `SELECT` público (contenido curado sin PII); escrituras solo vía service role en `/api/admin/*` |
+| `categories`, `resources`, `playlist_items`, `resource_categories` | RLS activo; `SELECT` público (contenido curado sin PII); el catálogo público solo ve `resources.status = 'published'`; escrituras solo vía service role |
+| `profiles` | RLS activo; `SELECT` público; el usuario puede actualizar su fila (no la columna `role`, revocada); solo el service role cambia roles |
+| `resource_votes` | RLS activo **sin políticas públicas**: el voto se procesa con el service role tras verificar la sesión |
 
 Las escrituras siempre pasan por rutas API del servidor con `SUPABASE_SERVICE_ROLE_KEY`
-(nunca expuesta al navegador).
+(nunca expuesta al navegador). Las rutas `/api/admin/*` autorizan por **rol de sesión**
+(owner/admin) o, como respaldo programático, por `ADMIN_SECRET` (ver
+`src/lib/admin-auth.ts`).
 
 ## Migraciones aplicadas
 
@@ -155,3 +200,12 @@ Las escrituras siempre pasan por rutas API del servidor con `SUPABASE_SERVICE_RO
    Agentes, Datos) con `ON CONFLICT (slug) DO NOTHING` (idempotente).
 7. **`add_category_color`** (2026-07-23): columna `color` en `categories` (aditiva) +
    asignación de la paleta de marca a IA (magenta), Agentes (rojo) y Datos (vino).
+8. **`0001_users_submissions_voting`** (`supabase/migrations/`): cuentas y comunidad.
+   Columnas nuevas en `resources` (`submitted_by`, `status`, `vote_count`), tabla
+   `profiles` (+ trigger `handle_new_user`), tabla `resource_votes` (+ trigger
+   `sync_resource_vote_count`), RLS, y **upsert de las 12 categorías** por defecto
+   (Tecnología, Programación, Web, IA, Agentes, Datos, Diseño, Producto, DevOps,
+   Ciberseguridad, Móvil, Carrera). Todo aditivo (`ADD COLUMN/CREATE ... IF NOT EXISTS`).
+9. **`0002_roles`** (`supabase/migrations/`): columna `role` en `profiles`
+   (`owner`/`admin`/`user`, default `user`), se revoca el `UPDATE` de `role` a los
+   clientes (anti auto-escalada) y se asigna `owner` a la cuenta inicial.

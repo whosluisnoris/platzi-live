@@ -98,8 +98,8 @@ una playlist. La analítica (`trackEvent`/`watch_events`) es genérica por
 
 ## Marca
 
-El sitio se llama **Sendari** — "la plataforma que te ayuda a encontrar tu senda en el
-mundo infinito de videos". El nombre vive en `SITE_NAME`
+El sitio se llama **Clusly** — "te ayudamos a encontrar tu camino en el mundo infinito
+de videos". El nombre vive en `SITE_NAME`
 ([`src/lib/constants.ts`](../src/lib/constants.ts)) como **punto único de cambio**. La
 encuesta flotante solo se muestra en `/platzi-lives` (su pregunta es sobre esa
 funcionalidad, no sobre el catálogo). La encuesta

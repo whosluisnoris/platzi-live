@@ -33,6 +33,24 @@ En móvil las columnas se apilan (reproductor arriba). Rejilla:
 Las tarjetas muestran "hace 3 semanas · 3 h 58 min" (fecha relativa + duración del
 video); el reproductor añade además la fecha absoluta.
 
+## Catálogo, navegación y responsive
+
+- **`SiteHeader`** ([componente](../src/components/SiteHeader.tsx)): barra del catálogo
+  con marca + enlaces (Explorar, Platzi Lives, y **Admin** solo para staff) + tema +
+  sesión (`AuthNav`). En **móvil** los enlaces se mueven a un **menú lateral (drawer)**
+  con hamburguesa ([`MobileMenu`](../src/components/MobileMenu.tsx)); la barra deja solo
+  el CTA de sesión y el toggle de tema. El drawer se renderiza con un **portal** a
+  `document.body` para escapar del `backdrop-filter` del header (que, si no, atraparía a
+  los elementos `fixed`). `body` usa `overflow-x-clip` como red de seguridad.
+- **`ResourceCard`** ([componente](../src/components/ResourceCard.tsx)): tarjeta del
+  catálogo (miniatura + título + canal). Al pie muestra **las categorías** del recurso
+  (hasta 2, con "+N" si hay más); los datos los inyecta cada página vía
+  `getCategoriesForResources` (`src/lib/catalog.ts`) y `ResourceGrid`.
+- **`AuthNav`**: sin sesión muestra "Crear cuenta" (CTA) y "Entrar"; con sesión, botón
+  "Aportar video" + menú con "Mis videos" y "Cerrar sesión".
+- **`ExploreFilters`** (`/todo`): filtros de categoría (chips) + orden (más votados /
+  recientes), con el estado en la URL (`?cat=…&sort=…`).
+
 ## Paleta, tema claro/oscuro y color por categoría
 
 Tras el pivot, la marca dejó el verde de Platzi por una paleta propia (definida en
@@ -55,9 +73,12 @@ para títulos (`h1`–`h3` y `.font-display`, regla global en `globals.css`) y
 `next/font/google` en [`layout.tsx`](../src/app/layout.tsx).
 
 **Íconos por categoría**: [`CategoryIcon`](../src/components/CategoryIcon.tsx) — SVGs
-de línea que referencian cada temática (IA → destellos, Agentes → robot, Datos →
-cilindro de base de datos; cuadrícula genérica para categorías nuevas). Se muestran en
-discos ámbar en la landing y en la cabecera de cada categoría.
+de línea (`currentColor`, trazo 1.7) que referencian cada temática: Tecnología →
+microchip, Programación → `</>`, Web → globo, IA → destellos, Agentes → robot, Datos →
+cilindro de base de datos, Diseño → pluma, Producto → caja, DevOps → bucle infinito,
+Ciberseguridad → escudo, Móvil → smartphone, Carrera → maletín. Cae a una cuadrícula
+genérica para categorías nuevas. Se muestran en discos en la landing y en la cabecera
+de cada categoría.
 
 - **Tokens semánticos** (`background`, `surface`, `foreground`, `muted`, `border`,
   `fill`, `accent`, …) mapeados en `@theme`. Los componentes usan estos tokens, no

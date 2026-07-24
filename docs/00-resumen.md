@@ -9,13 +9,20 @@ videos dispersos.
 
 - **Landing (`/`)**: presenta la plataforma (qué resuelve, cómo funciona) e invita
   a explorar el catálogo.
-- **Catálogo por pestañas**: categorías extensibles (IA, Agentes, Datos…) más
-  "Todo"; cada una muestra una cuadrícula de **recursos** (playlists curadas y
-  videos sueltos). Al abrir uno se reproduce en un `<iframe>` de YouTube; las
-  playlists muestran reproductor + lista de episodios.
-- **Pestaña "Platzi Lives"**: el producto original intacto — histórico de lives
-  con **detección automática** (se guardan solos con su fecha real y se marcan "EN
-  VIVO"), reproductor + lista lateral, y la radio lofi 24/7 cuando no hay live.
+- **Explorar (`/todo`)**: cuadrícula de **recursos** (playlists curadas y videos
+  sueltos) filtrable por categoría y orden (más votados / recientes), con el estado
+  en la URL. Cada tarjeta muestra sus categorías. Al abrir un recurso se reproduce
+  en un `<iframe>` de YouTube; las playlists muestran reproductor + lista de episodios.
+- **Cuentas, envíos y votación**: registro/login con confirmación por correo
+  (Supabase Auth + Resend). Los usuarios aportan videos (`/enviar`), la comunidad
+  vota (+/−) y ese puntaje ordena el catálogo. Ver
+  [08-cuentas-votacion-setup.md](08-cuentas-votacion-setup.md).
+- **Roles** (`owner` / `admin` / `user`): el panel `/admin` se abre por el rol de la
+  sesión (no por contraseña); ahí se gestionan categorías, recursos y lives, más
+  estadísticas.
+- **"Platzi Lives" (`/platzi-lives`)**: el producto original intacto — histórico de
+  lives con **detección automática** (se guardan solos con su fecha real y se marcan
+  "EN VIVO"), reproductor + lista lateral, y la radio lofi 24/7 cuando no hay live.
 - **Analítica anónima**: cada reproducción se registra (sin datos personales) para
   saber qué interesa más.
 
@@ -33,14 +40,19 @@ en iframes; la plataforma solo organiza enlaces públicos) y sin API de Google
 ```
 Navegador (Next.js)
   │  Catálogo (Server Components) ─► lectura directa de Supabase (RLS público)
+  │  /api/auth/* + Send Email Hook► registro/login (Supabase Auth) + correo (Resend)
+  │  POST /api/resources ─────────► envío de la comunidad (sesión requerida)
+  │  POST /api/resources/[id]/vote► voto +/− (sesión requerida)
   │  GET /api/live  ──────────────► scraping del canal de YouTube (¿hay lives?)
   │                                 + histórico en Supabase + enriquecimiento
   │  POST /api/events ────────────► inserta evento anónimo en Supabase
-  │  /api/admin/* (con contraseña)─► CRUD de categorías/recursos + scraping de
+  │  /api/admin/* (rol owner/admin)► CRUD de categorías/recursos + scraping de
   │                                  playlists + stats
   ▼
-Supabase (Postgres)
+Supabase (Postgres + Auth)
+  ├── profiles       ← perfil por usuario + role (owner/admin/user)
   ├── categories, resources, playlist_items, resource_categories ← catálogo
+  ├── resource_votes ← un voto por usuario/recurso (mantiene resources.vote_count)
   ├── streams        ← histórico de lives (con fechas y estado en vivo)
   ├── watch_events   ← eventos de analítica
   └── watch_stats    ← vista con los agregados
@@ -60,7 +72,8 @@ Supabase (Postgres)
 | [04-analitica.md](04-analitica.md) | Eventos, sesiones anónimas y consultas útiles |
 | [05-pruebas-y-despliegue.md](05-pruebas-y-despliegue.md) | Checklist de pruebas y proceso de deploy |
 | [06-propuesta-ia-gemini.md](06-propuesta-ia-gemini.md) | Plan del buscador con IA (fase futura) |
-| [07-catalogo-de-recursos.md](07-catalogo-de-recursos.md) | El pivot: catálogo de recursos IA/datos, playlists y admin |
+| [07-catalogo-de-recursos.md](07-catalogo-de-recursos.md) | El pivot: catálogo de recursos, playlists y admin |
+| [08-cuentas-votacion-setup.md](08-cuentas-votacion-setup.md) | Cuentas, correo (Resend), roles, envíos y votación: puesta en marcha |
 
 ## Decisiones de diseño
 
