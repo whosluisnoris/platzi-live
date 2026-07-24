@@ -99,6 +99,14 @@ export async function POST(request: NextRequest) {
   });
 
   if (error) {
+    // Log el motivo real del rechazo de Resend: el 502 por sí solo no dice nada
+    // en los logs de Vercel (dominio sin verificar, remitente inválido, API key…).
+    console.error("[send-email] Resend rechazó el envío", {
+      from: process.env.EMAIL_FROM ?? "onboarding@resend.dev",
+      to: user.email,
+      action: email_action_type,
+      error: error.message,
+    });
     return NextResponse.json({ error: error.message }, { status: 502 });
   }
 
