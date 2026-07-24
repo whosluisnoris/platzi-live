@@ -4,24 +4,28 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ResourceRow } from "@/lib/types";
+import type { CategoryTag } from "@/lib/catalog";
 import { formatDuration, timeAgo } from "@/lib/dates";
 import { VoteControl } from "@/components/VoteControl";
 
 // Tarjeta del catálogo (grid). El enlace envuelve la miniatura y el título; el
 // control de voto vive en un pie aparte para no anidar botones dentro de un <a>.
 // `accent` (color de la categoría) tiñe el marco y el distintivo de tipo.
+// `categories` muestra a qué filtro(s) pertenece el video.
 export function ResourceCard({
   resource,
   from,
   accent,
   userVote,
   canVote = false,
+  categories,
 }: {
   resource: ResourceRow;
   from?: string;
   accent?: string | null;
   userVote?: number;
   canVote?: boolean;
+  categories?: CategoryTag[];
 }) {
   const [imgError, setImgError] = useState(false);
   const thumbnailUrl = imgError
@@ -84,6 +88,28 @@ export function ResourceCard({
           </h3>
           {resource.channel_title && (
             <p className="truncate text-xs text-muted">{resource.channel_title}</p>
+          )}
+          {categories && categories.length > 0 && (
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {categories.slice(0, 2).map((c) => (
+                <span
+                  key={c.slug}
+                  className="inline-flex items-center gap-1 rounded-full bg-fill px-2 py-0.5 text-[10px] font-semibold text-muted ring-1 ring-border"
+                >
+                  <span
+                    className="h-1.5 w-1.5 rounded-full"
+                    style={{ backgroundColor: c.color ?? "var(--accent)" }}
+                    aria-hidden="true"
+                  />
+                  {c.name}
+                </span>
+              ))}
+              {categories.length > 2 && (
+                <span className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold text-faint">
+                  +{categories.length - 2}
+                </span>
+              )}
+            </div>
           )}
         </div>
       </Link>

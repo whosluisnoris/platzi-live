@@ -1,6 +1,7 @@
 import {
   getActiveCategories,
   getResourcesFiltered,
+  getCategoriesForResources,
   type ResourceSort,
 } from "@/lib/catalog";
 import { getCurrentUser } from "@/lib/auth";

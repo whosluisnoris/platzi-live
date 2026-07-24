@@ -105,6 +105,51 @@ export async function getPlaylistItems(resourceId: string): Promise<PlaylistItem
   return (data as PlaylistItemRow[] | null) ?? [];
 }
 
+// Etiqueta de categoría para mostrar en las tarjetas (a qué filtro pertenece).
+export interface CategoryTag {
+  slug: string;
+  name: string;
+  color: string | null;
+}
+
+interface CategoryJoinRow {
+  resource_id: string;
+  categories: { slug: string; name: string; color: string | null; sort_order: number } | null;
+}
+
+// Categorías de un conjunto de recursos, como mapa resourceId → etiquetas
+// (ordenadas por sort_order). Se usa para pintar en cada tarjeta a qué filtro(s)
+// pertenece el video.
+export async function getCategoriesForResources(
+  resourceIds: string[]
+): Promise<Record<string, CategoryTag[]>> {
+  if (resourceIds.length === 0) return {};
+  const { data } = await getSupabase()
+    .from("resource_categories")
+    .select("resource_id, categories(slug, name, color, sort_order)")
+    .in("resource_id", resourceIds);
+
+  const tmp: Record<string, (CategoryTag & { order: number })[]> = {};
+  for (const row of (data as CategoryJoinRow[] | null) ?? []) {
+    const cat = row.categories;
+    if (!cat) continue;
+    (tmp[row.resource_id] ??= []).push({
+      slug: cat.slug,
+      name: cat.name,
+      color: cat.color,
+      order: cat.sort_order,
+    });
+  }
+
+  const map: Record<string, CategoryTag[]> = {};
+  for (const [id, tags] of Object.entries(tmp)) {
+    map[id] = tags
+      .sort((a, b) => a.order - b.order)
+      .map(({ slug, name, color }) => ({ slug, name, color }));
+  }
+  return map;
+}
+
 // Conteo de recursos por categoría (para la landing). Tally en JS sobre las
 // filas de la tabla puente — suficiente a la escala del catálogo curado.
 export async function getCategoryResourceCounts(): Promise<Map<string, number>> {

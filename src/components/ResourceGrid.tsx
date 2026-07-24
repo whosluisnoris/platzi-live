@@ -1,9 +1,11 @@
 import { ResourceCard } from "./ResourceCard";
 import type { ResourceRow } from "@/lib/types";
+import type { CategoryTag } from "@/lib/catalog";
 
 // Cuadrícula de tarjetas de recurso, compartida por las páginas de categoría y la
 // de exploración. `userVotes` (resourceId → valor) y `canVote` alimentan el control
-// de voto de cada tarjeta. Server Component (sin interactividad propia).
+// de voto; `categoriesByResource` muestra a qué filtro pertenece cada video.
+// Server Component (sin interactividad propia).
 export function ResourceGrid({
   resources,
   from,
@@ -11,6 +13,7 @@ export function ResourceGrid({
   accent,
   userVotes,
   canVote = false,
+  categoriesByResource,
 }: {
   resources: ResourceRow[];
   from?: string;
@@ -18,6 +21,7 @@ export function ResourceGrid({
   accent?: string | null;
   userVotes?: Record<string, number>;
   canVote?: boolean;
+  categoriesByResource?: Record<string, CategoryTag[]>;
 }) {
   if (resources.length === 0) {
     return <p className="py-16 text-center text-sm text-faint">{empty}</p>;
@@ -32,6 +36,7 @@ export function ResourceGrid({
           accent={accent}
           userVote={userVotes?.[r.id]}
           canVote={canVote}
+          categories={categoriesByResource?.[r.id]}
         />
       ))}
     </div>
