@@ -5,7 +5,7 @@ import { SubmitForm } from "@/components/SubmitForm";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Aportar video · Clusly" };
+export const metadata = { title: "Aportar video" };
 
 export default async function EnviarPage() {
   const user = await getCurrentUser();

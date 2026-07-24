@@ -4,7 +4,7 @@ import { AuthForm } from "@/components/AuthForm";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Entrar · Clusly" };
+export const metadata = { title: "Entrar" };
 
 export default async function EntrarPage({
   searchParams,

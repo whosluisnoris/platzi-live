@@ -17,10 +17,57 @@ const roboto = Roboto({
   weight: ["400", "500", "700"],
 });
 
+// URL canónica de producción (se usa como base para resolver enlaces absolutos
+// de Open Graph / Twitter, que las redes sociales exigen).
+const SITE_URL = "https://clusly.com";
+const DEFAULT_TITLE = `${SITE_NAME} — recursos de tecnología curados por la comunidad`;
+const OG_DESCRIPTION = `${SITE_TAGLINE} Playlists y videos de tecnología curados por temática, aportados y votados por la comunidad — gratis y en español.`;
+
 export const metadata: Metadata = {
-  title: `${SITE_NAME} — encuentra tu senda para aprender tecnología`,
-  description:
-    `${SITE_TAGLINE} Playlists y videos de YouTube curados por temática (IA, agentes, datos) más los lives de Platzi, gratis y en tu idioma.`,
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: DEFAULT_TITLE,
+    template: `%s · ${SITE_NAME}`,
+  },
+  description: OG_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    "Clusly",
+    "aprender tecnología",
+    "cursos gratis",
+    "YouTube",
+    "IA",
+    "programación",
+    "datos",
+    "playlists",
+    "español",
+    "Platzi Lives",
+  ],
+  authors: [{ name: "Luis Noris", url: "https://www.linkedin.com/in/luisnorisgarcia/" }],
+  creator: "Luis Noris",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: DEFAULT_TITLE,
+    description: OG_DESCRIPTION,
+    url: SITE_URL,
+    locale: "es_MX",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: `${SITE_NAME} — ${SITE_TAGLINE}`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: DEFAULT_TITLE,
+    description: OG_DESCRIPTION,
+    images: ["/og.png"],
+  },
 };
 
 // Fija el tema antes del primer paint: elección guardada o preferencia del sistema.

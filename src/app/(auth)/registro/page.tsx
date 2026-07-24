@@ -4,7 +4,7 @@ import { AuthForm } from "@/components/AuthForm";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Crear cuenta · Clusly" };
+export const metadata = { title: "Crear cuenta" };
 
 export default async function RegistroPage({
   searchParams,

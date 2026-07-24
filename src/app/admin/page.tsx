@@ -4,7 +4,7 @@ import { AdminDashboard } from "@/components/admin/AdminDashboard";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Panel Admin · Clusly" };
+export const metadata = { title: "Panel Admin" };
 
 // Panel de administración. Acceso solo para staff (owner/admin): la sesión se
 // resuelve en el servidor y se redirige a quien no tenga rol suficiente. Las

@@ -9,7 +9,7 @@ import type { ResourceRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Mis videos · Clusly" };
+export const metadata = { title: "Mis videos" };
 
 // Videos aportados por el usuario. Se leen con el cliente service-role para
 // incluir también los ocultados por moderación (no visibles para el público).
