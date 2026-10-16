@@ -1,5 +1,20 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
+export interface StoredStream {
+  id: string;
+  video_id: string;
+  title: string;
+  channel_title: string;
+  added_at: string;
+  published_at: string | null;
+  live_started_at: string | null;
+  live_ended_at: string | null;
+  is_live: boolean;
+  thumbnail_url: string | null;
+  enriched_at: string | null;
+  duration_seconds: number | null;
+}
+
 let _public: SupabaseClient | null = null;
 let _admin: SupabaseClient | null = null;
 
@@ -23,15 +38,4 @@ export function getSupabaseAdmin(): SupabaseClient {
     );
   }
   return _admin;
-}
-
-// Igual que getSupabaseAdmin pero devuelve null si falta la service key (p. ej.
-// en local sin .env completo). Para funciones opcionales que deben degradarse
-// sin tumbar la página en vez de reventar.
-export function tryGetSupabaseAdmin(): SupabaseClient | null {
-  try {
-    return getSupabaseAdmin();
-  } catch {
-    return null;
-  }
 }

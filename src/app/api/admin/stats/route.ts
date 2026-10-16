@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { authorizeAdmin } from "@/lib/admin-auth";
+import { LOFI_STREAM } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
+
+function isAuthorized(request: NextRequest): boolean {
+  const secret = process.env.ADMIN_SECRET;
+  if (!secret) return false;
+  const auth = request.headers.get("authorization") ?? "";
+  return auth === `Bearer ${secret}`;
+}
 
 interface StatsRow {
   video_id: string;
@@ -61,7 +68,7 @@ function buildDaily(events: EventRow[]) {
 
 // GET /api/admin/stats — agregados de reproducción por video
 export async function GET(request: NextRequest) {
-  if (!(await authorizeAdmin(request))) {
+  if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -69,31 +76,36 @@ export async function GET(request: NextRequest) {
   const sinceIso = new Date(
     Date.now() - DAYS_WINDOW * 86_400_000
   ).toISOString();
-  const [statsRes, resourcesRes, itemsRes, eventsRes] = await Promise.all([
+  const [statsRes, titlesRes, eventsRes, commentsRes] = await Promise.all([
     admin
       .from("watch_stats")
       .select("*")
       .order("last_activity", { ascending: false }),
-    admin.from("resources").select("youtube_id, title"),
-    admin.from("playlist_items").select("youtube_video_id, title"),
+    admin.from("streams").select("video_id, title"),
     admin
       .from("watch_events")
       .select("event_type, session_id, created_at")
       .gte("created_at", sinceIso)
       .limit(20_000),
+    admin
+      .from("feedback_votes")
+      .select("answer, comment, created_at")
+      .not("comment", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(50),
   ]);
 
   if (statsRes.error) {
     return NextResponse.json({ error: statsRes.error.message }, { status: 500 });
   }
 
-  const titles = new Map<string, string>();
-  for (const r of (itemsRes.data ?? []) as { youtube_video_id: string; title: string }[]) {
-    titles.set(r.youtube_video_id, r.title);
-  }
-  for (const r of (resourcesRes.data ?? []) as { youtube_id: string; title: string }[]) {
-    titles.set(r.youtube_id, r.title);
-  }
+  const titles = new Map(
+    ((titlesRes.data ?? []) as { video_id: string; title: string }[]).map((r) => [
+      r.video_id,
+      r.title,
+    ])
+  );
+  titles.set(LOFI_STREAM.videoId, LOFI_STREAM.title);
 
   const stats = ((statsRes.data ?? []) as StatsRow[]).map((r) => ({
     videoId: r.video_id,
@@ -107,5 +119,17 @@ export async function GET(request: NextRequest) {
 
   const daily = buildDaily((eventsRes.data ?? []) as EventRow[]);
 
-  return NextResponse.json({ stats, daily });
+  const comments = (
+    (commentsRes.data ?? []) as {
+      answer: string;
+      comment: string;
+      created_at: string;
+    }[]
+  ).map((c) => ({
+    answer: c.answer,
+    comment: c.comment,
+    createdAt: c.created_at,
+  }));
+
+  return NextResponse.json({ stats, daily, comments });
 }

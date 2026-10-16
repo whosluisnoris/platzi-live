@@ -1,35 +1,25 @@
-# Clusly
+# Platzi Live
 
-**Te ayudamos a encontrar tu camino en el mundo infinito de videos.**
+Plataforma tipo YouTube que reúne los lives del canal de [Platzi](https://platzi.com):
+reproductor principal + histórico de transmisiones como lista lateral, con detección
+automática de lives, fechas reales de transmisión y analítica anónima.
 
-Centro comunitario de **recursos de aprendizaje de tecnología**: reúne y ordena
-contenido de calidad de YouTube (en español, gratuito) por área temática, para
-aprender de forma guiada en vez de perderse entre miles de videos dispersos. La
-comunidad aporta videos, los clasifica y vota por los que ayudan. (La
-marca vive en `SITE_NAME`, `src/lib/constants.ts`.)
-
-**Producción**: https://clusly.com
+**Producción**: (definir tras crear el proyecto en Vercel)
 
 ## Características
 
-- 🧭 **Landing** editorial que explica la plataforma e invita a explorar el catálogo
-- 🔎 **Explorar** (`/todo`): cuadrícula filtrable por categoría y orden (más votados / recientes), con el estado en la URL
-- 🗂️ **Categorías extensibles** (Tecnología, Programación, Web, IA, Agentes, Datos, Diseño, Producto, DevOps, Ciberseguridad, Móvil, Carrera), cada una con ícono e identidad propios
-- 🎬 **Dos tipos de recurso**: **playlists** curadas (reproductor + lista de episodios) y **videos** sueltos; cada tarjeta muestra sus categorías
-- 👤 **Cuentas** (Supabase Auth): registro con confirmación por correo (Resend) e inicio de sesión
-- 🙌 **Envíos de la comunidad** (`/enviar`) con detección de duplicados
-- ⬆️⬇️ **Votación** positiva/negativa que ordena el catálogo
-- 🛡️ **Roles** (`owner` / `admin` / `user`): el panel `/admin` se abre por rol de la sesión
-- ⬇️ **Importación de playlists de YouTube** por scraping (sin API de Google), con fallback manual
-- 📊 **Analítica anónima** de reproducciones (sin datos personales)
-- 📱 **Responsive**: en móvil la navegación vive en un menú lateral (drawer)
-- 🚫 **Sin API de YouTube/Google**: scraping de páginas públicas + oEmbed + fallback Invidious
+- 📺 **Reproductor principal**: al entrar carga el Platzi Live activo; si no hay, la radio lofi 24/7 de Claude
+- 🗂️ **Histórico ordenable**: todos los lives guardados, de más reciente a más antiguo (o al revés)
+- 🔴 **Detección automática**: los lives nuevos se guardan solos, con su fecha real de inicio, y se marcan "EN VIVO" mientras duran
+- 📊 **Analítica anónima**: qué lives se ven más, sin datos personales (panel en `/admin`)
+- 🔗 **Deep-links**: `?v=VIDEO_ID` para compartir un live específico
+- 🚫 **Sin API de YouTube/Google**: scraping de páginas públicas + fallback a Invidious
+- ☁️ **Sin costo de video**: todo se reproduce en iframes de YouTube
 
 ## Stack
 
 - **Next.js 16** (App Router) + TypeScript + Tailwind CSS v4
-- **Supabase** (Postgres + Auth): catálogo, cuentas/perfiles/roles, votos y analítica
-- **Resend**: correos de autenticación (Send Email Hook de Supabase)
+- **Supabase** (Postgres): histórico de lives y eventos de analítica
 - **Vercel**: hosting con deploy automático desde `master`
 
 ## Desarrollo
@@ -39,11 +29,15 @@ npm install
 npm run dev
 ```
 
-Crea `.env.local` con las variables de [docs/05-pruebas-y-despliegue.md](docs/05-pruebas-y-despliegue.md)
-(Supabase, Resend, `ADMIN_SECRET`).
+Copia `.env.example` a `.env.local` y completa las variables. Crea un proyecto Supabase propio y ejecuta `supabase/schema.sql` en el SQL Editor.
+
+**Probar la UI con un live simulado** (solo dev):
+
+```
+http://localhost:3000?test=VIDEO_ID
+```
 
 ## Documentación
 
-La documentación completa (arquitectura, base de datos, catálogo de recursos,
-cuentas/votación/roles, analítica, pruebas y despliegue) vive
-en [`docs/`](docs/00-resumen.md).
+La documentación completa (arquitectura, base de datos, detección sin API, analítica,
+pruebas y la propuesta de buscador con IA) vive en [`docs/`](docs/00-resumen.md).
