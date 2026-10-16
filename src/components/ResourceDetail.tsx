@@ -9,8 +9,8 @@ import { useT } from "@/components/I18nProvider";
 import { Card, SectionHeader } from "@/components/ui";
 
 // Detalle de un recurso. Para un video suelto, solo el reproductor. Para una
-// playlist, reproductor + lista de episodios (mismo layout que Platzi Lives),
-// reutilizando PlayerPanel y VideoListItem sin cambios.
+// playlist, reproductor + lista lateral de episodios
+// (PlayerPanel y VideoListItem).
 export function ResourceDetail({
   main,
   episodes,

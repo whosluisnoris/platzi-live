@@ -25,7 +25,7 @@ export default async function AdminPage() {
             Panel <span className="text-accent-ink">Admin</span>
           </>
         }
-        description="Organiza recursos de aprendizaje y los lives de Platzi"
+        description="Organiza recursos de aprendizaje"
         actions={
           <Badge size="md" dot className="normal-case tracking-normal">
             {user.displayName} · {user.role}

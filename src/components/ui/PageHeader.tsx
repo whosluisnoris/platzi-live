@@ -10,8 +10,8 @@ import { BackLink } from "./BackLink";
 // Con `size="lg"`, en móvil todo se apila (acciones debajo del texto) y desde
 // `sm` las acciones se alinean a la derecha, a la altura de la última línea.
 //
-// `size="md"` es para cabeceras que no son protagonistas (el reproductor de
-// Platzi Lives, el panel admin, la tarjeta de acceso): título más chico y las
+// `size="md"` es para cabeceras que no son protagonistas (el reproductor,
+// el panel admin, la tarjeta de acceso): título más chico y las
 // acciones al lado desde móvil (bajan de línea solo si no caben).
 export function PageHeader({
   title,

@@ -78,29 +78,6 @@ y el panel ya está preparado para mostrarlas. Requiere configuración única:
 Vercel y la sección "Visitas" del panel muestra la gráfica; sin configurar, muestra
 esta misma guía.
 
-## Encuesta de la plataforma
-
-Encuesta flotante (esquina inferior derecha, se puede cerrar y reabrir con la pastilla
-"📊 Encuesta"): "¿Te gustaría tener una funcionalidad así en Platzi?" con tres
-opciones: *Sí, me encanta* / *Puede mejorar* / *No me convence*. Se abre sola tras
-1.5 s solo si la persona no ha votado ni la ha cerrado antes.
-
-Tras votar aparece un campo opcional "¿Quieres contarnos por qué?" (máx. 500
-caracteres). El comentario viaja adjunto al voto de la sesión (columna `comment`;
-volver a comentar lo actualiza) y **solo se lee desde /admin** — el GET público sigue
-devolviendo únicamente conteos. Los comentarios aparecen en /admin bajo los resultados
-de la encuesta, con la respuesta votada y la fecha.
-
-- Un voto por sesión anónima (la misma de la analítica); volver a votar lo **actualiza**
-  vía `UNIQUE (question_id, session_id)` + upsert.
-- `POST /api/feedback` registra el voto; `GET /api/feedback?question=...` devuelve solo
-  agregados (conteos y total — nunca sesiones).
-- Tras votar, el usuario ve los porcentajes (estilo encuesta de redes) y puede cambiar
-  su respuesta; el estado se recuerda en `localStorage` (`pl_poll_live_platform_v1`).
-- Los resultados también aparecen en `/admin` → "Encuesta de la plataforma".
-
-Sirve como evidencia de interés real para la propuesta a Platzi.
-
 ## Posibles extensiones futuras
 
 - **Duración de visualización**: eventos periódicos `heartbeat` mientras el iframe está

@@ -27,7 +27,6 @@ export const es = {
 
   nav: {
     explore: "Explorar",
-    lives: "Platzi Lives",
     blog: "Blog",
     opinions: "Opiniones",
     saved: "Guardados",
@@ -75,7 +74,6 @@ export const es = {
     titleAccent: "tu ruta empieza aquí.",
     subtitle: "Lo mejor de YouTube para aprender tecnología. Gratis, en tu idioma y en orden.",
     ctaPrimary: "Empieza tu ruta",
-    ctaSecondary: "o mira los Platzi Lives",
     // Tres ideas cortas bajo el CTA (con ✓, sin numerar: no son una secuencia).
     claim1: "Curado por área",
     claim2: "Gratis y en tu idioma",
@@ -326,40 +324,7 @@ export const es = {
     notFound: "Artículo no encontrado",
   },
 
-  lives: {
-    title: "Platzi Lives",
-    liveNow: "En vivo",
-    liveNowSection: "En vivo ahora",
-    refresh: "Actualizar",
-    searching: "Buscando…",
-    error:
-      "No se pudo comprobar el canal ahora mismo: {message}. Mostrando el histórico guardado.",
-    pastSection: "Lives anteriores",
-    sortLabel: "Ordenar lives",
-    sortNewest: "Más recientes primero",
-    sortOldest: "Más antiguos primero",
-    empty:
-      "Aún no hay lives guardados. Cuando Platzi transmita, aparecerá aquí automáticamente.",
-  },
 
-  poll: {
-    open: "📊 Encuesta",
-    openLabel: "Abrir encuesta",
-    closeLabel: "Cerrar encuesta",
-    ariaLabel: "Encuesta",
-    defaultTitle: "¿Te gustaría tener una funcionalidad así en Platzi?",
-    privacy: "Tu opinión es anónima y nos ayuda a proponer esta sección.",
-    yes: "Sí, me encanta",
-    maybe: "Puede mejorar",
-    no: "No me convence",
-    thanks: "Gracias por tu opinión 💚",
-    voteCount: { one: "{n} voto", other: "{n} votos" },
-    change: "Cambiar respuesta",
-    commentPlaceholder: "¿Quieres contarnos por qué? (opcional)",
-    commentSend: "Enviar comentario",
-    commentThanks: "💬 ¡Gracias por tu comentario!",
-    error: "No se pudo registrar tu voto, inténtalo de nuevo en un momento.",
-  },
 
   auth: {
     signInTitle: "Entra a tu cuenta",

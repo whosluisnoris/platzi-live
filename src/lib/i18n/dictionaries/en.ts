@@ -30,7 +30,6 @@ export const en: Dictionary = {
 
   nav: {
     explore: "Explore",
-    lives: "Platzi Lives",
     blog: "Blog",
     opinions: "Feedback",
     saved: "Saved",
@@ -78,7 +77,6 @@ export const en: Dictionary = {
     titleAccent: "your path starts here.",
     subtitle: "The best of YouTube for learning tech. Free, in your language, and in order.",
     ctaPrimary: "Start your path",
-    ctaSecondary: "or watch the Platzi Lives",
     claim1: "Curated by topic",
     claim2: "Free, in your language",
     claim3: "Step by step",
@@ -321,40 +319,7 @@ export const en: Dictionary = {
     notFound: "Article not found",
   },
 
-  lives: {
-    title: "Platzi Lives",
-    liveNow: "Live",
-    liveNowSection: "Live now",
-    refresh: "Refresh",
-    searching: "Searching…",
-    error:
-      "Couldn't check the channel right now: {message}. Showing the saved history.",
-    pastSection: "Past lives",
-    sortLabel: "Sort lives",
-    sortNewest: "Newest first",
-    sortOldest: "Oldest first",
-    empty:
-      "No lives saved yet. When Platzi goes live, it'll show up here automatically.",
-  },
 
-  poll: {
-    open: "📊 Survey",
-    openLabel: "Open survey",
-    closeLabel: "Close survey",
-    ariaLabel: "Survey",
-    defaultTitle: "Would you like a feature like this on Platzi?",
-    privacy: "Your answer is anonymous and helps us pitch this section.",
-    yes: "Yes, I love it",
-    maybe: "Room to improve",
-    no: "Not convinced",
-    thanks: "Thanks for your answer 💚",
-    voteCount: { one: "{n} vote", other: "{n} votes" },
-    change: "Change answer",
-    commentPlaceholder: "Want to tell us why? (optional)",
-    commentSend: "Send comment",
-    commentThanks: "💬 Thanks for your comment!",
-    error: "Couldn't record your vote, please try again in a moment.",
-  },
 
   auth: {
     signInTitle: "Sign in to your account",

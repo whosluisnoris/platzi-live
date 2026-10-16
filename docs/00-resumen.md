@@ -31,11 +31,8 @@ videos dispersos.
   un bucket de Supabase Storage. Solo los escribe y publica el staff
   (`owner`/`admin`) desde la pestaña Blog del panel; el resto solo lee.
 - **Roles** (`owner` / `admin` / `user`): el panel `/admin` se abre por el rol de la
-  sesión (no por contraseña); ahí se gestionan categorías, recursos y lives, más
+  sesión (no por contraseña); ahí se gestionan categorías, recursos y blog, más
   estadísticas.
-- **"Platzi Lives" (`/platzi-lives`)**: el producto original intacto — histórico de
-  lives con **detección automática** (se guardan solos con su fecha real y se marcan
-  "EN VIVO"), reproductor + lista lateral, y la radio lofi 24/7 cuando no hay live.
 - **Analítica anónima**: cada reproducción se registra (sin datos personales) para
   saber qué interesa más.
 
@@ -62,8 +59,6 @@ Navegador (Next.js)
   │  /api/admin/blog (rol owner/admin)► escribir y publicar artículos del blog
   │  POST /api/admin/blog/upload ─► sube imágenes al bucket `blog` de Storage
   │  /api/admin/blog/media ───────► ver el bucket y borrar imágenes a mano
-  │  GET /api/live  ──────────────► scraping del canal de YouTube (¿hay lives?)
-  │                                 + histórico en Supabase + enriquecimiento
   │  POST /api/events ────────────► inserta evento anónimo en Supabase
   │  /api/admin/* (rol owner/admin)► CRUD de categorías/recursos + scraping de
   │                                  playlists + stats
@@ -75,7 +70,6 @@ Supabase (Postgres + Auth + Storage)
   ├── resource_favorites ← lista privada de guardados por usuario
   ├── site_feedback  ← buzón privado de opiniones (solo lo lee el staff)
   ├── blog_posts     ← artículos del blog (público solo lo publicado)
-  ├── streams        ← histórico de lives (con fechas y estado en vivo)
   ├── watch_events   ← eventos de analítica
   ├── watch_stats    ← vista con los agregados
   └── Storage: bucket `blog` ← imágenes de los artículos (leer sí, escribir no)
@@ -83,18 +77,15 @@ Supabase (Postgres + Auth + Storage)
 
 - **Hosting**: Vercel (deploy automático al hacer push a `master` en GitHub).
 - **Sin API de YouTube/Google**: todo se obtiene por scraping de páginas públicas
-  (ver [02-deteccion-y-fechas.md](02-deteccion-y-fechas.md)).
 
 ## Índice de la documentación
 
 | Documento | Contenido |
 |---|---|
 | [01-base-de-datos.md](01-base-de-datos.md) | Esquema, migraciones y seguridad (RLS) |
-| [02-deteccion-y-fechas.md](02-deteccion-y-fechas.md) | Cómo se detectan lives y se obtienen fechas sin API |
 | [03-interfaz.md](03-interfaz.md) | Estructura de la UI y sus componentes |
 | [04-analitica.md](04-analitica.md) | Eventos, sesiones anónimas y consultas útiles |
 | [05-pruebas-y-despliegue.md](05-pruebas-y-despliegue.md) | Checklist de pruebas y proceso de deploy |
-| [06-propuesta-ia-gemini.md](06-propuesta-ia-gemini.md) | Plan del buscador con IA (fase futura) |
 | [07-catalogo-de-recursos.md](07-catalogo-de-recursos.md) | El pivot: catálogo de recursos, playlists y admin |
 | [08-cuentas-votacion-setup.md](08-cuentas-votacion-setup.md) | Cuentas, correo (Resend), roles, envíos y votación: puesta en marcha |
 | [09-plan-de-monetizacion.md](09-plan-de-monetizacion.md) | Opciones y hoja de ruta para monetizar la plataforma |
@@ -106,7 +97,4 @@ Supabase (Postgres + Auth + Storage)
 |---|---|---|
 | Idioma de la UI | Español por defecto, inglés opcional | El catálogo son videos en español: quien llega sin preferencia debe caer en español |
 | Detección de idioma | `Accept-Language`, no geo-IP | El país no es el idioma: hay hispanohablantes en todo el mundo y el navegador ya dice la preferencia real |
-| Video inicial | Platzi Live activo → si no, lofi | No perderse ningún live real |
 | Analítica | Eventos + sesión anónima | Medir interés sin datos personales |
-| Fecha principal | `live_started_at` (inicio real del live) | El `publishDate` de YouTube a veces difiere semanas del live real |
-| Buscador IA | Solo documentado | Se decidirá más adelante |

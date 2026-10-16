@@ -21,7 +21,6 @@ export function MobileMenu({
   const t = useT();
   const links = [
     { href: "/todo", label: t.nav.explore },
-    { href: "/platzi-lives", label: t.nav.lives },
     { href: "/blog", label: t.nav.blog },
     { href: "/enviar", label: t.nav.submitShort },
     ...(loggedIn

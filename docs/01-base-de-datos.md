@@ -1,28 +1,5 @@
 # Base de datos (Supabase / Postgres)
 
-Proyecto Supabase: `platzi-live` (`ozkmxovmdognljtsvhrl`).
-
-## Tabla `streams` — histórico de lives
-
-| Columna | Tipo | Descripción |
-|---|---|---|
-| `id` | uuid (PK) | Autogenerado |
-| `video_id` | text (único) | ID de YouTube (11 caracteres) |
-| `title` | text | Título del video |
-| `channel_title` | text | Canal (default `Platzi`) |
-| `added_at` | timestamptz | Cuándo lo detectó/guardó la plataforma |
-| `published_at` | timestamptz | Fecha de publicación según YouTube |
-| `live_started_at` | timestamptz | **Inicio real de la transmisión** (fecha principal para mostrar/ordenar) |
-| `live_ended_at` | timestamptz | Fin de la transmisión (`null` mientras siga en vivo) |
-| `is_live` | boolean | `true` mientras el live está activo |
-| `thumbnail_url` | text | Miniatura (`i.ytimg.com/vi/<id>/maxresdefault.jpg`) |
-| `enriched_at` | timestamptz | Cuándo se scrapearon los metadatos (`null` = pendiente de auto-reparación) |
-| `duration_seconds` | integer | Duración del video (`null` mientras el live sigue activo; se captura al terminar) |
-
-> ¿Por qué `live_started_at` y no `published_at`? Los lives se programan con antelación:
-> hay casos reales donde `published_at` es semanas anterior (o incluso posterior) al live.
-> `live_started_at` refleja cuándo ocurrió de verdad.
-
 ## Tabla `watch_events` — analítica anónima
 
 | Columna | Tipo | Descripción |
@@ -35,26 +12,10 @@ Proyecto Supabase: `platzi-live` (`ozkmxovmdognljtsvhrl`).
 
 Índice: `(video_id, created_at)`.
 
-## Tabla `feedback_votes` — encuesta de la plataforma
-
-| Columna | Tipo | Descripción |
-|---|---|---|
-| `id` | uuid (PK) | Autogenerado |
-| `question_id` | text | Pregunta (hoy: `live_platform_v1`) |
-| `answer` | text | `si` \| `puede_mejorar` \| `no` (CHECK en DB) |
-| `session_id` | text | Misma sesión anónima de la analítica |
-| `comment` | text | Comentario opcional (máx. 500 caracteres, solo visible en /admin) |
-| `created_at` | timestamptz | Momento del voto |
-
-`UNIQUE (question_id, session_id)`: un voto por sesión; volver a votar **actualiza** la
-respuesta (upsert). Si el navegador bloquea localStorage, el voto entra sin sesión (los
-`NULL` no chocan con la restricción). RLS activo sin políticas públicas, igual que
-`watch_events`.
-
 ## Catálogo de recursos (IA/Datos)
 
 El pivot a centro de recursos añade cuatro tablas nuevas (todas aditivas, sin tocar
-`streams`/`watch_events`/`feedback_votes`). Detalle completo en
+`watch_events`). Detalle completo en
 [07-catalogo-de-recursos.md](07-catalogo-de-recursos.md).
 
 ### Tabla `categories` — taxonomía extensible

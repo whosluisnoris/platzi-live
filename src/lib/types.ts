@@ -49,9 +49,8 @@ export interface PlaylistItemRow {
 
 // Forma común de cualquier video reproducible en la plataforma: miniatura,
 // enlaces de watch/embed y metadatos opcionales de fecha/duración. La satisfacen
-// tanto un Platzi Live como un video suelto o un episodio de playlist del
-// catálogo, así que `PlayerPanel` y `VideoListItem` operan sobre este tipo y se
-// reutilizan sin cambios entre ambos mundos.
+// un video suelto y un episodio de playlist del catálogo, así que `PlayerPanel`
+// y `VideoListItem` operan sobre este tipo.
 export interface Playable {
   videoId: string;
   title: string;

@@ -35,7 +35,6 @@ export function SiteHeader({
         {/* Enlaces solo en escritorio; en móvil viven en el menú lateral */}
         <nav className="hidden flex-1 items-center gap-0.5 sm:flex">
           <NavLink href="/todo">{t.nav.explore}</NavLink>
-          <NavLink href="/platzi-lives">{t.nav.lives}</NavLink>
           {user && <NavLink href="/guardados">{t.nav.saved}</NavLink>}
           <NavLink href="/blog">{t.nav.blog}</NavLink>
           <NavLink href="/opiniones">{t.nav.opinions}</NavLink>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { formatDate, timeAgo } from "@/lib/dates";
+import { timeAgo } from "@/lib/dates";
 import { DailyChart } from "@/components/DailyChart";
 import { Alert, Button, Card, EmptyState, SectionHeader } from "@/components/ui";
 
@@ -23,11 +23,6 @@ interface VideoStats {
   lastActivity: string | null;
 }
 
-interface PollResults {
-  total: number;
-  counts: { si: number; puede_mejorar: number; no: number };
-}
-
 interface DailyRow {
   date: string;
   plays: number;
@@ -43,32 +38,12 @@ interface VisitsState {
   error?: string;
 }
 
-interface PollComment {
-  answer: string;
-  comment: string;
-  createdAt: string;
-}
-
-const ANSWER_EMOJI: Record<string, string> = {
-  si: "😍",
-  puede_mejorar: "🤔",
-  no: "😕",
-};
-
-const POLL_LABELS: { key: keyof PollResults["counts"]; label: string }[] = [
-  { key: "si", label: "😍 Sí, me encanta" },
-  { key: "puede_mejorar", label: "🤔 Puede mejorar" },
-  { key: "no", label: "😕 No me convence" },
-];
-
-// Panel de estadísticas (extraído tal cual del admin original): reproducciones,
-// visitas de Vercel, encuesta y comentarios.
+// Panel de estadísticas: reproducciones,
+// visitas de Vercel.
 export function StatsPanel() {
   const [stats, setStats] = useState<VideoStats[]>([]);
   const [daily, setDaily] = useState<DailyRow[]>([]);
   const [visits, setVisits] = useState<VisitsState | null>(null);
-  const [poll, setPoll] = useState<PollResults | null>(null);
-  const [comments, setComments] = useState<PollComment[]>([]);
 
   const headers = { "Content-Type": "application/json" };
 
@@ -78,11 +53,6 @@ export function StatsPanel() {
     const data = await res.json();
     setStats(data.stats ?? []);
     setDaily(data.daily ?? []);
-    setComments(data.comments ?? []);
-    fetch("/api/feedback?question=live_platform_v1")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((p) => setPoll(p))
-      .catch(() => {});
     fetch("/api/admin/visits", { headers })
       .then((r) => r.json())
       .then((v) => setVisits(v))
@@ -160,7 +130,7 @@ export function StatsPanel() {
           </p>
           <ol className="list-decimal space-y-2 pl-5 text-muted">
             <li>
-              En el dashboard de Vercel: proyecto <b>platzi-live</b> → pestaña{" "}
+              En el dashboard de Vercel: tu proyecto → pestaña{" "}
               <b>Analytics</b> → <b>Enable Web Analytics</b> (gratis en Hobby).
             </li>
             <li>
@@ -190,62 +160,6 @@ export function StatsPanel() {
             tooltipExtra={(row) => `Visitantes únicos: ${Number(row.visitors ?? 0)}`}
           />
         </Card>
-      )}
-
-      {/* Encuesta */}
-      <SectionHeader className="mt-14" title="Encuesta de la plataforma" />
-      <p className="-mt-2 mb-4 text-sm text-muted">
-        &ldquo;¿Te gustaría tener una funcionalidad así en Platzi?&rdquo;
-      </p>
-      {!poll || poll.total === 0 ? (
-        <EmptyState description="Todavía no hay votos." />
-      ) : (
-        <Card className="flex max-w-lg flex-col gap-3">
-          {POLL_LABELS.map(({ key, label }) => {
-            const count = poll.counts[key] ?? 0;
-            const pct = poll.total > 0 ? Math.round((count / poll.total) * 100) : 0;
-            return (
-              <div key={key} className="flex items-center gap-2 text-sm">
-                <span className="w-40 shrink-0 text-muted">{label}</span>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-fill">
-                  <div className="h-full rounded-full bg-accent" style={{ width: `${pct}%` }} />
-                </div>
-                <span className="w-16 shrink-0 text-right tabular-nums text-muted">
-                  {count} · {pct}%
-                </span>
-              </div>
-            );
-          })}
-          <p className="mt-1 text-xs text-faint">
-            {poll.total} {poll.total === 1 ? "voto" : "votos"} en total
-          </p>
-        </Card>
-      )}
-
-      {/* Comentarios de la encuesta */}
-      <SectionHeader
-        size="sm"
-        as="h3"
-        className="mt-10"
-        title={`Comentarios (${comments.length})`}
-      />
-      {comments.length === 0 ? (
-        <p className="text-sm text-muted">Todavía no hay comentarios.</p>
-      ) : (
-        <ul className="flex max-w-2xl flex-col gap-3">
-          {comments.map((c, i) => (
-            <Card as="li" padding="sm" key={`${c.createdAt}-${i}`}>
-              <p className="whitespace-pre-wrap break-words text-sm text-foreground">
-                {c.comment}
-              </p>
-              <p className="mt-2 text-xs text-faint">
-                {ANSWER_EMOJI[c.answer] ?? ""} Votó &ldquo;
-                {POLL_LABELS.find((l) => l.key === c.answer)?.label.replace(/^\S+ /, "") ?? c.answer}
-                &rdquo; · {timeAgo(c.createdAt) ?? formatDate(c.createdAt)}
-              </p>
-            </Card>
-          ))}
-        </ul>
       )}
     </section>
   );

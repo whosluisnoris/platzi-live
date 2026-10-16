@@ -4,9 +4,6 @@
 // pestaña Opiniones. La página pública únicamente ofrece el formulario; nadie
 // ve lo que escribieron los demás (ni los conteos).
 //
-// Distinto de la encuesta flotante (`feedback_votes`, una pregunta cerrada por
-// sesión): aquí lo que importa es el texto libre.
-//
 // La tabla `site_feedback` no tiene políticas públicas: se escribe desde
 // `/api/opinions` y se lee con el service role en `/api/admin/opinions`.
 // `hidden_at` marca las que el equipo ya archivó.

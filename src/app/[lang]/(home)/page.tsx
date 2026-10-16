@@ -68,13 +68,6 @@ export default async function LandingPage({
             <ButtonLink href="/todo" size="lg">
               {t.landing.ctaPrimary} <span aria-hidden="true">→</span>
             </ButtonLink>
-            <TextLink
-              href="/platzi-lives"
-              tone="muted"
-              className="self-center p-2 text-[15px] sm:p-0"
-            >
-              {t.landing.ctaSecondary}
-            </TextLink>
           </div>
 
           <ul className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-[13px] text-muted sm:mt-12 sm:justify-start sm:gap-x-7 sm:text-sm">

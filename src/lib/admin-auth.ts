@@ -12,7 +12,7 @@ export async function authorizeAdmin(request: NextRequest): Promise<boolean> {
 }
 
 // Solo el secreto compartido (sin mirar la sesión). Se conserva para usos
-// programáticos como `/api/live?debug=<ADMIN_SECRET>`.
+// programáticos que se autentican con `ADMIN_SECRET`.
 export function hasAdminSecret(request: NextRequest): boolean {
   const secret = process.env.ADMIN_SECRET;
   if (!secret) return false;
