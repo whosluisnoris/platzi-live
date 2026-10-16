@@ -27,11 +27,11 @@ export function VideoListItem({ stream, active, onSelect, badge }: VideoListItem
       aria-current={active ? "true" : undefined}
       className={`group flex w-full gap-3.5 rounded-xl p-2.5 text-left transition ${
         active
-          ? "bg-accent/10 ring-1 ring-accent/40"
-          : "hover:bg-fill"
+          ? "bg-[#0aeb8b]/10 ring-1 ring-[#0aeb8b]/40"
+          : "hover:bg-white/5"
       }`}
     >
-      <div className="relative aspect-video w-40 shrink-0 overflow-hidden rounded-lg bg-surface">
+      <div className="relative aspect-video w-40 shrink-0 overflow-hidden rounded-lg bg-[#14171c]">
         <Image
           src={thumbnailUrl}
           alt=""
@@ -45,8 +45,8 @@ export function VideoListItem({ stream, active, onSelect, badge }: VideoListItem
           <span
             className={`absolute bottom-1 right-1 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
               badge === "EN VIVO"
-                ? "bg-danger text-white"
-                : "bg-black/80 text-accent-ink"
+                ? "bg-red-600 text-white"
+                : "bg-black/80 text-[#0aeb8b]"
             }`}
           >
             {badge}
@@ -57,14 +57,14 @@ export function VideoListItem({ stream, active, onSelect, badge }: VideoListItem
       <div className="flex min-w-0 flex-col gap-1 py-0.5">
         <h3
           className={`line-clamp-2 text-sm font-semibold leading-snug ${
-            active ? "text-accent-ink" : "text-foreground"
+            active ? "text-[#0aeb8b]" : "text-white"
           }`}
         >
           {stream.title}
         </h3>
-        <p className="text-xs text-muted">{stream.channelTitle}</p>
+        <p className="text-xs text-gray-400">{stream.channelTitle}</p>
         {(relative || duration) && (
-          <p className="text-xs text-faint">
+          <p className="text-xs text-gray-500">
             {relative}
             {relative && duration && " · "}
             {duration}

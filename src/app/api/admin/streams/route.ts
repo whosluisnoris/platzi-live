@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { fetchVideoDetails } from "@/lib/invidious";
-import { authorizeAdmin } from "@/lib/admin-auth";
 
 const VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
 
+function isAuthorized(request: NextRequest): boolean {
+  const secret = process.env.ADMIN_SECRET;
+  if (!secret) return false;
+  const auth = request.headers.get("authorization") ?? "";
+  return auth === `Bearer ${secret}`;
+}
+
 // POST /api/admin/streams — add a stream
 export async function POST(request: NextRequest) {
-  if (!(await authorizeAdmin(request))) {
+  if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -59,7 +65,7 @@ export async function POST(request: NextRequest) {
 
 // DELETE /api/admin/streams — remove a stream by videoId
 export async function DELETE(request: NextRequest) {
-  if (!(await authorizeAdmin(request))) {
+  if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

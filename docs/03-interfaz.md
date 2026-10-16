@@ -20,11 +20,6 @@
 En móvil las columnas se apilan (reproductor arriba). Rejilla:
 `lg:grid-cols-[minmax(0,1fr)_400px]`.
 
-> **Componentes base**: botones, cabeceras, tarjetas, campos, avisos… viven en
-> [`@/components/ui`](../src/components/ui) y siguen el diseño de la landing. Toda
-> página nueva debería armarse con ellos: ver
-> [10-componentes-ui.md](10-componentes-ui.md).
-
 ## Componentes ([`src/components/`](../src/components))
 
 | Componente | Rol |
@@ -33,223 +28,18 @@ En móvil las columnas se apilan (reproductor arriba). Rejilla:
 | `VideoListItem` | Tarjeta horizontal de la lista (miniatura 160px con fallback a `hqdefault`, título 2 líneas, canal, fecha relativa); resalta el video activo; insignias "EN VIVO" (rojo) y "24/7" (verde) |
 | `StatusBadge` | Insignia "EN VIVO" (roja, convención universal; el verde Platzi queda para acciones) |
 | `FeedbackPoll` | Encuesta flotante en la esquina inferior derecha, con cierre y pastilla "📊 Encuesta" para reabrir (ver [04-analitica.md](04-analitica.md)) |
-| `FavoriteButton` | Corazón para guardar un video/playlist. En la tarjeta flota en la esquina y solo aparece al pasar el cursor (en móvil siempre, porque no hay hover); en el detalle es una pastilla "Guardar/Guardado" |
-| `OpinionForm` | Formulario de `/opiniones`: sentimiento (😍/🤔/😕) + texto libre. Funciona sin cuenta (se publica como "Anónimo") |
 | `DailyChart` | Gráfica SVG de barras apiladas por día, usada en `/admin` |
 
 Las tarjetas muestran "hace 3 semanas · 3 h 58 min" (fecha relativa + duración del
 video); el reproductor añade además la fecha absoluta.
 
-## Catálogo, navegación y responsive
+## Estilo glass y barra de scroll
 
-- **`SiteShell`** ([componente](../src/components/SiteShell.tsx)): el marco de **toda**
-  la plataforma — `SiteHeader` + contenido + `SiteFooter`, con la sesión resuelta en el
-  servidor. Lo usan los layouts del catálogo, del panel `/admin` y de las páginas de
-  acceso; la landing no lo usa (tiene su propio envoltorio con el resplandor de fondo)
-  pero monta el mismo `SiteHeader`. Así la navegación no cambia al pasar de una sección
-  a otra.
-- **`SiteHeader`** ([componente](../src/components/SiteHeader.tsx)): barra con marca +
-  enlaces (Explorar, Platzi Lives, Blog, Opiniones, **Guardados** con sesión y **Admin**
-  solo para staff) + tema + sesión (`AuthNav`). En **móvil** los enlaces se mueven a un **menú lateral (drawer)**
-  con hamburguesa ([`MobileMenu`](../src/components/MobileMenu.tsx)); la barra deja solo
-  el CTA de sesión y el toggle de tema. El drawer se renderiza con un **portal** a
-  `document.body` para escapar del `backdrop-filter` del header (que, si no, atraparía a
-  los elementos `fixed`). `body` usa `overflow-x-clip` como red de seguridad.
-  > En la landing, el recorte del resplandor de fondo va en su propio contenedor y no
-  > en el envoltorio de la página: un `overflow-hidden` en un ancestro rompería el
-  > `position: sticky` de la barra.
-- **`ResourceCard`** ([componente](../src/components/ResourceCard.tsx)): tarjeta del
-  catálogo (miniatura + título + canal). Al pie muestra **las categorías** del recurso
-  (hasta 2, con "+N" si hay más); los datos los inyecta cada página vía
-  `getCategoriesForResources` (`src/lib/catalog.ts`) y `ResourceGrid`.
-  Tiene el **mismo efecto que las temáticas de la landing** (`GlowFrame`): al pasar
-  el cursor brilla con el color de su temática (el de la categoría de la página, o
-  la primera del recurso), se marca el borde y se levanta. Sobre la miniatura, las
-  playlists llevan "PLAYLIST" abajo a la izquierda y "24 ▶" (número de videos)
-  abajo a la derecha; los videos en inglés, "EN" arriba a la izquierda.
-- **`AuthNav`**: sin sesión muestra "Aportar video", "Entrar" y "Crear cuenta" (CTA);
-  con sesión, botón "Aportar video" + menú con "Guardados", "Mis videos" y "Cerrar
-  sesión".
-- **`ExploreFilters`** (`/todo`): filtros de categoría (chips), orden (más votados /
-  recientes) e **idioma hablado del video**, con el estado en la URL
-  (`?cat=…&sort=…&lang=es|en`).
-  > Ojo con los dos "idiomas": el prefijo de la ruta (`/es`, `/en`) es el de la
-  > **interfaz**; el `?lang=` de la query es el del **video**. Son independientes: se
-  > puede leer la interfaz en inglés y filtrar videos en español.
-
-## Guardados (favoritos)
-
-Cada tarjeta lleva un **corazón** en la esquina superior derecha
-([`FavoriteButton`](../src/components/FavoriteButton.tsx)): aparece al pasar el cursor
-sobre la tarjeta y se queda fijo si el recurso ya está guardado. Vive **fuera** del
-`<Link>` de la tarjeta (nunca un `<button>` dentro de un `<a>`) y actualiza optimista,
-revirtiendo si el servidor falla. Sin sesión, el clic lleva a `/entrar?next=…`.
-
-La lista personal está en **`/guardados`**: es privada (nadie ve lo de los demás), no
-afecta al puntaje del catálogo y se ordena por cuándo se guardó. Al quitar el corazón
-ahí, la tarjeta desaparece de la cuadrícula (`ResourceGrid` con `removeOnUnsave`).
-
-## Opiniones
-
-**`/opiniones`** es un **buzón privado**, no un muro público: la página solo tiene el
-formulario (sentimiento + texto libre) y nadie ve lo que escribieron los demás — ni los
-mensajes ni los conteos. Se puede opinar **sin cuenta** (llega como "Anónimo") o con
-sesión (firmada con el nombre visible, para poder dar seguimiento); hay un límite de 3
-por hora y persona.
-
-Todo se lee desde `/admin` → pestaña **Opiniones**, con el reparto de sentimientos
-arriba. Ahí se puede **archivar** lo ya leído (`hidden_at`, reversible) o borrarlo
-definitivamente. Enlazada desde la barra y el pie de página.
-
-## Perfil
-
-**`/perfil`** ([página](../src/app/[lang]/(catalog)/perfil/page.tsx)) reúne la información de
-la cuenta: avatar con la inicial, nombre, correo, distintivo de rol (solo staff),
-ubicación y desde cuándo es miembro. Debajo, la biografía y los enlaces, y un resumen
-de actividad (aportes, guardados, votos y opiniones) donde cada tarjeta lleva a su
-sección.
-
-[`ProfileCard`](../src/components/ProfileCard.tsx) alterna entre la vista y el
-formulario en el mismo sitio: nombre visible, biografía (300 caracteres con contador),
-ubicación y hasta 6 enlaces con etiqueta. Guarda con `PATCH /api/profile` y refresca la
-página para que la barra y las opiniones firmadas vean el nombre nuevo. Los enlaces se
-abren con `rel="noopener noreferrer nofollow"` y solo si son `http`/`https`.
-
-## Idiomas (español / inglés)
-
-La plataforma pública vive bajo **`/es` o `/en`**; el panel `/admin` y las APIs no
-llevan prefijo (`UNLOCALIZED_PREFIXES` en `src/lib/i18n/config.ts`).
-
-**El español es el idioma base y el de respaldo**, no por gusto sino porque el catálogo
-son videos en español: quien llega sin una preferencia clara debe caer en español. El
-inglés solo aparece si el navegador lo pide antes que el español.
-
-- **Detección**: por la cabecera `Accept-Language` (la preferencia que el usuario
-  configuró de verdad), **no por país** — hay millones de hispanohablantes fuera de
-  Latinoamérica y España, y un turista en México no habla español por estar ahí.
-- **Elección manual**: el botón ES/EN de la barra
-  ([`LanguageToggle`](../src/components/LanguageToggle.tsx)) lleva a la misma ruta con
-  el otro prefijo y guarda la elección en cookie. A partir de ahí **manda sobre la
-  detección**: a quien eligió a mano no se le vuelve a cambiar solo.
-- El [`proxy`](../src/proxy.ts) redirige lo que llegue sin prefijo y anota el idioma en
-  la cookie al navegar.
-
-### Cómo se traduce
-
-| Pieza | Qué hace |
-|---|---|
-| [`dictionaries/es.ts`](../src/lib/i18n/dictionaries/es.ts) | Diccionario base. `en.ts` está **tipado contra él**: agregar una clave rompe el build hasta traducirla |
-| [`I18nProvider`](../src/components/I18nProvider.tsx) | Publica el diccionario al árbol de cliente (`useT()`), montado en el layout de `[lang]` |
-| [`LocaleLink`](../src/components/LocaleLink.tsx) | `next/link` que antepone el idioma; sirve igual desde Server y Client Components |
-| `getDictionary(lang)` | Para Server Components, que reciben `params.lang` |
-
-Los valores del diccionario son **siempre cadenas** (cruzan la frontera
-servidor → cliente, así que no pueden ser funciones). Para los huecos hay `fmt()` con
-`{clave}` y para los plurales `plural()` con `{ one, other }`.
-
-**El panel `/admin` se queda en español**: lo usa el staff, no los visitantes.
-
-### Lo que la traducción no alcanza
-
-Los títulos de los videos, las descripciones de categorías y los artículos del blog son
-**datos**, no cadenas de UI: siguen en el idioma en que se escribieron. Por eso existe
-el filtro de idioma del video — para que quien lee en inglés pueda quedarse con lo que
-sí va a entender.
-
-## Blog
-
-**`/blog`** lista los artículos publicados (título, resumen, firma, fecha y minutos de
-lectura) y **`/blog/[slug]`** muestra uno, con `generateMetadata` propio para que al
-compartirlo salgan su título y su resumen en vez de los genéricos del sitio.
-
-**Escribirlo es exclusivo del staff**: la pestaña **Blog** de `/admin`
-([`BlogManager`](../src/components/admin/BlogManager.tsx)) es el único punto de entrada
-y todas sus llamadas van a `/api/admin/blog`, que vuelve a exigir rol `owner`/`admin`.
-Un artículo **nace como borrador** y no lo ve nadie hasta pulsar "Publicar"; se puede
-despublicar, editar y borrar desde la misma lista.
-
-El cuerpo se escribe en Markdown básico — encabezados, listas, citas, separadores,
-bloques de código, imágenes, **negrita**, *cursiva*, `código` y enlaces — y lo pinta
-[`Markdown`](../src/lib/markdown.tsx), que genera nodos de React en vez de HTML crudo.
-
-**Imágenes.** El editor tiene dos subidores, ambos contra el bucket `blog` de Supabase
-Storage (ver [01-base-de-datos.md](01-base-de-datos.md)):
-
-- **Portada**: se sube, se previsualiza y se puede cambiar o quitar. Sale en la lista
-  del blog (recorte 21:9), arriba del artículo (16:9) y como imagen de Open Graph al
-  compartirlo.
-- **Insertar imagen**: sube el archivo y pega `![](url)` justo donde está el cursor del
-  editor. Una imagen sola en su línea se pinta como figura y el texto alternativo hace
-  de pie de foto.
-
-**Vista del bucket.** Al final de la pestaña, "Ver imágenes subidas"
-([`BlogMedia`](../src/components/admin/BlogMedia.tsx)) lista todo lo que hay en el
-bucket con miniatura, peso, fecha y **en qué artículos se usa cada imagen**. De cada
-una se puede: ponerla de portada, insertarla en el texto que se está editando, copiar
-su URL o **borrarla del bucket**.
-
-El borrado es a mano y avisa antes: si la imagen está en uso, el aviso dice en cuántos
-artículos y solo entonces se manda con `force`. Si no parecía estar en uso, la API
-vuelve a comprobarlo del lado del servidor y responde **409** si cambió mientras tanto,
-así que no hay forma de romper un artículo publicado por una lista desactualizada.
-
-## Aportar sin cuenta
-
-`/enviar` ya no exige sesión para entrar. Se llena la URL y las categorías, y al
-confirmar aparece un paso que ofrece crear cuenta (el aporte se publica al instante) o
-mandarlo **sin cuenta**, en cuyo caso queda **pendiente de aprobación**. El borrador se
-guarda en `localStorage`, así que irse a `/entrar` y volver no pierde nada.
-
-## Paleta, tema claro/oscuro y color por categoría
-
-Tras el pivot, la marca dejó el verde de Platzi por una paleta propia (definida en
-[`globals.css`](../src/app/globals.css)). Esta rama usa la variante **carbon & flame**:
-un esquema minimalista monocromo con un único acento — flame `#F15025`, blanco
-`#FFFFFF`, alabastro `#E6E8E6`, gris polvo `#CED0CE` y carbón `#191919` — más un
-**amarillo ámbar** (análogo del naranja en la rueda cromática, combinan de forma
-natural) para detalles, íconos y acentos secundarios: `#FFC53D` en oscuro y dorado
-profundo `#8A6100` en claro (5.5:1 sobre blanco).
-
-Todos los pares texto/fondo fueron verificados contra WCAG: los usos de texto normal
-cumplen AA (≥4.5:1) en ambos temas; el naranja como texto usa variantes propias
-(`--accent-ink`: `#FF6A42` en oscuro, `#C0370C` en claro) porque el flame puro no
-alcanza el ratio sobre carbón/blanco — el flame puro queda para rellenos y titulares
-grandes (donde AA pide ≥3:1).
-
-**Tipografías**: [Bricolage Grotesque](https://fonts.google.com/specimen/Bricolage+Grotesque)
-para títulos (`h1`–`h3` y `.font-display`, regla global en `globals.css`) y
-[Roboto](https://fonts.google.com/specimen/Roboto) para el resto del texto, ambas vía
-`next/font/google` en [`layout.tsx`](../src/app/layout.tsx).
-
-**Íconos por categoría**: [`CategoryIcon`](../src/components/CategoryIcon.tsx) — SVGs
-de línea (`currentColor`, trazo 1.7) que referencian cada temática: Tecnología →
-microchip, Programación → `</>`, Web → globo, IA → destellos, Agentes → robot, Datos →
-cilindro de base de datos, Diseño → pluma, Producto → caja, DevOps → bucle infinito,
-Ciberseguridad → escudo, Móvil → smartphone, Carrera → maletín. Cae a una cuadrícula
-genérica para categorías nuevas. Se muestran en discos en la landing y en la cabecera
-de cada categoría.
-
-- **Tokens semánticos** (`background`, `surface`, `foreground`, `muted`, `border`,
-  `fill`, `accent`, …) mapeados en `@theme`. Los componentes usan estos tokens, no
-  colores fijos, así que el mismo marcado sirve para ambos temas.
-- **Tema claro/oscuro**: `[data-theme]` en `<html>`. Un script en el `<body>` lo fija
-  antes del primer paint (elección guardada en `localStorage` o preferencia del sistema),
-  sin parpadeo; `ThemeToggle` lo alterna. Por defecto: oscuro (base vino-negro).
-- **Acento único**: al ser una paleta monocromo con un solo color, todo el acento
-  (pestaña activa, cabecera de categoría, marco de tarjetas, CTAs) usa el flame. La
-  columna `color` por categoría sigue existiendo en la DB, pero aquí `catColor()` la
-  ignora y devuelve el acento para mantener la coherencia. La landing usa el degradado
-  de la paleta completa (`--blend`) como firma.
-
-## Estilo glass, brillo de tarjetas y barra de scroll
-
-- Clase `.glass`: tinte sutil derivado del fondo + `backdrop-blur` + borde luminoso.
+- Tonos base más cercanos al negro y unificados: fondo `#0e1013`, superficie `#14171c`
+  (variables en [`globals.css`](../src/app/globals.css)).
+- Clase `.glass`: degradado sutil de gris claro + `backdrop-blur` + borde luminoso.
   Se usa en el header, el panel de la lista, la encuesta flotante y las tarjetas del
-  admin. Adaptada a tokens para verse bien en claro y oscuro.
-- Clases `.glow-*`: el brillo de color de las tarjetas de temática, usado por
-  los componentes `GlowCard` y `GlowFrame` (ver [10-componentes-ui.md](10-componentes-ui.md)).
-- Clase `.no-scrollbar`: filas que se deslizan de lado sin barra visible (los
-  chips de filtros en móvil).
+  admin.
 - Clase `.custom-scroll`: barra de 10px con degradado claro y carril tenue, uniforme
   en las dos zonas con scroll propio (más visible que la nativa).
 

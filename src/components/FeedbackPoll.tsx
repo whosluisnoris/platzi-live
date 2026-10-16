@@ -2,13 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { getSessionId } from "@/lib/analytics";
-import { useT } from "@/components/I18nProvider";
-import { plural } from "@/lib/i18n";
 
-// Pregunta y texto por defecto (retrocompatibles con los votos ya recogidos).
-// Para una pregunta post-pivot, pasa props distintas y añade el nuevo id a la
-// lista blanca QUESTIONS en src/app/api/feedback/route.ts.
-const DEFAULT_QUESTION_ID = "live_platform_v1";
+const QUESTION_ID = "live_platform_v1";
+const STORAGE_KEY = `pl_poll_${QUESTION_ID}`;
+const DISMISS_KEY = `pl_poll_${QUESTION_ID}_cerrada`;
+const COMMENT_KEY = `pl_poll_${QUESTION_ID}_comentario`;
 
 type Answer = "si" | "puede_mejorar" | "no";
 
@@ -17,18 +15,24 @@ interface Results {
   counts: Record<Answer, number>;
 }
 
-function readStoredVote(storageKey: string): Answer | null {
+const OPTIONS: { value: Answer; emoji: string; label: string }[] = [
+  { value: "si", emoji: "😍", label: "Sí, me encanta" },
+  { value: "puede_mejorar", emoji: "🤔", label: "Puede mejorar" },
+  { value: "no", emoji: "😕", label: "No me convence" },
+];
+
+function readStoredVote(): Answer | null {
   try {
-    const v = localStorage.getItem(storageKey);
+    const v = localStorage.getItem(STORAGE_KEY);
     return v === "si" || v === "puede_mejorar" || v === "no" ? v : null;
   } catch {
     return null;
   }
 }
 
-async function fetchResults(questionId: string): Promise<Results | null> {
+async function fetchResults(): Promise<Results | null> {
   try {
-    const res = await fetch(`/api/feedback?question=${questionId}`);
+    const res = await fetch(`/api/feedback?question=${QUESTION_ID}`);
     if (!res.ok) return null;
     return (await res.json()) as Results;
   } catch {
@@ -37,26 +41,8 @@ async function fetchResults(questionId: string): Promise<Results | null> {
 }
 
 // Encuesta flotante tipo notificación: esquina inferior derecha, se puede
-// cerrar y reabrir con la pastilla "📊 Encuesta". La pregunta es parametrizable
-// para poder cambiarla tras el pivot sin tocar la lógica.
-export function FeedbackPoll({
-  questionId = DEFAULT_QUESTION_ID,
-  title,
-}: {
-  questionId?: string;
-  title?: string;
-} = {}) {
-  const t = useT();
-  const heading = title ?? t.poll.defaultTitle;
-  const OPTIONS: { value: Answer; emoji: string; label: string }[] = [
-    { value: "si", emoji: "😍", label: t.poll.yes },
-    { value: "puede_mejorar", emoji: "🤔", label: t.poll.maybe },
-    { value: "no", emoji: "😕", label: t.poll.no },
-  ];
-  const STORAGE_KEY = `pl_poll_${questionId}`;
-  const DISMISS_KEY = `pl_poll_${questionId}_cerrada`;
-  const COMMENT_KEY = `pl_poll_${questionId}_comentario`;
-
+// cerrar y reabrir con la pastilla "📊 Encuesta".
+export function FeedbackPoll() {
   const [open, setOpen] = useState(false);
   const [voted, setVoted] = useState<Answer | null>(null);
   const [results, setResults] = useState<Results | null>(null);
@@ -79,7 +65,7 @@ export function FeedbackPoll({
   // Estado inicial (async para no divergir del SSR): recupera el voto y
   // auto-abre tras un momento solo si nunca votó ni la cerró antes.
   useEffect(() => {
-    const stored = readStoredVote(STORAGE_KEY);
+    const stored = readStoredVote();
     const dismissed = (() => {
       try {
         return localStorage.getItem(DISMISS_KEY) === "1";
@@ -89,7 +75,7 @@ export function FeedbackPoll({
     })();
 
     if (stored) {
-      fetchResults(questionId).then((r) => {
+      fetchResults().then((r) => {
         setVoted(stored);
         if (r) setResults(r);
       });
@@ -99,8 +85,6 @@ export function FeedbackPoll({
       const t = setTimeout(() => setOpen(true), 1500);
       return () => clearTimeout(t);
     }
-    // Solo al montar: la pregunta no cambia durante la vida del componente.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function close() {
@@ -115,7 +99,7 @@ export function FeedbackPoll({
 
   async function reopen() {
     setOpen(true);
-    if (voted && !results) setResults(await fetchResults(questionId));
+    if (voted && !results) setResults(await fetchResults());
   }
 
   async function vote(answer: Answer) {
@@ -126,7 +110,7 @@ export function FeedbackPoll({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          questionId,
+          questionId: QUESTION_ID,
           answer,
           sessionId: getSessionId(),
         }),
@@ -139,7 +123,7 @@ export function FeedbackPoll({
       }
       setVoted(answer);
       setChanging(false);
-      setResults(await fetchResults(questionId));
+      setResults(await fetchResults());
     } catch {
       setError(true);
     } finally {
@@ -158,7 +142,7 @@ export function FeedbackPoll({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          questionId,
+          questionId: QUESTION_ID,
           answer: voted,
           sessionId: getSessionId(),
           comment: text.slice(0, 500),
@@ -186,17 +170,17 @@ export function FeedbackPoll({
       {/* Pastilla para reabrir cuando está cerrada */}
       <button
         onClick={reopen}
-        aria-label={t.poll.openLabel}
-        className={`glass backdrop-blur-md fixed bottom-5 right-5 z-50 rounded-full px-4 py-2.5 text-sm font-semibold text-accent-ink shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 ${
+        aria-label="Abrir encuesta"
+        className={`glass backdrop-blur-md fixed bottom-5 right-5 z-50 rounded-full px-4 py-2.5 text-sm font-semibold text-[#0aeb8b] shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 ${
           open ? "pointer-events-none translate-y-3 opacity-0" : "opacity-100"
         }`}
       >
-        {t.poll.open}
+        📊 Encuesta
       </button>
 
       {/* Tarjeta flotante */}
       <section
-        aria-label={t.poll.ariaLabel}
+        aria-label="Encuesta"
         aria-hidden={!open}
         className={`glass backdrop-blur-md fixed bottom-5 left-4 right-4 z-50 rounded-2xl p-5 shadow-2xl transition-all duration-300 sm:left-auto sm:right-5 sm:w-[400px] ${
           open
@@ -205,21 +189,21 @@ export function FeedbackPoll({
         }`}
       >
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-sm font-bold text-foreground">
-            📊 {heading}
+          <h2 className="text-sm font-bold text-white">
+            📊 ¿Te gustaría tener una funcionalidad así en Platzi?
           </h2>
           <button
             onClick={close}
-            aria-label={t.poll.closeLabel}
-            className="-mr-1 -mt-1 rounded-full p-1.5 text-muted transition hover:bg-fill-strong hover:text-foreground"
+            aria-label="Cerrar encuesta"
+            className="-mr-1 -mt-1 rounded-full p-1.5 text-gray-400 transition hover:bg-white/10 hover:text-white"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
               <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </button>
         </div>
-        <p className="mt-1 text-xs text-muted">
-          {t.poll.privacy}
+        <p className="mt-1 text-xs text-gray-400">
+          Tu opinión es anónima y nos ayuda a proponer esta sección.
         </p>
 
         {showOptions ? (
@@ -231,8 +215,8 @@ export function FeedbackPoll({
                 disabled={sending}
                 className={`rounded-lg px-3.5 py-2 text-sm font-medium transition active:scale-95 disabled:opacity-50 ${
                   voted === o.value
-                    ? "bg-accent text-on-accent"
-                    : "bg-fill text-foreground ring-1 ring-border hover:bg-accent/15 hover:text-accent-ink"
+                    ? "bg-[#0aeb8b] text-[#0e1013]"
+                    : "bg-white/5 text-gray-200 ring-1 ring-white/10 hover:bg-[#0aeb8b]/15 hover:text-[#0aeb8b]"
                 }`}
               >
                 {o.emoji} {o.label}
@@ -250,21 +234,21 @@ export function FeedbackPoll({
                 <div key={o.value} className="flex items-center gap-2 text-xs">
                   <span
                     className={`w-36 shrink-0 ${
-                      mine ? "font-bold text-accent-ink" : "text-muted"
+                      mine ? "font-bold text-[#0aeb8b]" : "text-gray-300"
                     }`}
                   >
                     {o.emoji} {o.label}
                     {mine && " ✓"}
                   </span>
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-fill">
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/5">
                     <div
                       className={`h-full rounded-full ${
-                        mine ? "bg-accent" : "bg-fill-strong"
+                        mine ? "bg-[#0aeb8b]" : "bg-white/20"
                       }`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <span className="w-10 shrink-0 text-right text-muted">
+                  <span className="w-10 shrink-0 text-right text-gray-400">
                     {pct}%
                   </span>
                 </div>
@@ -272,8 +256,8 @@ export function FeedbackPoll({
             })}
             {/* Comentario opcional */}
             {commentSent ? (
-              <p className="mt-1 text-xs text-muted">
-                {t.poll.commentThanks}
+              <p className="mt-1 text-xs text-gray-400">
+                💬 ¡Gracias por tu comentario!
               </p>
             ) : (
               <form onSubmit={sendComment} className="mt-1 flex flex-col gap-2">
@@ -282,39 +266,41 @@ export function FeedbackPoll({
                   onChange={(e) => setCommentText(e.target.value)}
                   maxLength={500}
                   rows={2}
-                  placeholder={t.poll.commentPlaceholder}
-                  className="w-full resize-none rounded-lg bg-fill px-3 py-2 text-xs text-foreground placeholder-faint ring-1 ring-border focus:outline-none focus:ring-accent/50"
+                  placeholder="¿Quieres contarnos por qué? (opcional)"
+                  className="w-full resize-none rounded-lg bg-white/5 px-3 py-2 text-xs text-white placeholder-gray-500 ring-1 ring-white/10 focus:outline-none focus:ring-[#0aeb8b]/50"
                 />
                 {commentText.trim().length > 0 && (
                   <button
                     type="submit"
                     disabled={sendingComment}
-                    className="self-end rounded-lg bg-accent px-3.5 py-1.5 text-xs font-semibold text-on-accent transition hover:opacity-90 active:scale-95 disabled:opacity-50"
+                    className="self-end rounded-lg bg-[#0aeb8b] px-3.5 py-1.5 text-xs font-semibold text-[#0e1013] transition hover:bg-[#08c975] active:scale-95 disabled:opacity-50"
                   >
-                    {sendingComment ? t.common.sending : t.poll.commentSend}
+                    {sendingComment ? "Enviando…" : "Enviar comentario"}
                   </button>
                 )}
               </form>
             )}
 
-            <div className="mt-1.5 flex items-center justify-between text-xs text-muted">
+            <div className="mt-1.5 flex items-center justify-between text-xs text-gray-400">
               <span>
-                {t.poll.thanks}
-                {results ? ` · ${plural(t.poll.voteCount, results.total)}` : ""}
+                Gracias por tu opinión 💚
+                {results
+                  ? ` · ${results.total} ${results.total === 1 ? "voto" : "votos"}`
+                  : ""}
               </span>
               <button
                 onClick={() => setChanging(true)}
-                className="text-accent-ink hover:underline"
+                className="text-[#0aeb8b] hover:underline"
               >
-                {t.poll.change}
+                Cambiar respuesta
               </button>
             </div>
           </div>
         )}
 
         {error && (
-          <p className="mt-2 text-xs text-danger-ink">
-            {t.poll.error}
+          <p className="mt-2 text-xs text-red-400">
+            No se pudo registrar tu voto, inténtalo de nuevo en un momento.
           </p>
         )}
       </section>

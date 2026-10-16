@@ -39,14 +39,3 @@ export function getSupabaseAdmin(): SupabaseClient {
   }
   return _admin;
 }
-
-// Igual que getSupabaseAdmin pero devuelve null si falta la service key (p. ej.
-// en local sin .env completo). Para funciones opcionales que deben degradarse
-// sin tumbar la página en vez de reventar.
-export function tryGetSupabaseAdmin(): SupabaseClient | null {
-  try {
-    return getSupabaseAdmin();
-  } catch {
-    return null;
-  }
-}

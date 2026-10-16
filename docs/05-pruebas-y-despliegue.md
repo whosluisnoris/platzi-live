@@ -28,9 +28,8 @@ anterior funciona sin cambios en la DB.
 - [ ] El selector de orden invierte la lista correctamente
 - [ ] Clic en una tarjeta: cambia el video, resalta la tarjeta, actualiza `?v=` en la URL
 - [ ] Deep-link `?v=VIDEO_ID` abre ese video directamente
-- [ ] Responsive: en móvil (375px) la nav vive en el menú lateral (drawer); sin overflow horizontal
-- [ ] `/admin`: solo entra staff (owner/admin); un `user` es redirigido. Categorías/recursos/lives y estadísticas
-- [ ] Cuentas: registro con correo de confirmación, login, voto y envío de video
+- [ ] Responsive: columnas apiladas en móvil (375px) y lado a lado en escritorio
+- [ ] `/admin`: login, lista con fechas, agregar/quitar (con confirmación), estadísticas
 
 ## Checklist en el Preview de Vercel
 
@@ -69,15 +68,9 @@ auto-guardado de streams la usa hoy mismo).
 | Variable | Uso |
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto Supabase |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Lecturas públicas (RLS) y sesión en el cliente |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Lecturas públicas (RLS solo permite SELECT en `streams`) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Escrituras desde rutas API (server-only) |
-| `ADMIN_SECRET` | Respaldo programático de `/api/admin/*` y `/api/live?debug=` (el panel usa el rol de sesión) |
-| `RESEND_API_KEY` | Envío de correos de auth (Resend) |
-| `SEND_EMAIL_HOOK_SECRET` | Secreto del Send Email Hook de Supabase (`v1,whsec_…`) |
-| `EMAIL_FROM` | Remitente verificado, p. ej. `Clusly <no-reply@welcome.clusly.com>` |
-| `NEXT_PUBLIC_SITE_URL` | Opcional; origen de los enlaces de correo (`https://clusly.com`) |
-
-Detalle de cuentas/correo/roles en [08-cuentas-votacion-setup.md](08-cuentas-votacion-setup.md).
+| `ADMIN_SECRET` | Contraseña del panel `/admin` |
 
 Para desarrollo local: copiar esas mismas variables a `.env.local` (no se versiona).
 
@@ -87,7 +80,7 @@ Hoy la detección corre cuando alguien visita la página. Si se quiere detectar 
 aunque nadie tenga la página abierta, dos opciones gratuitas:
 
 1. **pg_cron + pg_net en Supabase**: un job cada 5 minutos que haga
-   `select net.http_get('https://clusly.com/api/live')`.
+   `select net.http_get('https://platzi-live.vercel.app/api/live')`.
 2. Un monitor externo gratuito (p. ej. UptimeRobot) apuntando a `/api/live`.
 
 Ambas son cambios de configuración, no de código.
