@@ -55,9 +55,8 @@ commit;
 --    Primero mira cuántos son:
 --   select count(*) from public.watch_events
 --   where video_id not in (select video_id from public.streams) and video_id <> 'tRsQsTMvPNg';
---    y si quieres borrarlos:
---   delete from public.watch_events
---   where video_id not in (select video_id from public.streams) and video_id <> 'tRsQsTMvPNg';
+--    Este script NO borra nada de watch_events: si decides limpiar esos eventos,
+--    hazlo a mano y después de respaldar la tabla.
 
 -- B. Cuentas de usuario de Clusly (Auth). Platzi Live no usa cuentas.
 --    Mejor bórralas desde Authentication → Users, o:

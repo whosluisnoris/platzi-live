@@ -1,6 +1,6 @@
 # Base de datos (Supabase / Postgres)
 
-Proyecto Supabase propio de Platzi Live (independiente de Clusly). El esquema completo está en [`supabase/schema.sql`](../supabase/schema.sql).
+Proyecto Supabase propio de Platzi Live. El esquema completo está en [`supabase/schema.sql`](../supabase/schema.sql).
 
 ## Tabla `streams` — histórico de lives
 
